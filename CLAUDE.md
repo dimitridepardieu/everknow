@@ -32,3 +32,9 @@
 - Always include a description body explaining the "why" — not just the "what"
 - **Never** add Co-Authored-By lines
 - Always show the proposed commit to the developer for validation before executing
+
+### Rule 6: Code Formatting
+- **Always run `make fmt` before committing** — formats both Go and TypeScript/JS/CSS/JSON
+- Go: `gofmt` (built-in)
+- TypeScript/JS/CSS/JSON: Biome (replaces both ESLint and Prettier)
+- Never commit unformatted code

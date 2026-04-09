@@ -19,6 +19,10 @@ api:
 web:
 	$(COMPOSE) exec web $(CMD)
 
+fmt:
+	$(COMPOSE) exec api gofmt -w .
+	$(COMPOSE) exec web bunx --bun @biomejs/biome check --write .
+
 check-versions:
 	@echo "=== Docker versions ==="
 	@grep _VERSION docker/.env
