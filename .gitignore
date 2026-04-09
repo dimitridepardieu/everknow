@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+api/server
+web/dist/
+
+# Environment files (secrets)
+docker/.env.local
+docker/.env.prod
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/*
+!.vscode/extensions.json

@@ -1,0 +1,31 @@
+name: flashcardacademy
+
+services:
+  api:
+    container_name: flashcardacademy-api
+    build:
+      context: ../api
+      dockerfile: ../docker/Dockerfile.api
+      args:
+        GO_VERSION: ${GO_VERSION}
+
+  web:
+    container_name: flashcardacademy-web
+    build:
+      context: ../web
+      dockerfile: ../docker/Dockerfile.web
+      args:
+        BUN_VERSION: ${BUN_VERSION}
+
+  postgres:
+    container_name: flashcardacademy-postgres
+    image: postgres:${POSTGRES_VERSION}-alpine
+    environment:
+      POSTGRES_DB: flashcardacademy
+      POSTGRES_USER: flashcard
+      POSTGRES_PASSWORD: flashcard
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

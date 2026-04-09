@@ -1,0 +1,13 @@
+{
+  "name": "Flashcard Academy — API (Go)",
+  "dockerComposeFile": ["../../docker/compose.yaml", "../../docker/compose.dev.yaml"],
+  "service": "api",
+  "workspaceFolder": "/app",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go"
+      ]
+    }
+  }
+}
