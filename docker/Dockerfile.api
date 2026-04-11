@@ -6,7 +6,8 @@ ARG GO_VERSION
 FROM golang:${GO_VERSION}-trixie AS base
 WORKDIR /app
 COPY --link go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod/ \
+    go mod download
 COPY --link . .
 
 # --- Dev stage: adds hot-reload with air ---
@@ -17,7 +18,8 @@ CMD ["air"]
 
 # --- Build stage: compile the binary ---
 FROM base AS build
-RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /server .
+RUN --mount=type=cache,target=/go/pkg/mod/ \
+    CGO_ENABLED=0 go build -ldflags="-s -w" -o /server .
 RUN adduser --disabled-password --no-create-home --uid 10001 appuser
 
 # --- Prod stage: minimal image with just the binary ---
