@@ -10,4 +10,13 @@ export default defineConfig({
       "@": "./src",
     },
   },
+  server: {
+    host: "0.0.0.0",
+    allowedHosts: ["flashcardacademy.localhost"],
+    hmr: {
+      host: "flashcardacademy.localhost",
+      clientPort: 443,
+      protocol: "wss",
+    },
+  },
 });

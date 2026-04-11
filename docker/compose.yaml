@@ -1,31 +1,64 @@
-name: flashcardacademy
+name: ${PROJECT_CODENAME}
 
 services:
   api:
-    container_name: flashcardacademy-api
     build:
       context: ../api
       dockerfile: ../docker/Dockerfile.api
       args:
         GO_VERSION: ${GO_VERSION}
+        AIR_VERSION: ${AIR_VERSION}
+    container_name: ${PROJECT_CODENAME}-api
+    networks:
+      - public
+      - private
 
   web:
-    container_name: flashcardacademy-web
     build:
       context: ../web
       dockerfile: ../docker/Dockerfile.web
       args:
         BUN_VERSION: ${BUN_VERSION}
+    container_name: ${PROJECT_CODENAME}-web
+    networks:
+      - public
 
   postgres:
-    container_name: flashcardacademy-postgres
-    image: postgres:${POSTGRES_VERSION}-alpine
+    image: postgres:${POSTGRES_VERSION}
+    container_name: ${PROJECT_CODENAME}-postgres
     environment:
-      POSTGRES_DB: flashcardacademy
-      POSTGRES_USER: flashcard
-      POSTGRES_PASSWORD: flashcard
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - ${DOCKER_VOLUMES_PATH}/postgres:/var/lib/postgresql/data
+    networks:
+      - private
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  caddy:
+    image: caddy:${CADDY_VERSION}-alpine
+    container_name: ${PROJECT_CODENAME}-caddy
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      - SITE_ADDRESS=${SITE_ADDRESS}
+      - ACME_EMAIL=${ACME_EMAIL}
+    networks:
+      - public
+
+networks:
+  public:
+  private:
 
 volumes:
-  pgdata:
+  web_dist:
+  caddy_data:
+  caddy_config:

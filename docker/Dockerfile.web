@@ -1,9 +1,38 @@
-ARG BUN_VERSION
-FROM oven/bun:${BUN_VERSION}-alpine
+# syntax=docker/dockerfile:1
 
+ARG BUN_VERSION
+
+# --- Base stage: Bun runtime ---
+FROM oven/bun:${BUN_VERSION}-slim AS base
 WORKDIR /app
 
-COPY package.json bun.lock* ./
-RUN bun install
+# --- Install stage: cache dependencies separately ---
+FROM base AS install
 
-COPY . .
+RUN mkdir -p /temp/dev
+COPY --link package.json bun.lock /temp/dev/
+RUN cd /temp/dev && bun install --frozen-lockfile
+
+RUN mkdir -p /temp/prod
+COPY --link package.json bun.lock /temp/prod/
+RUN cd /temp/prod && bun install --frozen-lockfile --production
+
+# --- Dev stage: full dev environment ---
+FROM base AS dev
+COPY --from=install /temp/dev/node_modules node_modules
+COPY --link . .
+USER bun
+CMD ["bun", "run", "dev", "--host", "0.0.0.0"]
+
+# --- Build stage: generate static files ---
+FROM base AS build
+COPY --from=install /temp/prod/node_modules node_modules
+COPY --link . .
+ENV NODE_ENV=production
+RUN bun run build
+
+# --- Prod stage: copy dist to shared volume and exit ---
+FROM base AS prod
+COPY --from=build /app/dist /app/dist
+USER bun
+CMD ["sh", "-c", "cp -r /app/dist/* /srv/ && echo 'Build copied to /srv' && exit 0"]

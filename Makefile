@@ -1,6 +1,8 @@
 ENV ?= dev
 COMPOSE = docker compose -f docker/compose.yaml -f docker/compose.$(ENV).yaml --env-file docker/.env
 
+.PHONY: up down build logs api web fmt check-versions
+
 up:
 	$(COMPOSE) up -d
 

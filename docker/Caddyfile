@@ -1,0 +1,34 @@
+{
+	admin off
+	log default {
+		format console
+	}
+	email {$ACME_EMAIL}
+}
+
+{$SITE_ADDRESS} {
+	# No explicit tls directive — Caddy auto-selects:
+	#   - internal CA for .localhost (dev)
+	#   - Let's Encrypt for public hostnames (prod, using the global email)
+
+	encode zstd gzip
+
+	# TODO (prod): add security headers before going live.
+	# Minimum set to add:
+	#   - Strict-Transport-Security (HSTS) — force HTTPS, 1 year max-age
+	#   - X-Content-Type-Options: nosniff — block MIME sniffing
+	#   - X-Frame-Options: DENY — block clickjacking via iframe
+	#   - Referrer-Policy: strict-origin-when-cross-origin — limit referer leakage
+	#   - -Server — remove the Server: Caddy header
+	# Later, when the frontend is stable:
+	#   - Content-Security-Policy — fine-grained resource allowlist (XSS defense)
+	#   - Permissions-Policy — disable unused browser APIs
+
+	handle /api/* {
+		reverse_proxy api:8080
+	}
+
+	handle {
+		import /etc/caddy/frontend.caddy
+	}
+}

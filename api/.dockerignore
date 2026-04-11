@@ -1,0 +1,12 @@
+server
+
+.git
+.gitignore
+.vscode
+.env
+.DS_Store
+
+README.md
+LICENSE
+Dockerfile*
+compose*.yaml

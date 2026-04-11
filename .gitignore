@@ -5,6 +5,9 @@ node_modules/
 api/server
 web/dist/
 
+# Docker data volumes
+docker/volumes/
+
 # Environment files (secrets)
 docker/.env.local
 docker/.env.prod

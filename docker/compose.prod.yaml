@@ -1,0 +1,54 @@
+services:
+  api:
+    build:
+      target: prod
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      target: prod
+    volumes:
+      - web_dist:/srv
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    restart: "no"
+
+  postgres:
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  caddy:
+    volumes:
+      - ./frontend.prod.caddy:/etc/caddy/frontend.caddy:ro
+      - web_dist:/srv:ro
+    environment:
+      - SITE_ADDRESS=flashcardacademy.io
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_started
+      web:
+        condition: service_completed_successfully

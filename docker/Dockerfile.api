@@ -1,12 +1,28 @@
+# syntax=docker/dockerfile:1
+
 ARG GO_VERSION
-FROM golang:${GO_VERSION}-alpine
 
+# --- Base stage: Go toolchain + dependencies ---
+FROM golang:${GO_VERSION}-trixie AS base
 WORKDIR /app
-
-# Dev tools
-RUN apk add --no-cache git
-
-COPY go.mod go.sum* ./
+COPY --link go.mod go.sum ./
 RUN go mod download
+COPY --link . .
 
-COPY . .
+# --- Dev stage: adds hot-reload with air ---
+FROM base AS dev
+ARG AIR_VERSION
+RUN go install github.com/air-verse/air@v${AIR_VERSION}
+CMD ["air"]
+
+# --- Build stage: compile the binary ---
+FROM base AS build
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /server .
+
+# --- Prod stage: minimal image with just the binary ---
+FROM scratch AS prod
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=build /server /server
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD ["/server", "healthcheck"]
+ENTRYPOINT ["/server"]
