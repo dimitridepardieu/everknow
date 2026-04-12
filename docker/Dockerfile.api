@@ -3,7 +3,7 @@
 ARG GO_VERSION
 
 # --- Base stage: Go toolchain + dependencies ---
-FROM golang:${GO_VERSION}-trixie AS base
+FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-trixie AS base
 WORKDIR /app
 COPY --link go.mod go.sum ./
 RUN --mount=type=cache,target=/go/pkg/mod/ \
@@ -18,8 +18,9 @@ CMD ["air"]
 
 # --- Build stage: compile the binary ---
 FROM base AS build
+ARG TARGETARCH
 RUN --mount=type=cache,target=/go/pkg/mod/ \
-    CGO_ENABLED=0 go build -ldflags="-s -w" -o /server .
+    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -ldflags="-s -w" -o /server .
 RUN adduser --disabled-password --no-create-home --uid 10001 appuser
 
 # --- Prod stage: minimal image with just the binary ---
