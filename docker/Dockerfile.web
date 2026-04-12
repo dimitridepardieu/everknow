@@ -11,11 +11,13 @@ FROM base AS install
 
 RUN mkdir -p /temp/dev
 COPY --link package.json bun.lock /temp/dev/
-RUN cd /temp/dev && bun install --frozen-lockfile
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    cd /temp/dev && bun install --frozen-lockfile
 
 RUN mkdir -p /temp/prod
 COPY --link package.json bun.lock /temp/prod/
-RUN cd /temp/prod && bun install --frozen-lockfile --production
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    cd /temp/prod && bun install --frozen-lockfile --production
 
 # --- Dev stage: full dev environment ---
 FROM base AS dev
@@ -29,6 +31,7 @@ FROM base AS build
 COPY --from=install /temp/prod/node_modules node_modules
 COPY --link . .
 ENV NODE_ENV=production
+USER bun
 RUN bun run build
 
 # --- Prod stage: copy dist to shared volume and exit ---
