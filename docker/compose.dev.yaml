@@ -20,6 +20,9 @@ services:
     volumes:
       - ../web:/app
       - web_node_modules:/app/node_modules
+      - ./web-entrypoint.sh:/app/docker-entrypoint.sh:ro
+    entrypoint: ["/app/docker-entrypoint.sh"]
+    command: ["bun", "run", "dev", "--host", "0.0.0.0"]
 
   postgres:
     ports:

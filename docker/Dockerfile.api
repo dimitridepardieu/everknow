@@ -13,7 +13,8 @@ COPY --link . .
 # --- Dev stage: adds hot-reload with air ---
 FROM base AS dev
 ARG AIR_VERSION
-RUN go install github.com/air-verse/air@v${AIR_VERSION}
+RUN --mount=type=cache,target=/go/pkg/mod/ \
+    go install github.com/air-verse/air@v${AIR_VERSION}
 CMD ["air"]
 
 # --- Build stage: compile the binary ---
