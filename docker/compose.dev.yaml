@@ -8,7 +8,7 @@ services:
     volumes:
       - ../api:/app
     ports:
-      - "${API_PORT}:8080"
+      - "${DEV_HOST:-127.0.0.1}:${API_PORT}:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -25,15 +25,15 @@ services:
 
   postgres:
     ports:
-      - "5432:5432"
+      - "${DEV_HOST:-127.0.0.1}:5432:5432"
 
   caddy:
     volumes:
       - ./frontend.dev.caddy:/etc/caddy/frontend.caddy:ro
     ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
+      - "${DEV_HOST:-127.0.0.1}:80:80"
+      - "${DEV_HOST:-127.0.0.1}:443:443"
+      - "${DEV_HOST:-127.0.0.1}:443:443/udp"
     depends_on:
       - api
       - web
