@@ -2,8 +2,6 @@ services:
   api:
     build:
       target: prod
-    environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
     security_opt:
       - no-new-privileges:true
     read_only: true
