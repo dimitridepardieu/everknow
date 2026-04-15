@@ -3,6 +3,8 @@ services:
     init: true
     build:
       target: dev
+      args:
+        AIR_VERSION: ${AIR_VERSION}
     volumes:
       - ../api:/app
     ports:

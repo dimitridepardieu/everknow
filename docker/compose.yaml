@@ -7,7 +7,6 @@ services:
       dockerfile: ../docker/Dockerfile.api
       args:
         GO_VERSION: ${GO_VERSION}
-        AIR_VERSION: ${AIR_VERSION}
     container_name: ${PROJECT_CODENAME}-api
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
