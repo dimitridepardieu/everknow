@@ -1,7 +1,8 @@
-ENV ?= dev
-COMPOSE = docker compose -f docker/compose.yaml -f docker/compose.$(ENV).yaml --env-file docker/.env
+-include docker/.env
+APP_ENV ?= dev
+COMPOSE = docker compose -f docker/compose.yaml -f docker/compose.$(APP_ENV).yaml --env-file docker/.env
 
-.PHONY: up down clean build build-prod logs api web fmt check-versions
+.PHONY: up down clean build logs api web fmt check-versions
 
 up:
 	$(COMPOSE) up -d
@@ -14,9 +15,6 @@ clean:
 
 build:
 	$(COMPOSE) build
-
-build-prod:
-	$(COMPOSE) build --platform linux/amd64
 
 logs:
 	$(COMPOSE) logs -f

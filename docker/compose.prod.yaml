@@ -2,6 +2,8 @@ services:
   api:
     build:
       target: prod
+      platforms:
+        - linux/amd64
     security_opt:
       - no-new-privileges:true
     read_only: true
@@ -15,6 +17,8 @@ services:
   web:
     build:
       target: prod
+      platforms:
+        - linux/amd64
     volumes:
       - web_dist:/srv
     security_opt:
