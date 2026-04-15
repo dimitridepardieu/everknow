@@ -60,6 +60,5 @@ networks:
 
 volumes:
   pgdata:
-  web_dist:
   caddy_data:
   caddy_config:
