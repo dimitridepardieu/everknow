@@ -6,8 +6,7 @@ api/server
 web/dist/
 
 # Environment files (secrets)
-docker/.env.local
-docker/.env.prod
+docker/.env
 
 # OS
 .DS_Store
@@ -15,3 +14,6 @@ docker/.env.prod
 # IDE
 .vscode/*
 !.vscode/extensions.json
+
+# Temporary files
+tmp/
