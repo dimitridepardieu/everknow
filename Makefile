@@ -2,34 +2,51 @@
 APP_ENV ?= dev
 COMPOSE = docker compose -f docker/compose.yaml -f docker/compose.$(APP_ENV).yaml --env-file docker/.env
 
-.PHONY: up down clean build logs api web fmt check-versions
+.PHONY: up down restart rebuild clean build logs api web fmt test db-reset check-versions
 
-up:
+up: ## Start the stack
 	$(COMPOSE) up -d
 
-down:
+down: ## Stop the stack
 	$(COMPOSE) down
 
-clean:
+restart: ## Restart the stack (without rebuilding)
+	$(COMPOSE) restart
+
+rebuild: ## Rebuild and restart the stack
+	$(COMPOSE) down
+	$(COMPOSE) build
+	$(COMPOSE) up -d
+
+clean: ## Stop the stack and remove all volumes
 	$(COMPOSE) down -v
 
-build:
+build: ## Build container images
 	$(COMPOSE) build
 
-logs:
+logs: ## Follow container logs
 	$(COMPOSE) logs -f
 
-api:
+api: ## Run a command in the api container (e.g. make api CMD="go test ./...")
 	$(COMPOSE) exec api $(CMD)
 
-web:
+web: ## Run a command in the web container (e.g. make web CMD="bun add foo")
 	$(COMPOSE) exec web $(CMD)
 
-fmt:
+fmt: ## Format code (Go + TypeScript/JS/CSS/JSON)
 	$(COMPOSE) exec api gofmt -w .
 	$(COMPOSE) exec web bunx --bun @biomejs/biome check --write .
 
-check-versions:
+test: ## Run all tests
+	$(COMPOSE) exec api go test ./...
+	$(COMPOSE) exec web bunx --bun vitest run
+
+db-reset: ## Reset the database (drop + recreate)
+	$(COMPOSE) exec postgres dropdb -U $(POSTGRES_USER) --force $(POSTGRES_DB)
+	$(COMPOSE) exec postgres createdb -U $(POSTGRES_USER) $(POSTGRES_DB)
+	@echo "Database $(POSTGRES_DB) reset."
+
+check-versions: ## Show tool versions (Docker .env + containers)
 	@echo "=== Docker versions ==="
 	@grep _VERSION docker/.env
 	@echo "=== Container Go ==="
