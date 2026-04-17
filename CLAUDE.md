@@ -33,8 +33,12 @@
 - **Never** add Co-Authored-By lines
 - Always show the proposed commit to the developer for validation before executing
 
-### Rule 6: Code Formatting
+### Rule 6: Tailwind CSS — Cursor Pointer
+- Always add `cursor-pointer` to interactive elements (buttons, links, clickable cards, etc.)
+- Tailwind 4 no longer adds `cursor: pointer` automatically on buttons — it must be explicit
+
+### Rule 7: Code Formatting
 - **Always run `make fmt` before committing** — formats both Go and TypeScript/JS/CSS/JSON
 - Go: `gofmt` (built-in)
-- TypeScript/JS/CSS/JSON: Biome (replaces both ESLint and Prettier)
+- TypeScript/JS/CSS/JSON: Biome (formatting + linting + import sorting)
 - Never commit unformatted code
