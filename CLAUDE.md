@@ -40,5 +40,5 @@
 ### Rule 7: Code Formatting
 - **Always run `make fmt` before committing** — formats both Go and TypeScript/JS/CSS/JSON
 - Go: `gofmt` (built-in)
-- TypeScript/JS/CSS/JSON: Biome (formatting + linting + import sorting)
+- TypeScript/JS/CSS/JSON: Prettier (formatting + import sorting via `@trivago/prettier-plugin-sort-imports`) + ESLint (with `--fix`)
 - Never commit unformatted code

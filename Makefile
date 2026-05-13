@@ -33,9 +33,10 @@ api: ## Run a command in the api container (e.g. make api CMD="go test ./...")
 web: ## Run a command in the web container (e.g. make web CMD="bun add foo")
 	$(COMPOSE) exec web $(CMD)
 
-fmt: ## Format code (Go + TypeScript/JS/CSS/JSON)
+fmt: ## Format code (Go + TS/JS/CSS/JSON) and apply ESLint auto-fixes
 	$(COMPOSE) exec api gofmt -w .
-	$(COMPOSE) exec web bunx --bun @biomejs/biome check --write .
+	$(COMPOSE) exec web bunx --bun prettier --write .
+	$(COMPOSE) exec web bunx --bun eslint . --fix
 
 test: ## Run all tests
 	$(COMPOSE) exec api go test ./...
