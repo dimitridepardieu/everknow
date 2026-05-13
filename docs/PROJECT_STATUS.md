@@ -29,7 +29,6 @@ flashcardacademy/
 │   └── Biome 2.4.11 (replaces ESLint + Prettier)
 ├── docker/              ← Complete Docker setup (see below)
 ├── docs/                ← Spec + implementation plan
-├── .devcontainer/       ← VS Code Dev Containers (api + web)
 ├── Makefile             ← Docker commands
 └── CLAUDE.md            ← 6 rules (language, mobile-first, pedagogy, docker, commits, formatting)
 ```
@@ -64,11 +63,6 @@ flashcardacademy/
 - Compression (zstd + gzip)
 - Air hot-reload for Go dev, Vite HMR through Caddy WSS for web dev
 - Biome for formatting + linting (replaced ESLint + Prettier)
-
-**Dev Containers (VS Code):**
-- `.devcontainer/api/` — attaches to Go container
-- `.devcontainer/web/` — attaches to Bun container
-- Two separate configs because Go and Bun must be in separate containers
 
 **Makefile commands:**
 - `make up` / `make down` — start/stop dev environment
