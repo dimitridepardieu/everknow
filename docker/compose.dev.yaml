@@ -19,7 +19,7 @@ services:
       target: dev
     volumes:
       - ../web:/app
-      - ./web-entrypoint.sh:/usr/local/bin/docker-entrypoint.sh:ro
+      - ./web/entrypoint.sh:/usr/local/bin/docker-entrypoint.sh:ro
     entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
     command: ["bun", "run", "dev", "--host", "0.0.0.0"]
 
@@ -29,7 +29,7 @@ services:
 
   caddy:
     volumes:
-      - ./frontend.dev.caddy:/etc/caddy/frontend.caddy:ro
+      - ./caddy/frontend.dev.caddy:/etc/caddy/frontend.caddy:ro
     ports:
       - "${DEV_HOST:-127.0.0.1}:80:80"
       - "${DEV_HOST:-127.0.0.1}:443:443"

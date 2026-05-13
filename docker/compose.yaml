@@ -4,7 +4,7 @@ services:
   api:
     build:
       context: ../api
-      dockerfile: ../docker/Dockerfile.api
+      dockerfile: ../docker/api/Dockerfile
       args:
         GO_VERSION: ${GO_VERSION}
     container_name: ${PROJECT_CODENAME}-api
@@ -17,7 +17,7 @@ services:
   web:
     build:
       context: ../web
-      dockerfile: ../docker/Dockerfile.web
+      dockerfile: ../docker/web/Dockerfile
       args:
         BUN_VERSION: ${BUN_VERSION}
     container_name: ${PROJECT_CODENAME}-web
@@ -46,7 +46,7 @@ services:
     image: caddy:${CADDY_VERSION}-alpine
     container_name: ${PROJECT_CODENAME}-caddy
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     environment:
