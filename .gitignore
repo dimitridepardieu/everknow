@@ -1,8 +1,5 @@
-docker/.env
-api/server
-web/dist/
-node_modules/
 .DS_Store
 .vscode/*
 !.vscode/extensions.json
-tmp/
+.idea
+*.sw?
