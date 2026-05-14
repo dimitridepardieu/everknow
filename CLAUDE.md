@@ -19,8 +19,12 @@
 
 ### Rule 4: Command Execution (Docker)
 - Go and Bun **may** be installed locally for IDE/LSP support (gopls, tsserver) — but **all commands must run in Docker containers**, never directly on the host
-- Use `make api CMD="..."` for Go commands (e.g., `make api CMD="go test ./..."`)
-- Use `make web CMD="..."` for Bun commands (e.g., `make web CMD="bun run build"`)
+- **For one-shot commands (the AI's primary mode), always use `exec-<service>` with `CMD`:**
+  - `make exec-api CMD="go test ./..."` for Go commands
+  - `make exec-web CMD="bun run build"` for Bun commands
+  - `make exec-psql CMD="SELECT ..."` for SQL queries (no password needed — connects via Unix socket inside the container)
+  - `make exec-postgres CMD="..."` / `make exec-caddy CMD="..."` for raw container commands
+- **Bare targets (`make api`, `make web`, `make caddy`, `make postgres`, `make psql`) open interactive shells** — for the human developer, NOT for the AI. Do not use them to run scripted commands; they will spawn a shell and block.
 - Use `make up` to start dev environment, `make down` to stop
 - Files can be read and edited directly (they are volume-mounted in containers)
 - Versions are defined in `docker/.env` — single source of truth (host versions may diverge slightly on patch level, harmless for LSP)

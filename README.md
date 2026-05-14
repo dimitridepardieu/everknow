@@ -49,9 +49,22 @@ make rebuild                     # After a Dockerfile or major dep change
 make logs                        # Follow logs from all containers
 make fmt                         # Format + lint-fix everything (run before commit)
 make test                        # Run all tests
-make api CMD="go test ./..."     # Run any Go command in the api container
-make web CMD="bun add <pkg>"     # Run any Bun command in the web container
 ```
+
+## Working inside containers
+
+When you want to poke around — read files, run a quick command by hand,
+inspect the database — open an interactive shell:
+
+```bash
+make api         # bash shell in the api container
+make web         # bash shell in the web container
+make postgres    # bash shell in the postgres container
+make caddy       # sh shell in the caddy container (Alpine — no bash)
+make psql        # psql session connected to the dev database
+```
+
+Exit with `Ctrl-D` or `exit`.
 
 ## Project structure
 

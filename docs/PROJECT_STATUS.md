@@ -71,7 +71,9 @@ flashcardacademy/
 - `make up` / `make down` — start/stop dev environment
 - `APP_ENV=prod make up` — start prod environment (validate prod stack locally)
 - `make rebuild` — down + build + up
-- `make api CMD="..."` / `make web CMD="..."` — exec in containers
+- `make api` / `make web` / `make caddy` / `make postgres` — open interactive shells
+- `make psql` — interactive psql session ; `make exec-psql CMD="..."` — one-shot SQL
+- `make exec-api CMD="..."` / `make exec-web CMD="..."` — one-shot commands in containers
 - `make fmt` — format Go (gofmt) + frontend (Prettier) + lint fix (ESLint)
 - `make logs` — follow container logs
 - `make check-versions` — verify versions match `.env`
@@ -132,6 +134,7 @@ These are noted in the codebase (search for `TODO`):
 4. **`docker/compose.prod.yaml`** — Consider `sslmode=require` for Postgres connection in prod
 5. **Structured logging** — Implement JSON logging in Go API for monitoring
 6. **`docker/compose.prod.yaml`** — `SITE_ADDRESS=flashcardacademy.io` needs to be set
+7. **Postgres least-privilege user (to reassess)** — API currently connects as the `postgres` superuser. Consider creating a dedicated app role with minimal privileges before prod.
 
 ## Versions (source of truth: `docker/.env`)
 
