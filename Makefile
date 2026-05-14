@@ -18,7 +18,12 @@ help:
 		printf "\n  \033[1;38;5;117m%s\033[0m\n", substr($$0, 5); \
 	} \
 	/^[a-zA-Z_-]+:.*?##/ { \
-		printf "    \033[38;5;222m%-16s\033[0m  \033[38;5;250m%s\033[0m\n", $$1, $$2; \
+		if (substr($$2, 1, 2) == "! ") { \
+			desc = substr($$2, 3); \
+			printf "    \033[38;5;222m%-16s\033[0m  \033[38;5;250m%s\033[0m \033[1;38;5;203m[!]\033[0m\n", $$1, desc; \
+		} else { \
+			printf "    \033[38;5;222m%-16s\033[0m  \033[38;5;250m%s\033[0m\n", $$1, $$2; \
+		} \
 	} \
 	END { printf "\n" }' $(MAKEFILE_LIST)
 
@@ -41,7 +46,7 @@ rebuild: ## Down + build + up
 build: ## Build container images
 	$(COMPOSE) build
 
-clean: ## Stop the stack and remove all volumes
+clean: ## ! Stop the stack and remove all volumes
 	$(COMPOSE) down -v
 
 ##@ LOGS
@@ -108,7 +113,7 @@ test: ## Run all tests
 
 ##@ DATABASE
 
-db-reset: ## Reset the database (drop + recreate)
+db-reset: ## ! Reset the database (drop + recreate)
 	$(COMPOSE) exec postgres dropdb -U $(POSTGRES_USER) --force $(POSTGRES_DB)
 	$(COMPOSE) exec postgres createdb -U $(POSTGRES_USER) $(POSTGRES_DB)
 	@echo "Database $(POSTGRES_DB) reset."
