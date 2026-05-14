@@ -4,7 +4,7 @@ COMPOSE = docker compose -f docker/compose.yaml -f docker/compose.$(APP_ENV).yam
 
 .DEFAULT_GOAL := help
 
-.PHONY: help up down restart rebuild clean build logs api web caddy postgres psql exec-api exec-web exec-caddy exec-postgres exec-psql fmt test db-reset check-versions trust-caddy-ca
+.PHONY: help up down restart rebuild clean build logs logs-api logs-web logs-caddy logs-postgres api web caddy postgres psql exec-api exec-web exec-caddy exec-postgres exec-psql fmt test db-reset check-versions trust-caddy-ca
 
 help:
 	@awk 'BEGIN { \
@@ -44,8 +44,22 @@ build: ## Build container images
 clean: ## Stop the stack and remove all volumes
 	$(COMPOSE) down -v
 
-logs: ## Follow container logs
+##@ LOGS
+
+logs: ## Follow all containers logs
 	$(COMPOSE) logs -f
+
+logs-api: ## Follow api container logs only
+	$(COMPOSE) logs -f api
+
+logs-web: ## Follow web container logs only
+	$(COMPOSE) logs -f web
+
+logs-caddy: ## Follow caddy container logs only
+	$(COMPOSE) logs -f caddy
+
+logs-postgres: ## Follow postgres container logs only
+	$(COMPOSE) logs -f postgres
 
 ##@ SHELLS
 
