@@ -4,7 +4,7 @@ COMPOSE = docker compose -f docker/compose.yaml -f docker/compose.$(APP_ENV).yam
 
 .DEFAULT_GOAL := help
 
-.PHONY: help up down restart rebuild clean build logs api web fmt test db-reset check-versions
+.PHONY: help up down restart rebuild clean build logs api web fmt test db-reset check-versions trust-caddy-ca
 
 help: ## Show this help
 	@awk 'BEGIN { \
@@ -81,3 +81,18 @@ check-versions: ## Show tool versions (.env + containers)
 	@$(COMPOSE) exec api go version 2>/dev/null || echo "(api not running)"
 	@echo "=== Container Bun ==="
 	@$(COMPOSE) exec web bun --version 2>/dev/null || echo "(web not running)"
+
+##@ HTTPS local
+
+trust-caddy-ca: ## Trust Caddy's dev CA in the macOS Keychain
+	@if [ "$$(uname)" != "Darwin" ]; then \
+		echo "Error: trust-caddy-ca supports macOS only."; \
+		echo "Linux: import root.crt from the caddy container into /usr/local/share/ca-certificates/ and run update-ca-certificates"; \
+		exit 1; \
+	fi
+	@echo "Extracting current Caddy root CA from the container..."
+	@$(COMPOSE) exec caddy cat /data/caddy/pki/authorities/local/root.crt > /tmp/caddy-root.crt
+	@echo "Adding to system keychain (will prompt for sudo password)..."
+	@sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain /tmp/caddy-root.crt
+	@rm /tmp/caddy-root.crt
+	@echo "Done. Restart your browser to pick up the new trusted CA."
