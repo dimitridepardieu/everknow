@@ -46,3 +46,12 @@
 - Go: `gofmt` (built-in)
 - TypeScript/JS/CSS/JSON: Prettier (formatting + import sorting via `@trivago/prettier-plugin-sort-imports`) + ESLint (with `--fix`)
 - Never commit unformatted code
+
+### Rule 8: IDE Diagnostics
+- After modifying TypeScript / TSX / CSS / JSON config files, call `mcp__ide__getDiagnostics` to surface LSP warnings the developer sees in VS Code but that `tsc` and ESLint may not flag (deprecation notices, soon-removed APIs, missing types, unused imports flagged only by the language server)
+- Especially valuable for "compiles fine but will break in TS N+1" warnings (e.g., `baseUrl` deprecation in TS 6) — these are invisible to CI but visible to the developer's IDE
+
+### Rule 9: Library Documentation
+- For any library / framework / SDK / CLI tool reference (React 19, Tailwind v4, shadcn, Vite 8, Bun, etc.), use `mcp__claude_ai_Context7__resolve-library-id` + `query-docs` instead of relying on training-data memory
+- The project's stack uses bleeding-edge versions whose APIs may have changed since my last training cutoff — Context7 returns current official docs
+- Skip Context7 only for general programming concepts, refactors, or business logic where lib-specific knowledge isn't the issue
