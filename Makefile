@@ -47,6 +47,10 @@ build: ## Build container images
 	$(COMPOSE) build
 
 clean: ## ! Stop the stack and remove all volumes
+	@if [ "$(CONFIRM)" != "yes" ]; then \
+		read -p "Remove all containers and DELETE all data volumes? Type 'yes' to confirm: " REPLY; \
+		[ "$$REPLY" = "yes" ] || { echo "Aborted."; exit 1; }; \
+	fi
 	$(COMPOSE) down -v
 
 ##@ LOGS
@@ -114,6 +118,10 @@ test: ## Run all tests
 ##@ DATABASE
 
 db-reset: ## ! Reset the database (drop + recreate)
+	@if [ "$(CONFIRM)" != "yes" ]; then \
+		read -p "Drop and recreate database '$(POSTGRES_DB)'? Type 'yes' to confirm: " REPLY; \
+		[ "$$REPLY" = "yes" ] || { echo "Aborted."; exit 1; }; \
+	fi
 	$(COMPOSE) exec postgres dropdb -U $(POSTGRES_USER) --force $(POSTGRES_DB)
 	$(COMPOSE) exec postgres createdb -U $(POSTGRES_USER) $(POSTGRES_DB)
 	@echo "Database $(POSTGRES_DB) reset."
