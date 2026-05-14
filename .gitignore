@@ -1,19 +1,8 @@
-# Dependencies
-node_modules/
-
-# Build outputs
+docker/.env
 api/server
 web/dist/
-
-# Environment files (secrets)
-docker/.env
-
-# OS
+node_modules/
 .DS_Store
-
-# IDE
 .vscode/*
 !.vscode/extensions.json
-
-# Temporary files
 tmp/
