@@ -135,6 +135,7 @@ These are noted in the codebase (search for `TODO`):
 5. **Structured logging** — Implement JSON logging in Go API for monitoring
 6. **`docker/compose.prod.yaml`** — `SITE_ADDRESS=flashcardacademy.io` needs to be set
 7. **Postgres least-privilege user (to reassess)** — API currently connects as the `postgres` superuser. Consider creating a dedicated app role with minimal privileges before prod.
+8. **Extend `make fmt` to root-level `.md` files (optional)** — Prettier currently only formats `web/` (the container's mount scope). Could add a `$(COMPOSE) run --rm -v "$(PWD):/repo" -w /repo --no-deps web bunx --bun prettier --write "*.md" "docs/**/*.md"` step. Skip unless drift becomes a real problem.
 
 ## Versions (source of truth: `docker/.env`)
 
