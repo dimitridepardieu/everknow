@@ -19,4 +19,14 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // shadcn ships cva variant configs alongside components in the same file
+    // (Button + buttonVariants). `allowConstantExport: true` doesn't cover this
+    // because cva() returns a function, not a literal. Disable Fast Refresh
+    // enforcement on the generated UI primitives directory.
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

@@ -36,7 +36,6 @@
 - Commit messages in **English**
 - Always include a description body explaining the "why" — not just the "what"
 - **Never** add Co-Authored-By lines
-- Always show the proposed commit to the developer for validation before executing
 
 ### Rule 6: Tailwind CSS — Cursor Pointer
 - Always add `cursor-pointer` to interactive elements (buttons, links, clickable cards, etc.)
