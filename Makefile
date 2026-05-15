@@ -140,7 +140,11 @@ db-fresh: ## ! Reset + auto-migrate + seed in one shot — DEV ONLY
 	@if [ "$(APP_ENV)" != "dev" ]; then \
 		echo "Refused: db-fresh is dev-only (APP_ENV=$(APP_ENV))."; exit 1; \
 	fi
-	@$(MAKE) db-reset CONFIRM=$(CONFIRM)
+	@if [ "$(CONFIRM)" != "yes" ]; then \
+		read -p "Reset database '$(POSTGRES_DB)' and re-seed it from scratch? Type 'yes' to confirm: " REPLY; \
+		[ "$$REPLY" = "yes" ] || { echo "Aborted."; exit 1; }; \
+	fi
+	@$(MAKE) db-reset CONFIRM=yes
 	@echo "Restarting api to re-run migrations..."
 	@$(COMPOSE) restart api >/dev/null
 	@sleep 3
