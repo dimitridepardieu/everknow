@@ -15,7 +15,7 @@ import (
 	"flashcardacademy/api/internal/config"
 	"flashcardacademy/api/internal/db"
 	"flashcardacademy/api/internal/email"
-	"flashcardacademy/api/internal/httpx/middleware"
+	"flashcardacademy/api/internal/middleware"
 	"flashcardacademy/api/internal/session"
 	"flashcardacademy/api/internal/user"
 )

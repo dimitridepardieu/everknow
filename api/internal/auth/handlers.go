@@ -13,7 +13,7 @@ import (
 
 	"flashcardacademy/api/internal/config"
 	"flashcardacademy/api/internal/httpx"
-	"flashcardacademy/api/internal/httpx/middleware"
+	"flashcardacademy/api/internal/middleware"
 	"flashcardacademy/api/internal/session"
 	"flashcardacademy/api/internal/token"
 	"flashcardacademy/api/internal/user"
