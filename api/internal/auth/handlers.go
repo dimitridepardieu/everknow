@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
@@ -88,22 +90,11 @@ func (h *Handlers) Verify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionToken, err := token.New()
-	if err != nil {
-		slog.ErrorContext(r.Context(), "new session token", "err", err)
+	if err := h.issueSession(r.Context(), w, r, u); err != nil {
+		slog.ErrorContext(r.Context(), "issue session", "err", err)
 		h.redirectWithError(w, r, "internal")
 		return
 	}
-	ipAddr := extractClientIP(r)
-	userAgent := r.Header.Get("User-Agent")
-	if _, err := h.sessions.Create(r.Context(), u.ID, sessionToken,
-		time.Now().Add(h.cfg.SessionTTL), ipAddr, &userAgent); err != nil {
-		slog.ErrorContext(r.Context(), "create session", "err", err)
-		h.redirectWithError(w, r, "internal")
-		return
-	}
-
-	session.SetCookie(w, h.cfg.SessionCookieName, sessionToken, h.cfg.SessionTTL, true)
 	slog.InfoContext(r.Context(), "session created", "user_id", u.ID, "new_user", isNewUser)
 
 	target := "/learn"
@@ -169,7 +160,41 @@ func (h *Handlers) UpdateMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	slog.InfoContext(r.Context(), "user role updated", "user_id", u.ID, "from", oldRole, "to", body.Role)
+
+	// Rotate the session: a privilege change is sensitive, so any token
+	// possibly leaked before this point becomes useless. Best-effort delete
+	// of the old session — failing here would still leave the new session
+	// valid, so we only warn.
+	if oldToken := session.ReadCookie(r, h.cfg.SessionCookieName); oldToken != "" {
+		if err := h.sessions.DeleteByToken(r.Context(), oldToken); err != nil {
+			slog.WarnContext(r.Context(), "delete old session on rotation", "err", err)
+		}
+	}
+	if err := h.issueSession(r.Context(), w, r, u); err != nil {
+		slog.ErrorContext(r.Context(), "issue rotated session", "err", err)
+		httpx.WriteError(w, httpx.InternalServer("session rotation failed"))
+		return
+	}
+	slog.InfoContext(r.Context(), "session rotated", "user_id", u.ID)
+
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// issueSession creates a fresh DB session for u and sets the session cookie
+// on w. Caller must invalidate any prior session beforehand if rotation is
+// the intent.
+func (h *Handlers) issueSession(ctx context.Context, w http.ResponseWriter, r *http.Request, u *user.User) error {
+	raw, err := token.New()
+	if err != nil {
+		return fmt.Errorf("new session token: %w", err)
+	}
+	ipAddr := extractClientIP(r)
+	userAgent := r.Header.Get("User-Agent")
+	if _, err := h.sessions.Create(ctx, u.ID, raw, time.Now().Add(h.cfg.SessionTTL), ipAddr, &userAgent); err != nil {
+		return fmt.Errorf("create session: %w", err)
+	}
+	session.SetCookie(w, h.cfg.SessionCookieName, raw, h.cfg.SessionTTL, true)
+	return nil
 }
 
 func (h *Handlers) redirectWithError(w http.ResponseWriter, r *http.Request, code string) {
