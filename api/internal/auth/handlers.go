@@ -13,6 +13,7 @@ import (
 	"flashcardacademy/api/internal/httpx"
 	"flashcardacademy/api/internal/httpx/middleware"
 	"flashcardacademy/api/internal/session"
+	"flashcardacademy/api/internal/token"
 	"flashcardacademy/api/internal/user"
 )
 
@@ -57,13 +58,13 @@ func (h *Handlers) RequestMagicLink(w http.ResponseWriter, r *http.Request) {
 
 // GET /api/auth/verify?token=...
 func (h *Handlers) Verify(w http.ResponseWriter, r *http.Request) {
-	token := r.URL.Query().Get("token")
-	if token == "" {
+	rawToken := r.URL.Query().Get("token")
+	if rawToken == "" {
 		h.redirectWithError(w, r, "missing_token")
 		return
 	}
 
-	identifier, err := h.magic.store.ConsumeByValue(r.Context(), HashToken(token))
+	identifier, err := h.magic.store.ConsumeByValue(r.Context(), token.Hash(rawToken))
 	if err != nil {
 		if !errors.Is(err, ErrVerificationNotFound) {
 			slog.ErrorContext(r.Context(), "consume verification", "err", err)
@@ -87,7 +88,7 @@ func (h *Handlers) Verify(w http.ResponseWriter, r *http.Request) {
 		slog.InfoContext(r.Context(), "user created via magic link", "user_id", u.ID, "email", h.redactEmail(u.Email))
 	}
 
-	sessionToken, err := session.NewToken()
+	sessionToken, err := token.New()
 	if err != nil {
 		slog.ErrorContext(r.Context(), "new session token", "err", err)
 		h.redirectWithError(w, r, "internal")
