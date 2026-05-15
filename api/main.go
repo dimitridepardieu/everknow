@@ -61,7 +61,7 @@ func run() error {
 		return fmt.Errorf("init email sender: %w", err)
 	}
 
-	verificationStore := auth.NewVerificationStore(pool)
+	verificationStore := auth.NewStore(pool)
 	sessionStore := session.NewStore(pool)
 	userStore := user.NewStore(pool)
 	magic := auth.NewMagicLinkSender(verificationStore, sender, cfg.AppBaseURL, cfg.MagicLinkTTL)

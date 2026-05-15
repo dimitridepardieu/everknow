@@ -10,13 +10,13 @@ import (
 )
 
 type MagicLinkSender struct {
-	store      *VerificationStore
+	store      *Store
 	sender     email.Sender
 	appBaseURL string
 	ttl        time.Duration
 }
 
-func NewMagicLinkSender(store *VerificationStore, sender email.Sender, appBaseURL string, ttl time.Duration) *MagicLinkSender {
+func NewMagicLinkSender(store *Store, sender email.Sender, appBaseURL string, ttl time.Duration) *MagicLinkSender {
 	return &MagicLinkSender{
 		store:      store,
 		sender:     sender,

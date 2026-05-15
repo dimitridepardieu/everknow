@@ -30,12 +30,12 @@ func NewHandlers(cfg *config.Config, sessions *session.Store, users *user.Store,
 	return &Handlers{cfg: cfg, sessions: sessions, users: users, magic: magic}
 }
 
-type requestMagicLinkRequest struct {
+type requestMagicLinkBody struct {
 	Email string `json:"email"`
 }
 
 func (h *Handlers) RequestMagicLink(w http.ResponseWriter, r *http.Request) {
-	body, err := httpx.DecodeJSON[requestMagicLinkRequest](r)
+	body, err := httpx.DecodeJSON[requestMagicLinkBody](r)
 	if err != nil {
 		httpx.WriteError(w, err)
 		return
@@ -64,9 +64,9 @@ func (h *Handlers) Verify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	identifier, err := h.magic.store.ConsumeByValue(r.Context(), token.Hash(rawToken))
+	identifier, err := h.magic.store.ConsumeByTokenHash(r.Context(), token.Hash(rawToken))
 	if err != nil {
-		if !errors.Is(err, ErrVerificationNotFound) {
+		if !errors.Is(err, ErrNotFound) {
 			slog.ErrorContext(r.Context(), "consume verification", "err", err)
 		}
 		h.redirectWithError(w, r, "invalid_or_expired_token")
@@ -130,13 +130,13 @@ func (h *Handlers) Me(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-type updateMeRequest struct {
+type updateMeBody struct {
 	Role string `json:"role"`
 }
 
 func (h *Handlers) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	u := middleware.UserFromContext(r.Context())
-	body, err := httpx.DecodeJSON[updateMeRequest](r)
+	body, err := httpx.DecodeJSON[updateMeBody](r)
 	if err != nil {
 		httpx.WriteError(w, err)
 		return
