@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html"
 	"io"
 	"net/http"
 	"time"
@@ -60,9 +61,13 @@ func (s *ResendSender) SendMagicLink(ctx context.Context, to, link string) error
 }
 
 func magicLinkHTML(link string) string {
+	// Escape defensively even though `link` is server-built today: a future
+	// config change feeding any user-controlled value into the URL would
+	// otherwise let HTML or javascript: payloads slip into the email body.
+	safe := html.EscapeString(link)
 	return fmt.Sprintf(`<p>Clique sur le lien ci-dessous pour te connecter à Flashcard Academy :</p>
 <p><a href="%s">Me connecter</a></p>
-<p>Ce lien expire dans 15 minutes. Si tu n'as pas fait cette demande, ignore cet email.</p>`, link)
+<p>Ce lien expire dans 15 minutes. Si tu n'as pas fait cette demande, ignore cet email.</p>`, safe)
 }
 
 func magicLinkText(link string) string {
