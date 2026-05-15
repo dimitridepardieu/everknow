@@ -17,6 +17,9 @@ func Open(ctx context.Context, dsn string) (*sql.DB, error) {
 	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(5)
 	db.SetConnMaxLifetime(5 * time.Minute)
+	// Close idle conns aggressively so a Postgres restart doesn't leave
+	// the pool holding stale connections for 5 minutes (= ConnMaxLifetime).
+	db.SetConnMaxIdleTime(90 * time.Second)
 
 	pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
