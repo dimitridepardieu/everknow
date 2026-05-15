@@ -9,9 +9,10 @@ import (
 	"time"
 )
 
-type ctxKey int
-
-const requestIDKey ctxKey = iota
+// requestIDKey is a distinct unexported type to prevent collisions with
+// other packages writing to the request context. Same pattern as
+// userCtxKey in auth.go.
+type requestIDKey struct{}
 
 const requestIDHeader = "X-Request-ID"
 
@@ -23,7 +24,7 @@ func Logger(next http.Handler) http.Handler {
 		}
 		w.Header().Set(requestIDHeader, reqID)
 
-		ctx := context.WithValue(r.Context(), requestIDKey, reqID)
+		ctx := context.WithValue(r.Context(), requestIDKey{}, reqID)
 		r = r.WithContext(ctx)
 
 		start := time.Now()
