@@ -156,6 +156,14 @@ func (h *Handlers) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	}
 	slog.InfoContext(r.Context(), "user role updated", "user_id", u.ID, "from", oldRole, "to", body.Role)
 
+	// TODO (post-MVP): wrap UpdateRole + DeleteByToken + issueSession in a
+	// single tx. Today they are three separate statements; if the process
+	// dies between them, the user can land in a brief inconsistent state
+	// (role updated but logged out, or old session lingering with new role).
+	// The fix requires the stores to accept *sql.Tx (small refactor); not
+	// worth the churn until we see this happen in practice — re-login
+	// resolves any inconsistency immediately.
+
 	// Rotate the session: a privilege change is sensitive, so any token
 	// possibly leaked before this point becomes useless. Best-effort delete
 	// of the old session — failing here would still leave the new session

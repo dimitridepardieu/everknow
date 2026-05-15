@@ -54,8 +54,11 @@ func (s *ResendSender) SendMagicLink(ctx context.Context, to, link string) error
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
-		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
-		return fmt.Errorf("resend status %d: %s", resp.StatusCode, respBody)
+		// Drain but don't include the body in the error: Resend's 4xx
+		// responses can echo the recipient address, which would defeat
+		// PII redaction once the error reaches slog (CLAUDE.md rule 11).
+		_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, 1024))
+		return fmt.Errorf("resend status %d", resp.StatusCode)
 	}
 	return nil
 }

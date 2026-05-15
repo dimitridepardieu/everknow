@@ -10,6 +10,13 @@ import (
 
 const maxRequestBytes = 1 << 20 // 1MB cap on inbound JSON to defend against runaway payloads
 
+// TODO (post-MVP): pass the *http.ResponseWriter through so MaxBytesReader
+// can write the canonical 413 response when the limit is exceeded. With
+// nil here the limit still applies (Read returns *MaxBytesError) and our
+// decodeError converts it into a 400 BadRequest — functional, just less
+// HTTP-conventional than 413. Refactor when the signature change cost
+// (touching every DecodeJSON caller) becomes trivial alongside another
+// httpx change.
 func DecodeJSON[T any](r *http.Request) (T, error) {
 	var v T
 	r.Body = http.MaxBytesReader(nil, r.Body, maxRequestBytes)
