@@ -209,6 +209,35 @@ CREATE INDEX verifications_type_identifier_idx ON verifications(type, identifier
 
 The `identifier` column stays flexible (email for magic-link, user_id for 2FA, etc.).
 
+## Future session hardening — post-MVP, before public launch
+
+Sessions are currently rotated on role change (the only privilege-altering
+operation today). With a 1-year TTL and re-authentication only via magic
+link, additional rotation triggers should ship before going public.
+Listed by impact for our usage pattern:
+
+- [ ] **Time-based ("sliding") rotation** — biggest single win. At every
+      authenticated request, if the session is older than N days (suggest
+      30), call `issueSession` transparently to swap the cookie. Caps the
+      effective lifetime of any single token to N days rather than 1 year,
+      independently of user behaviour. Requires:
+      - `sessions.last_rotated_at timestamptz` column
+      - check in the auth middleware (or a small helper called from there)
+      - careful concurrency: a parallel request mid-rotation should still
+        accept either the old or new token until the swap settles
+- [ ] **Multi-device "kill all other sessions"** — extend rotation on
+      role change (and other sensitive ops) to delete all other devices'
+      sessions, not just the current one. Becomes relevant when we
+      support more than one device per account.
+- [ ] **Future sensitive-operation triggers** — when email change,
+      payment-method add, or 2FA enrolment land, route them through
+      `issueSession` the same way `UpdateMe` does today.
+- [ ] **"Sign out from all devices" UI** — surface session revocation in
+      settings. Adjacent to DSR self-service.
+- [ ] **Suspicious-activity rotation** — geographic IP jumps, user-agent
+      changes, repeated 401s. Requires monitoring infrastructure (geo-IP
+      DB, signal aggregation). Long-term.
+
 ## GDPR Data Subject Rights (DSR) — post-MVP, before public launch
 
 Solo dev → automation is required to not become a personal bottleneck for
