@@ -73,11 +73,12 @@
 - When in doubt: **don't log it, don't return it** — data minimisation (Art. 5.1.c) is the default
 - IP addresses and `user_id` are PII per CJEU *Breyer* (2016) even when the email is redacted — log retention policy still required before prod
 
-### Rule 14: MVP Pragmatism on Review Findings
-- Review agents (security, reliability, code-review) are calibrated for "production-grade at scale". Many of their findings are real but **disproportionate** for a 0-user MVP. Filter every finding through: actual probability today × impact, vs complexity of the fix.
-- Prefer **accepting a rare edge case with an inline TODO + a slightly degraded UX** over adding abstraction to make the case impossible. A rare re-click beats 30 lines of clever code.
-- Keep clear separation of concerns. Two simple functions that may race once a year beat one "elegant atomic" function that mixes read + write semantically (e.g. `FindByEmail + Create` is more readable than an `INSERT ... ON CONFLICT DO UPDATE ... RETURNING` upsert with `xmax` discrimination). The atomic pattern earns its place when the race is frequent or the impact severe — not pre-emptively.
-- When pushing back on a review finding, explain the rationale to the developer (probability, impact, alternative). The dev decides; the review agent is a peer, not an authority.
+### Rule 12: GitHub Issues & Pull Requests
+- **Audience-first**: issues and PRs must be readable by both **non-developers** (PM, designer, end-user) **and** senior devs. A PM should grasp the goal in under 30 seconds
+- **Issues**: frame the user-facing problem or value, not the implementation. Plain language, concise, no jargon. Title should sound like something a user would say
+- **PRs**: same accessibility as issues, plus **just enough** technical context for a senior dev to understand the approach (1–2 sentences). **Do NOT duplicate the code in the description** — implementation details live in the diff
+- PR body structure: *what changes* (user-visible) → *why* (problem solved) → *key approach* (high-level) → *notable trade-offs* only if material
+- English (Rule 1), no emojis unless requested, no auto-generated boilerplate sections
 
 ### Rule 13: Go Idioms & Anti-Overengineering
 - **Default to stdlib patterns**: when in doubt, mirror how `net/http`, `database/sql`, `errors`, `context` solve the same problem. Effective Go is the baseline; deviate only with a documented reason.
@@ -86,9 +87,7 @@
 - **Context keys = `type k struct{}`** with `ctx.Value(k{})` at read sites. Zero allocation, collision-proof — what the stdlib `context` package docs show.
 - **Vertical-slice packages** (1 package = 1 capability — `auth`, `session`, `user`, each owning handlers + business logic + DB queries). Avoid `handlers/`, `services/`, `repositories/` layering — Java/C# muscle memory with no value at our scale.
 
-### Rule 12: GitHub Issues & Pull Requests
-- **Audience-first**: issues and PRs must be readable by both **non-developers** (PM, designer, end-user) **and** senior devs. A PM should grasp the goal in under 30 seconds
-- **Issues**: frame the user-facing problem or value, not the implementation. Plain language, concise, no jargon. Title should sound like something a user would say
-- **PRs**: same accessibility as issues, plus **just enough** technical context for a senior dev to understand the approach (1–2 sentences). **Do NOT duplicate the code in the description** — implementation details live in the diff
-- PR body structure: *what changes* (user-visible) → *why* (problem solved) → *key approach* (high-level) → *notable trade-offs* only if material
-- English (Rule 1), no emojis unless requested, no auto-generated boilerplate sections
+### Rule 14: Calibrate Review-Agent Findings for MVP Scale
+- Review agents are calibrated for "production at scale". **Filter every finding** by probability × impact, vs complexity of the fix. At 0 users many findings are real but disproportionate.
+- Prefer **accepting a rare edge case** with an inline TODO over adding abstraction to make it impossible. Two simple functions that may race annually beat one "elegant atomic" upsert.
+- When pushing back on a finding, explain probability + impact + alternative. The dev decides; the agent is a peer, not an authority.
