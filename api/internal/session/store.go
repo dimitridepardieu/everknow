@@ -20,20 +20,15 @@ func NewStore(db *sql.DB) *Store { return &Store{db: db} }
 
 // Create stores the token's sha256 hash; the raw value lives only in the
 // client cookie. This way a DB read alone cannot impersonate users.
-func (s *Store) Create(ctx context.Context, userID int64, rawToken string, expiresAt time.Time, ipAddress, userAgent *string) (*Session, error) {
-	var sess Session
-	err := s.db.QueryRowContext(ctx, `
+func (s *Store) Create(ctx context.Context, userID int64, rawToken string, expiresAt time.Time, ipAddress, userAgent *string) error {
+	_, err := s.db.ExecContext(ctx, `
 		INSERT INTO sessions (user_id, token, expires_at, ip_address, user_agent)
 		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id, user_id, expires_at, ip_address, user_agent, created_at, updated_at
-	`, userID, token.Hash(rawToken), expiresAt, ipAddress, userAgent).Scan(
-		&sess.ID, &sess.UserID, &sess.ExpiresAt,
-		&sess.IPAddress, &sess.UserAgent, &sess.CreatedAt, &sess.UpdatedAt,
-	)
+	`, userID, token.Hash(rawToken), expiresAt, ipAddress, userAgent)
 	if err != nil {
-		return nil, fmt.Errorf("insert session: %w", err)
+		return fmt.Errorf("insert session: %w", err)
 	}
-	return &sess, nil
+	return nil
 }
 
 func (s *Store) GetByToken(ctx context.Context, rawToken string) (*Session, error) {

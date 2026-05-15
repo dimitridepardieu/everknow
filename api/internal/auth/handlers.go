@@ -185,8 +185,8 @@ func (h *Handlers) issueSession(ctx context.Context, w http.ResponseWriter, r *h
 	}
 	ipAddr := extractClientIP(r)
 	userAgent := r.Header.Get("User-Agent")
-	if _, err := h.sessions.Create(ctx, u.ID, raw, time.Now().Add(h.cfg.SessionTTL), ipAddr, &userAgent); err != nil {
-		return fmt.Errorf("create session: %w", err)
+	if err := h.sessions.Create(ctx, u.ID, raw, time.Now().Add(h.cfg.SessionTTL), ipAddr, &userAgent); err != nil {
+		return err
 	}
 	session.SetCookie(w, h.cfg.SessionCookieName, raw, h.cfg.SessionTTL, true)
 	return nil
