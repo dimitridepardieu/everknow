@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import { Navigate, createFileRoute } from '@tanstack/react-router'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -8,25 +8,25 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { useUpdateRole } from '@/lib/auth'
+import { useMe, useUpdateRole } from '@/lib/auth'
 import type { Role } from '@/lib/schemas'
 
 export const Route = createFileRoute('/_app/onboarding')({
-  beforeLoad: ({ context }) => {
-    if (context.me.role) {
-      throw redirect({ to: '/learn' })
-    }
-  },
   component: OnboardingPage,
 })
 
 function OnboardingPage() {
-  const navigate = useNavigate()
+  const { data: me } = useMe()
   const mutation = useUpdateRole()
 
-  const handleChoice = async (role: Role) => {
-    await mutation.mutateAsync(role)
-    void navigate({ to: '/learn' })
+  // Auto-redirect once the role lands. After mutation succeeds, useMe()
+  // refetches via the invalidated cache, the component re-renders with
+  // the new role, and <Navigate> takes the user to /learn — no manual
+  // navigate() call needed and no router-context invalidation dance.
+  if (me?.role) return <Navigate to="/learn" />
+
+  const handleChoice = (role: Role) => {
+    mutation.mutate(role)
   }
 
   return (

@@ -1,22 +1,22 @@
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import { Navigate, createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useLogout } from '@/lib/auth'
+import { useLogout, useMe } from '@/lib/auth'
 
 export const Route = createFileRoute('/_app/learn')({
-  beforeLoad: ({ context }) => {
-    if (!context.me.role) {
-      throw redirect({ to: '/onboarding' })
-    }
-  },
   component: LearnPage,
 })
 
 function LearnPage() {
-  const { me } = Route.useRouteContext()
+  const { data: me } = useMe()
   const navigate = useNavigate()
   const mutation = useLogout()
+
+  // _app guarantees me is non-null here (it redirects to /login otherwise),
+  // but TS doesn't know that. Bail defensively rather than assert.
+  if (!me) return null
+  if (!me.role) return <Navigate to="/onboarding" />
 
   const handleLogout = async () => {
     await mutation.mutateAsync()
