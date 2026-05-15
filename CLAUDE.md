@@ -73,6 +73,12 @@
 - When in doubt: **don't log it, don't return it** — data minimisation (Art. 5.1.c) is the default
 - IP addresses and `user_id` are PII per CJEU *Breyer* (2016) even when the email is redacted — log retention policy still required before prod
 
+### Rule 14: MVP Pragmatism on Review Findings
+- Review agents (security, reliability, code-review) are calibrated for "production-grade at scale". Many of their findings are real but **disproportionate** for a 0-user MVP. Filter every finding through: actual probability today × impact, vs complexity of the fix.
+- Prefer **accepting a rare edge case with an inline TODO + a slightly degraded UX** over adding abstraction to make the case impossible. A rare re-click beats 30 lines of clever code.
+- Keep clear separation of concerns. Two simple functions that may race once a year beat one "elegant atomic" function that mixes read + write semantically (e.g. `FindByEmail + Create` is more readable than an `INSERT ... ON CONFLICT DO UPDATE ... RETURNING` upsert with `xmax` discrimination). The atomic pattern earns its place when the race is frequent or the impact severe — not pre-emptively.
+- When pushing back on a review finding, explain the rationale to the developer (probability, impact, alternative). The dev decides; the review agent is a peer, not an authority.
+
 ### Rule 13: Go Idioms & Anti-Overengineering
 - **Default to stdlib patterns**: when in doubt, mirror how `net/http`, `database/sql`, `errors`, `context` solve the same problem. Effective Go is the baseline; deviate only with a documented reason.
 - **Wrap errors only when adding context** (an ID, a path). `fmt.Errorf("open db: %w", err)` over a `sql.Open` error that already says "open db" creates noise like `"open db: open db: ..."`. Return `err` raw when no new info is available.
