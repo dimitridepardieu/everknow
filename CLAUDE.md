@@ -37,10 +37,6 @@
 - Always include a description body explaining the "why" — not just the "what"
 - **Never** add Co-Authored-By lines
 
-### Rule 6: Tailwind CSS — Cursor Pointer
-- Always add `cursor-pointer` to interactive elements (buttons, links, clickable cards, etc.)
-- Tailwind 4 no longer adds `cursor: pointer` automatically on buttons — it must be explicit
-
 ### Rule 7: Code Formatting
 - **Always run `make fmt` before committing** — formats both Go and TypeScript/JS/CSS/JSON
 - Go: `gofmt` (built-in)
@@ -91,3 +87,7 @@
 - Review agents are calibrated for "production at scale". **Filter every finding** by probability × impact, vs complexity of the fix. At 0 users many findings are real but disproportionate.
 - Prefer **accepting a rare edge case** with an inline TODO over adding abstraction to make it impossible. Two simple functions that may race annually beat one "elegant atomic" upsert.
 - When pushing back on a finding, explain probability + impact + alternative. The dev decides; the agent is a peer, not an authority.
+
+### Rule 15: Docker env vars and DB lifecycle traps
+- **`.env` changes are not picked up by `make restart`** — Docker injects env vars at container creation, not at process restart. Use `docker compose -f docker/compose.yaml -f docker/compose.dev.yaml --env-file docker/.env up -d --force-recreate <service>` (or `make rebuild`) after editing `docker/.env`. The running Go process keeps the values it had at boot.
+- **Migrations only run at API boot** — `make db-reset` empties the DB but the embedded migration runner won't re-execute until the api container restarts. Use `make db-fresh` (chains reset + restart api + seed) for the dev workflow rather than calling the steps individually.
