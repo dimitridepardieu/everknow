@@ -1,17 +1,14 @@
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
 
-import { meSchema } from '@/lib/schemas'
+import { meQueryOptions } from '@/lib/auth'
 
 export const Route = createFileRoute('/_app')({
-  beforeLoad: async () => {
-    const res = await fetch('/api/me', { credentials: 'include' })
-    if (res.status === 401) {
+  beforeLoad: async ({ context }) => {
+    const me = await context.queryClient.ensureQueryData(meQueryOptions)
+    if (!me) {
       throw redirect({ to: '/login' })
     }
-    if (!res.ok) {
-      throw new Error(`Failed to load session: ${res.status}`)
-    }
-    return { me: meSchema.parse(await res.json()) }
+    return { me }
   },
   component: AppLayout,
 })

@@ -11,7 +11,11 @@ const queryClient = new QueryClient()
 
 const router = createRouter({
   routeTree,
+  context: { queryClient },
   defaultPreload: 'intent',
+  // Loaders defer to TanStack Query for staleness; never re-fetch on the
+  // router side when the query cache is already fresh.
+  defaultPreloadStaleTime: 0,
   scrollRestoration: true,
 })
 

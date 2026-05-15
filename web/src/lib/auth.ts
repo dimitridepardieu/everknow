@@ -1,28 +1,33 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 
 import { ApiError, apiFetch } from './api'
 import type { Me, Role } from './schemas'
 import { meSchema } from './schemas'
 
-export const meQueryKey = ['me'] as const
+export const meQueryOptions = queryOptions({
+  queryKey: ['me'] as const,
+  queryFn: async (): Promise<Me | null> => {
+    try {
+      const data = await apiFetch<unknown>('/api/me')
+      return meSchema.parse(data)
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        return null
+      }
+      throw err
+    }
+  },
+  staleTime: 60_000,
+  retry: false,
+})
 
 export function useMe() {
-  return useQuery({
-    queryKey: meQueryKey,
-    queryFn: async (): Promise<Me | null> => {
-      try {
-        const data = await apiFetch<unknown>('/api/me')
-        return meSchema.parse(data)
-      } catch (err) {
-        if (err instanceof ApiError && err.status === 401) {
-          return null
-        }
-        throw err
-      }
-    },
-    staleTime: 60_000,
-    retry: false,
-  })
+  return useQuery(meQueryOptions)
 }
 
 export function useRequestMagicLink() {
@@ -44,7 +49,7 @@ export function useUpdateRole() {
         body: JSON.stringify({ role }),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: meQueryKey })
+      queryClient.invalidateQueries({ queryKey: meQueryOptions.queryKey })
     },
   })
 }
@@ -54,7 +59,7 @@ export function useLogout() {
   return useMutation({
     mutationFn: () => apiFetch<void>('/api/auth/logout', { method: 'POST' }),
     onSuccess: () => {
-      queryClient.setQueryData(meQueryKey, null)
+      queryClient.setQueryData(meQueryOptions.queryKey, null)
     },
   })
 }

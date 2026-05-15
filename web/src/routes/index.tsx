@@ -8,13 +8,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { meSchema } from '@/lib/schemas'
+import { meQueryOptions } from '@/lib/auth'
 
 export const Route = createFileRoute('/')({
-  beforeLoad: async () => {
-    const res = await fetch('/api/me', { credentials: 'include' })
-    if (res.ok) {
-      const me = meSchema.parse(await res.json())
+  beforeLoad: async ({ context }) => {
+    const me = await context.queryClient.ensureQueryData(meQueryOptions)
+    if (me) {
       throw redirect({ to: me.role ? '/learn' : '/onboarding' })
     }
   },
