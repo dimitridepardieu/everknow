@@ -69,10 +69,3 @@ func (s *statusRecorder) WriteHeader(code int) {
 	s.wroteHeader = true
 	s.ResponseWriter.WriteHeader(code)
 }
-
-func (s *statusRecorder) Write(b []byte) (int, error) {
-	if !s.wroteHeader {
-		s.wroteHeader = true
-	}
-	return s.ResponseWriter.Write(b)
-}

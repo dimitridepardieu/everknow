@@ -77,15 +77,15 @@ func (h *Handlers) Verify(w http.ResponseWriter, r *http.Request) {
 	isNewUser := false
 	if errors.Is(err, user.ErrNotFound) {
 		u, err = h.users.Create(r.Context(), identifier)
-		isNewUser = true
+		if err == nil {
+			isNewUser = true
+			slog.InfoContext(r.Context(), "user created via magic link", "user_id", u.ID, "email", h.redactEmail(u.Email))
+		}
 	}
 	if err != nil {
 		slog.ErrorContext(r.Context(), "find/create user", "err", err)
 		h.redirectWithError(w, r, "internal")
 		return
-	}
-	if isNewUser {
-		slog.InfoContext(r.Context(), "user created via magic link", "user_id", u.ID, "email", h.redactEmail(u.Email))
 	}
 
 	sessionToken, err := token.New()

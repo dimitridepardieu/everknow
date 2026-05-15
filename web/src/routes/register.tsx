@@ -1,14 +1,11 @@
 import { createFileRoute, useSearch } from '@tanstack/react-router'
-import { z } from 'zod'
+
+import { authSearchSchema } from '@/lib/schemas'
 
 import { AuthForm } from './login'
 
-const searchSchema = z.object({
-  error: z.string().optional(),
-})
-
 export const Route = createFileRoute('/register')({
-  validateSearch: searchSchema,
+  validateSearch: authSearchSchema,
   component: RegisterPage,
 })
 

@@ -1,6 +1,5 @@
 import { useForm } from '@tanstack/react-form'
 import { createFileRoute, useSearch } from '@tanstack/react-router'
-import { z } from 'zod'
 
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -15,14 +14,10 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useRequestMagicLink } from '@/lib/auth'
-import { emailSchema } from '@/lib/schemas'
-
-const searchSchema = z.object({
-  error: z.string().optional(),
-})
+import { authSearchSchema, emailSchema } from '@/lib/schemas'
 
 export const Route = createFileRoute('/login')({
-  validateSearch: searchSchema,
+  validateSearch: authSearchSchema,
   component: LoginPage,
 })
 
