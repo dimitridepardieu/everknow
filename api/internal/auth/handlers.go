@@ -192,19 +192,20 @@ func (h *Handlers) redactEmail(email string) string {
 
 // extractClientIP returns the client's IP without the port, preferring
 // X-Forwarded-For (set by Caddy in front of us) over RemoteAddr (which is
-// the proxy's IP in our setup). Returns nil if no usable IP is found.
+// the proxy's IP in our setup). Returns nil when no parseable IP is found
+// — sessions.ip_address is `inet` and rejects any non-IP string at INSERT.
 func extractClientIP(r *http.Request) *string {
 	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
 		if i := strings.IndexByte(xff, ','); i > 0 {
 			xff = xff[:i]
 		}
 		xff = strings.TrimSpace(xff)
-		if xff != "" {
+		if net.ParseIP(xff) != nil {
 			return &xff
 		}
 	}
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil || host == "" {
+	if err != nil || net.ParseIP(host) == nil {
 		return nil
 	}
 	return &host
