@@ -1,7 +1,7 @@
 CREATE TABLE sessions (
     id          bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id     bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    token       text NOT NULL UNIQUE,
+    token       bytea NOT NULL UNIQUE,
     expires_at  timestamptz NOT NULL,
     ip_address  inet,
     user_agent  text,

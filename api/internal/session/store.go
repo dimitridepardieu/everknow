@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"flashcardacademy/api/internal/token"
 )
 
 var ErrNotFound = errors.New("session not found")
@@ -16,14 +18,16 @@ type Store struct {
 
 func NewStore(db *sql.DB) *Store { return &Store{db: db} }
 
-func (s *Store) Create(ctx context.Context, userID int64, token string, expiresAt time.Time, ipAddress, userAgent *string) (*Session, error) {
+// Create stores the token's sha256 hash; the raw value lives only in the
+// client cookie. This way a DB read alone cannot impersonate users.
+func (s *Store) Create(ctx context.Context, userID int64, rawToken string, expiresAt time.Time, ipAddress, userAgent *string) (*Session, error) {
 	var sess Session
 	err := s.db.QueryRowContext(ctx, `
 		INSERT INTO sessions (user_id, token, expires_at, ip_address, user_agent)
 		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id, user_id, token, expires_at, ip_address, user_agent, created_at, updated_at
-	`, userID, token, expiresAt, ipAddress, userAgent).Scan(
-		&sess.ID, &sess.UserID, &sess.Token, &sess.ExpiresAt,
+		RETURNING id, user_id, expires_at, ip_address, user_agent, created_at, updated_at
+	`, userID, token.Hash(rawToken), expiresAt, ipAddress, userAgent).Scan(
+		&sess.ID, &sess.UserID, &sess.ExpiresAt,
 		&sess.IPAddress, &sess.UserAgent, &sess.CreatedAt, &sess.UpdatedAt,
 	)
 	if err != nil {
@@ -32,14 +36,14 @@ func (s *Store) Create(ctx context.Context, userID int64, token string, expiresA
 	return &sess, nil
 }
 
-func (s *Store) GetByToken(ctx context.Context, token string) (*Session, error) {
+func (s *Store) GetByToken(ctx context.Context, rawToken string) (*Session, error) {
 	var sess Session
 	err := s.db.QueryRowContext(ctx, `
-		SELECT id, user_id, token, expires_at, ip_address, user_agent, created_at, updated_at
+		SELECT id, user_id, expires_at, ip_address, user_agent, created_at, updated_at
 		FROM sessions
 		WHERE token = $1 AND expires_at > now()
-	`, token).Scan(
-		&sess.ID, &sess.UserID, &sess.Token, &sess.ExpiresAt,
+	`, token.Hash(rawToken)).Scan(
+		&sess.ID, &sess.UserID, &sess.ExpiresAt,
 		&sess.IPAddress, &sess.UserAgent, &sess.CreatedAt, &sess.UpdatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -51,8 +55,8 @@ func (s *Store) GetByToken(ctx context.Context, token string) (*Session, error) 
 	return &sess, nil
 }
 
-func (s *Store) DeleteByToken(ctx context.Context, token string) error {
-	if _, err := s.db.ExecContext(ctx, `DELETE FROM sessions WHERE token = $1`, token); err != nil {
+func (s *Store) DeleteByToken(ctx context.Context, rawToken string) error {
+	if _, err := s.db.ExecContext(ctx, `DELETE FROM sessions WHERE token = $1`, token.Hash(rawToken)); err != nil {
 		return fmt.Errorf("delete session: %w", err)
 	}
 	return nil
