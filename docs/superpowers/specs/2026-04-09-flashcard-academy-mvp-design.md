@@ -30,8 +30,18 @@ At signup, the user chooses:
 
 ### Device Model
 
-- Single device per account for MVP
-- Multi-device with child invitation links in roadmap
+- Multi-device per account: each magic-link login creates an independent
+  session. No upper bound enforced today.
+- Self-service session control (see active devices, sign out remotely)
+  is tracked under issue #3 — required before public launch.
+- Child invitation links remain on the roadmap.
+
+> Note: this section originally said "single device per account for MVP"
+> but the implementation in #2 went multi-device by default. Decision
+> assumed in 2026-05-15 because (a) modern users expect multi-device,
+> (b) issue #3 will surface session control to users, and (c) magic-link
+> only as the auth path makes single-device strict too friction-heavy
+> (every device switch = new email round-trip).
 
 ## Core Flow
 
