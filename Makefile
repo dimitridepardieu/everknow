@@ -4,7 +4,7 @@ COMPOSE = docker compose -f docker/compose.yaml -f docker/compose.$(APP_ENV).yam
 
 .DEFAULT_GOAL := help
 
-.PHONY: help up down restart rebuild clean build logs logs-api logs-web logs-caddy logs-postgres api web caddy postgres psql exec-api exec-web exec-caddy exec-postgres exec-psql fmt test db-reset check-versions trust-caddy-ca
+.PHONY: help up down restart rebuild clean build logs logs-api logs-web logs-caddy logs-postgres api web caddy postgres psql exec-api exec-web exec-caddy exec-postgres exec-psql fmt test db-reset db-seed db-fresh check-versions trust-caddy-ca
 
 help:
 	@awk 'BEGIN { \
@@ -117,7 +117,10 @@ test: ## Run all tests
 
 ##@ DATABASE
 
-db-reset: ## ! Reset the database (drop + recreate)
+db-reset: ## ! Reset the database (drop + recreate) — DEV ONLY
+	@if [ "$(APP_ENV)" != "dev" ]; then \
+		echo "Refused: db-reset is dev-only (APP_ENV=$(APP_ENV))."; exit 1; \
+	fi
 	@if [ "$(CONFIRM)" != "yes" ]; then \
 		read -p "Drop and recreate database '$(POSTGRES_DB)'? Type 'yes' to confirm: " REPLY; \
 		[ "$$REPLY" = "yes" ] || { echo "Aborted."; exit 1; }; \
@@ -125,6 +128,27 @@ db-reset: ## ! Reset the database (drop + recreate)
 	$(COMPOSE) exec postgres dropdb -U $(POSTGRES_USER) --force $(POSTGRES_DB)
 	$(COMPOSE) exec postgres createdb -U $(POSTGRES_USER) $(POSTGRES_DB)
 	@echo "Database $(POSTGRES_DB) reset."
+
+db-seed: ## Seed dev database with sample users (idempotent) — DEV ONLY
+	@if [ "$(APP_ENV)" != "dev" ]; then \
+		echo "Refused: db-seed is dev-only (APP_ENV=$(APP_ENV))."; exit 1; \
+	fi
+	@cat api/internal/db/seeds/dev.sql | $(COMPOSE) exec -T postgres psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) -v ON_ERROR_STOP=1
+	@echo "Database seeded."
+
+db-fresh: ## ! Reset + auto-migrate + seed in one shot — DEV ONLY
+	@if [ "$(APP_ENV)" != "dev" ]; then \
+		echo "Refused: db-fresh is dev-only (APP_ENV=$(APP_ENV))."; exit 1; \
+	fi
+	@if [ "$(CONFIRM)" != "yes" ]; then \
+		read -p "Reset database '$(POSTGRES_DB)' and re-seed it from scratch? Type 'yes' to confirm: " REPLY; \
+		[ "$$REPLY" = "yes" ] || { echo "Aborted."; exit 1; }; \
+	fi
+	@$(MAKE) db-reset CONFIRM=yes
+	@echo "Restarting api to re-run migrations..."
+	@$(COMPOSE) restart api >/dev/null
+	@sleep 3
+	@$(MAKE) db-seed
 
 ##@ SETUP
 
