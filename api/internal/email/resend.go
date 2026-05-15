@@ -1,0 +1,74 @@
+package email
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"time"
+)
+
+const resendEndpoint = "https://api.resend.com/emails"
+
+type ResendSender struct {
+	apiKey string
+	from   string
+	client *http.Client
+}
+
+func NewResendSender(apiKey, from string) *ResendSender {
+	return &ResendSender{
+		apiKey: apiKey,
+		from:   from,
+		client: &http.Client{Timeout: 10 * time.Second},
+	}
+}
+
+func (s *ResendSender) SendMagicLink(ctx context.Context, to, link string) error {
+	payload := map[string]any{
+		"from":    s.from,
+		"to":      []string{to},
+		"subject": "Ton lien de connexion à Flashcard Academy",
+		"html":    magicLinkHTML(link),
+		"text":    magicLinkText(link),
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("marshal resend payload: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, resendEndpoint, bytes.NewReader(body))
+	if err != nil {
+		return fmt.Errorf("build resend request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+s.apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("resend http: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
+		return fmt.Errorf("resend status %d: %s", resp.StatusCode, respBody)
+	}
+	return nil
+}
+
+func magicLinkHTML(link string) string {
+	return fmt.Sprintf(`<p>Clique sur le lien ci-dessous pour te connecter à Flashcard Academy :</p>
+<p><a href="%s">Me connecter</a></p>
+<p>Ce lien expire dans 15 minutes. Si tu n'as pas fait cette demande, ignore cet email.</p>`, link)
+}
+
+func magicLinkText(link string) string {
+	return fmt.Sprintf(`Connecte-toi à Flashcard Academy :
+
+%s
+
+Ce lien expire dans 15 minutes. Si tu n'as pas fait cette demande, ignore cet email.`, link)
+}
