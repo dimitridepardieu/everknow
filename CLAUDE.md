@@ -55,3 +55,27 @@
 - For any library / framework / SDK / CLI tool reference (React 19, Tailwind v4, shadcn, Vite 8, Bun, etc.), use `mcp__claude_ai_Context7__resolve-library-id` + `query-docs` instead of relying on training-data memory
 - The project's stack uses bleeding-edge versions whose APIs may have changed since my last training cutoff — Context7 returns current official docs
 - Skip Context7 only for general programming concepts, refactors, or business logic where lib-specific knowledge isn't the issue
+
+### Rule 10: Structured Logging
+- Use `slog.InfoContext` / `slog.WarnContext` / `slog.ErrorContext` (not bare `slog.Info`) so request_id, user_id, and other ctx-scoped attributes propagate properly
+- Log **business events explicitly in services** (`magic link sent`, `user role updated`), not just HTTP requests in middleware
+- Use slog **attributes** as `(key, value)` pairs, never embed values in the message string (`"user role updated", "user_id", id` not `fmt.Sprintf("user %d updated", id)`)
+- The middleware logger automatically includes `user_id` when authenticated; services should add it manually for business events
+- **Never log**: request bodies, tokens (session, magic-link, JWT), raw cookies, passwords, API keys
+- For PII handling in logs, see Rule 11
+
+### Rule 11: PII Handling (GDPR)
+- The following are **PII under GDPR Art. 4** and must be treated with care: email, name, phone number, IP address, user agent, geolocation, child profile data, any free-text user content
+- **In logs**: PII must be redacted in prod via `RedactEmail()` (or equivalent helper). Dev keeps clear values for debugging convenience — `cfg.IsDev()` is the gate
+- **In API responses**: only return a user's own PII; never expose another user's PII (always scope by `user_id` from context)
+- **In DB**: storage is legitimate under Art. 6.1.b (necessary for contract execution), but every user must be able to **export** and **delete** their own data — see DSR endpoints in `docs/plans/`
+- **In error messages to the client**: never echo PII back when avoidable (`"invalid email"` not `"user@example.com is invalid"`)
+- When in doubt: **don't log it, don't return it** — data minimisation (Art. 5.1.c) is the default
+- IP addresses and `user_id` are PII per CJEU *Breyer* (2016) even when the email is redacted — log retention policy still required before prod
+
+### Rule 12: GitHub Issues & Pull Requests
+- **Audience-first**: issues and PRs must be readable by both **non-developers** (PM, designer, end-user) **and** senior devs. A PM should grasp the goal in under 30 seconds
+- **Issues**: frame the user-facing problem or value, not the implementation. Plain language, concise, no jargon. Title should sound like something a user would say
+- **PRs**: same accessibility as issues, plus **just enough** technical context for a senior dev to understand the approach (1–2 sentences). **Do NOT duplicate the code in the description** — implementation details live in the diff
+- PR body structure: *what changes* (user-visible) → *why* (problem solved) → *key approach* (high-level) → *notable trade-offs* only if material
+- English (Rule 1), no emojis unless requested, no auto-generated boilerplate sections
