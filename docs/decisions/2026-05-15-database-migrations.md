@@ -50,6 +50,95 @@ desynchronise.
   delay server startup and may trip orchestrator health checks. Not a concern
   yet (small tables, simple schema).
 
+## Risks and mitigations
+
+Auto-on-boot is convenient but not free. Below are the risks we explicitly
+considered, with mitigations and verdicts at our current scale.
+
+### 1. Broken migration deployed by mistake
+
+A SQL bug in a migration ships to prod, the boot fails, the app is down.
+
+- ✅ Each migration runs in a transaction → on failure, the DB is rolled
+  back, no half-applied state
+- ✅ Fail-fast on boot → the orchestrator's health check fails, you can
+  detect and roll back to the previous binary
+- ⚠️ Missing today: CI tests that re-run all migrations against a temporary
+  database. **Should be in place before the first non-test user signs up.**
+
+### 2. Long-running migration blocking boot
+
+`ALTER TABLE users ADD COLUMN ...` on 50M rows can take minutes. During
+that time, the new binary doesn't serve, health checks fail, downtime.
+
+- ❌ Auto-on-boot has no way to separate "migrate" from "serve"
+- ✅ Risk is **nil today** (no production data, tiny tables)
+- ⚠️ Becomes real around ~10k–100k rows, and is the primary trigger for
+  the "switch to a separate migrate step" path described in *When to
+  revisit* below
+
+### 3. "Wrong moment" — can't deploy code without the pending migration
+
+You want a hotfix at 14:00 but the same branch contains a risky migration
+you'd rather run at 03:00 in a maintenance window.
+
+- ❌ Auto-boot couples them by design — the binary contains both
+- ✅ Workaround: cherry-pick the hotfix without the migration into a
+  separate deploy. Requires git discipline.
+- This trade-off is **deliberate**: coupling code and schema prevents the
+  much worse "deployed v2 forgot to migrate" class of bugs. At our
+  one-person, one-instance scale, scheduling rigidity is the lesser evil.
+
+### 4. Destructive migration accident
+
+`DROP TABLE users` ends up in a migration via copy-paste or merge mistake.
+Auto-boot executes it. Data is gone.
+
+- ❌ The runner has no "guard mode" that would refuse destructive DDL
+- ✅ Universal mitigation: **automated Postgres backups** (must be in
+  place before the first user signs up — it's not specific to this
+  decision)
+- ✅ Code review on every migration
+
+### 5. No dry-run
+
+You want to preview what a migration would do without applying it.
+
+- ❌ The runner has no `--dry-run` flag
+- ✅ Workaround: copy prod DB locally, apply migration, observe. Covers
+  most real cases.
+
+### Synthesis
+
+| Risk | Today | At scale (10k+ users) | Mitigation path |
+|---|---|---|---|
+| Broken migration | Moderate | Low | CI integration tests |
+| Long migration → downtime | Nil | **High** | Switch to CLI sub-command (cf. *When to revisit*) |
+| Wrong moment | Low (solo controls deploy) | Moderate | Cherry-pick discipline, then maintenance windows |
+| Destructive accident | Moderate | Low | Backups + code review (mandatory before launch) |
+| No dry-run | Low | Moderate | Copy-prod-locally workflow, eventually a flag |
+
+### The real long-term defence: Expand/Contract pattern
+
+The most robust protection isn't about *when* migrations run, it's about
+*what they do*. The industry pattern (used by GitHub, Stripe, Shopify) is
+to never write a single destructive migration. Instead:
+
+1. **Expand**: add the new schema element as nullable / additive (no
+   rewrites). Old code keeps working, new code can opt in.
+2. **Backfill**: a separate async script populates the new element.
+3. **Migrate code**: switch the application to use the new element.
+4. **Contract** (much later, as a separate deploy): once you're confident,
+   drop the old element.
+
+Each step is forward-only and reversible by re-deploying the previous
+binary. Auto-on-boot + Expand/Contract is a very solid combo because no
+single boot ever does anything irreversible.
+
+We don't enforce this pattern today (we have no destructive migrations
+yet), but it's the discipline to adopt before any column rename, type
+change, or deletion in prod.
+
 ## When to revisit
 
 Switch to a separate migrate step (CLI sub-command + init container) **when
