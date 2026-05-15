@@ -184,7 +184,7 @@ func (h *Handlers) issueSession(ctx context.Context, w http.ResponseWriter, r *h
 		return fmt.Errorf("new session token: %w", err)
 	}
 	ipAddr := extractClientIP(r)
-	userAgent := r.Header.Get("User-Agent")
+	userAgent := truncate(r.Header.Get("User-Agent"), 512)
 	if err := h.sessions.Create(ctx, u.ID, raw, time.Now().Add(h.cfg.SessionTTL), ipAddr, &userAgent); err != nil {
 		return err
 	}
@@ -210,23 +210,30 @@ func (h *Handlers) redactEmail(email string) string {
 	return email[:1] + "***" + email[at:]
 }
 
-// extractClientIP returns the client's IP without the port, preferring
-// X-Forwarded-For (set by Caddy in front of us) over RemoteAddr (which is
-// the proxy's IP in our setup). Returns nil when no parseable IP is found
-// — sessions.ip_address is `inet` and rejects any non-IP string at INSERT.
+// extractClientIP reads X-Real-IP, which Caddy sets from its own observation
+// of the TCP peer and which clients cannot forge (Caddy strips any incoming
+// X-Forwarded-For at the proxy boundary, see Caddyfile). Falls back to
+// RemoteAddr for direct connections (tests, dev without Caddy).
+// sessions.ip_address is inet and rejects non-IP strings, so we validate
+// before returning.
 func extractClientIP(r *http.Request) *string {
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		if i := strings.IndexByte(xff, ','); i > 0 {
-			xff = xff[:i]
-		}
-		xff = strings.TrimSpace(xff)
-		if net.ParseIP(xff) != nil {
-			return &xff
-		}
+	ip := strings.TrimSpace(r.Header.Get("X-Real-IP"))
+	if net.ParseIP(ip) != nil {
+		return &ip
 	}
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil || net.ParseIP(host) == nil {
 		return nil
 	}
 	return &host
+}
+
+// truncate caps a string at maxLen bytes. Used to bound user-controlled
+// headers (User-Agent can legitimately be hundreds of bytes; an attacker
+// can send much more) before storing them in DB columns.
+func truncate(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen]
 }

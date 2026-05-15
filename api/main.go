@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -68,7 +69,7 @@ func run() error {
 	handlers := auth.NewHandlers(cfg, sessionStore, userStore, magic)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /api/health", health)
+	mux.HandleFunc("GET /api/health", health(pool))
 	mux.HandleFunc("POST /api/auth/request", handlers.RequestMagicLink)
 	mux.HandleFunc("GET /api/auth/verify", handlers.Verify)
 	mux.Handle("POST /api/auth/logout", middleware.RequireUser(http.HandlerFunc(handlers.Logout)))
@@ -86,7 +87,12 @@ func run() error {
 		Addr:              cfg.APIAddr,
 		Handler:           handler,
 		ReadHeaderTimeout: 5 * time.Second,
-		IdleTimeout:       60 * time.Second,
+		// ReadTimeout + WriteTimeout bound slow-loris and slow-write
+		// attacks. Without them, a single attacker can park 25 (= pool
+		// MaxOpenConns) goroutines indefinitely and starve the service.
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
 
 	serverErr := make(chan error, 1)
@@ -127,7 +133,18 @@ func setupLogger(cfg *config.Config) {
 	slog.SetDefault(slog.New(handler))
 }
 
-func health(w http.ResponseWriter, _ *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintln(w, "ok")
+// health returns 503 when the database is unreachable so the orchestrator's
+// liveness check picks up DB outages rather than letting traffic hit a
+// silently-broken instance.
+func health(pool *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+		if err := pool.PingContext(ctx); err != nil {
+			http.Error(w, "db unreachable", http.StatusServiceUnavailable)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "ok")
+	}
 }
