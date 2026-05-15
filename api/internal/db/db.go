@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	_ "github.com/lib/pq"
+	_ "github.com/lib/pq" // registers the "postgres" driver with database/sql
 )
 
 func Open(ctx context.Context, dsn string) (*sql.DB, error) {
