@@ -73,6 +73,13 @@
 - When in doubt: **don't log it, don't return it** — data minimisation (Art. 5.1.c) is the default
 - IP addresses and `user_id` are PII per CJEU *Breyer* (2016) even when the email is redacted — log retention policy still required before prod
 
+### Rule 13: Go Idioms & Anti-Overengineering
+- **Default to stdlib patterns**: when in doubt, mirror how `net/http`, `database/sql`, `errors`, `context` solve the same problem. Effective Go is the baseline; deviate only with a documented reason.
+- **Wrap errors only when adding context** (an ID, a path). `fmt.Errorf("open db: %w", err)` over a `sql.Open` error that already says "open db" creates noise like `"open db: open db: ..."`. Return `err` raw when no new info is available.
+- **YAGNI on visibility and signatures**: don't export what no caller imports; don't return what callers always `_`-discard. Both broadcast intent the code doesn't have.
+- **Context keys = `type k struct{}`** with `ctx.Value(k{})` at read sites. Zero allocation, collision-proof — what the stdlib `context` package docs show.
+- **Vertical-slice packages** (1 package = 1 capability — `auth`, `session`, `user`, each owning handlers + business logic + DB queries). Avoid `handlers/`, `services/`, `repositories/` layering — Java/C# muscle memory with no value at our scale.
+
 ### Rule 12: GitHub Issues & Pull Requests
 - **Audience-first**: issues and PRs must be readable by both **non-developers** (PM, designer, end-user) **and** senior devs. A PM should grasp the goal in under 30 seconds
 - **Issues**: frame the user-facing problem or value, not the implementation. Plain language, concise, no jargon. Title should sound like something a user would say
