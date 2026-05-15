@@ -13,19 +13,31 @@
 
 	encode zstd gzip
 
-	# TODO (prod): add security headers before going live.
-	# Minimum set to add:
-	#   - Strict-Transport-Security (HSTS) — force HTTPS, 1 year max-age
-	#   - X-Content-Type-Options: nosniff — block MIME sniffing
-	#   - X-Frame-Options: DENY — block clickjacking via iframe
-	#   - Referrer-Policy: strict-origin-when-cross-origin — limit referer leakage
-	#   - -Server — remove the Server: Caddy header
-	# Later, when the frontend is stable:
-	#   - Content-Security-Policy — fine-grained resource allowlist (XSS defense)
-	#   - Permissions-Policy — disable unused browser APIs
+	# Security headers applied to every response.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options    "nosniff"
+		X-Frame-Options           "DENY"
+		Referrer-Policy           "no-referrer"
+		-Server
+	}
+
+	# The magic-link verify URL carries a single-use token in its query
+	# string. Skip access logging here so the token cannot be replayed by
+	# anyone with read access to the log sink within its 15-min TTL. The
+	# Go API still logs the resulting business event ("session created")
+	# with user_id but no token.
+	log_skip /api/auth/verify
 
 	handle /api/* {
-		reverse_proxy api:8080
+		reverse_proxy api:8080 {
+			# Drop any client-supplied X-Forwarded-For (otherwise the
+			# left-most value is attacker-controlled and our logging /
+			# future rate-limiter trusts the wrong IP). We attest the
+			# real client IP ourselves via X-Real-IP.
+			header_up -X-Forwarded-For
+			header_up X-Real-IP {client_ip}
+		}
 	}
 
 	handle {
