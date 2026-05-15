@@ -4,7 +4,7 @@ COMPOSE = docker compose -f docker/compose.yaml -f docker/compose.$(APP_ENV).yam
 
 .DEFAULT_GOAL := help
 
-.PHONY: help up down restart rebuild clean build logs logs-api logs-web logs-caddy logs-postgres api web caddy postgres psql exec-api exec-web exec-caddy exec-postgres exec-psql fmt test db-reset check-versions trust-caddy-ca
+.PHONY: help up down restart rebuild clean build logs logs-api logs-web logs-caddy logs-postgres api web caddy postgres psql exec-api exec-web exec-caddy exec-postgres exec-psql fmt test db-reset db-seed check-versions trust-caddy-ca
 
 help:
 	@awk 'BEGIN { \
@@ -125,6 +125,10 @@ db-reset: ## ! Reset the database (drop + recreate)
 	$(COMPOSE) exec postgres dropdb -U $(POSTGRES_USER) --force $(POSTGRES_DB)
 	$(COMPOSE) exec postgres createdb -U $(POSTGRES_USER) $(POSTGRES_DB)
 	@echo "Database $(POSTGRES_DB) reset."
+
+db-seed: ## Seed dev database with sample users (idempotent)
+	@cat api/internal/db/seeds/dev.sql | $(COMPOSE) exec -T postgres psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) -v ON_ERROR_STOP=1
+	@echo "Database seeded."
 
 ##@ SETUP
 
