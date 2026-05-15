@@ -34,7 +34,6 @@ type requestMagicLinkRequest struct {
 	Email string `json:"email"`
 }
 
-// POST /api/auth/request
 func (h *Handlers) RequestMagicLink(w http.ResponseWriter, r *http.Request) {
 	body, err := httpx.DecodeJSON[requestMagicLinkRequest](r)
 	if err != nil {
@@ -58,7 +57,6 @@ func (h *Handlers) RequestMagicLink(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, map[string]string{"status": "sent"})
 }
 
-// GET /api/auth/verify?token=...
 func (h *Handlers) Verify(w http.ResponseWriter, r *http.Request) {
 	rawToken := r.URL.Query().Get("token")
 	if rawToken == "" {
@@ -104,7 +102,6 @@ func (h *Handlers) Verify(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, target, http.StatusSeeOther)
 }
 
-// POST /api/auth/logout
 func (h *Handlers) Logout(w http.ResponseWriter, r *http.Request) {
 	u := middleware.UserFromContext(r.Context())
 	if token := session.ReadCookie(r, h.cfg.SessionCookieName); token != "" {
@@ -126,7 +123,6 @@ type meResponse struct {
 	Role  *string `json:"role"`
 }
 
-// GET /api/me
 func (h *Handlers) Me(w http.ResponseWriter, r *http.Request) {
 	u := middleware.UserFromContext(r.Context())
 	httpx.WriteJSON(w, http.StatusOK, meResponse{
@@ -138,7 +134,6 @@ type updateMeRequest struct {
 	Role string `json:"role"`
 }
 
-// PATCH /api/me
 func (h *Handlers) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	u := middleware.UserFromContext(r.Context())
 	body, err := httpx.DecodeJSON[updateMeRequest](r)

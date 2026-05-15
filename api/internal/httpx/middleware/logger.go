@@ -44,11 +44,6 @@ func Logger(next http.Handler) http.Handler {
 	})
 }
 
-func RequestIDFromContext(ctx context.Context) string {
-	id, _ := ctx.Value(requestIDKey).(string)
-	return id
-}
-
 func newRequestID() string {
 	var b [8]byte
 	_, _ = rand.Read(b[:])

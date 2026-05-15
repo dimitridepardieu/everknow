@@ -15,9 +15,8 @@ import (
 //go:embed migrations/*.sql
 var migrationsFS embed.FS
 
-// migrationLockKey is an arbitrary int64 used with pg_advisory_lock to ensure
-// only one process runs migrations at a time, even if multiple API instances
-// boot concurrently. Value: ASCII for "FCAMG" (Flashcard Academy MiGrations).
+// migrationLockKey is an arbitrary int64 for pg_advisory_lock so concurrent
+// API boots serialize migrations rather than race on the schema.
 const migrationLockKey int64 = 0x4643414d47
 
 type migration struct {
@@ -33,7 +32,6 @@ func Migrate(ctx context.Context, db *sql.DB) error {
 	}
 	defer conn.Close()
 
-	// Acquire advisory lock — auto-released when conn closes.
 	if _, err := conn.ExecContext(ctx, `SELECT pg_advisory_lock($1)`, migrationLockKey); err != nil {
 		return fmt.Errorf("acquire advisory lock: %w", err)
 	}

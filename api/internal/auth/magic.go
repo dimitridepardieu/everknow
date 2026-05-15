@@ -30,7 +30,7 @@ func NewMagicLinkSender(store *VerificationStore, sender email.Sender, appBaseUR
 func (m *MagicLinkSender) Request(ctx context.Context, recipientEmail string) error {
 	raw, err := token.New()
 	if err != nil {
-		return fmt.Errorf("generate token: %w", err)
+		return err
 	}
 	expiresAt := time.Now().Add(m.ttl)
 	if err := m.store.Create(ctx, recipientEmail, token.Hash(raw), expiresAt); err != nil {

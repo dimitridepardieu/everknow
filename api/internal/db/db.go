@@ -12,7 +12,7 @@ import (
 func Open(ctx context.Context, dsn string) (*sql.DB, error) {
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		return nil, fmt.Errorf("open db: %w", err)
+		return nil, err
 	}
 	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(5)
