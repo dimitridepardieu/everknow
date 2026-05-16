@@ -88,6 +88,11 @@
 - Prefer **accepting a rare edge case** with an inline TODO over adding abstraction to make it impossible. Two simple functions that may race annually beat one "elegant atomic" upsert.
 - When pushing back on a finding, explain probability + impact + alternative. The dev decides; the agent is a peer, not an authority.
 
+### Rule 16: Mitigate state drift in long conversations
+- Your view of a file is a snapshot from the last Read. After many edits, a long conversation, or a context compaction, **re-read before modifying** — the file may have changed (linter formatting, user edits, your own earlier writes) since your snapshot. An Edit that fails on `old_string not found` is the visible failure; the silent one is editing successfully against a stale mental model and producing incoherent code.
+- **Verify before asserting**: when you're about to claim "function X returns Y", "this route is wired", "this column has constraint Z", "this env var is set" — if you haven't grep'd / read / tested it in the current task, do that first. Memory of facts from earlier in the conversation drifts; the file system, the DB, and the running container are the source of truth.
+- This rule is the family head of Rule 8 (IDE diagnostics after TS/TSX edits), Rule 9 (Context7 for library docs), and Rule 14 (verify review-agent claims). All four share the same defence: when in doubt, fetch reality from a source other than your own memory.
+
 ### Rule 15: Docker env vars and DB lifecycle traps
 - **`.env` changes are not picked up by `make restart`** — Docker injects env vars at container creation, not at process restart. Use `docker compose -f docker/compose.yaml -f docker/compose.dev.yaml --env-file docker/.env up -d --force-recreate <service>` (or `make rebuild`) after editing `docker/.env`. The running Go process keeps the values it had at boot.
 - **Migrations only run at API boot** — `make db-reset` empties the DB but the embedded migration runner won't re-execute until the api container restarts. Use `make db-fresh` (chains reset + restart api + seed) for the dev workflow rather than calling the steps individually.
