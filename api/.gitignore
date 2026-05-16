@@ -1,4 +1,7 @@
-server
+# Anchored to the api/ module root so the rule ignores a stray top-level
+# binary (e.g. from `go build .`) without swallowing legitimate packages
+# named "server".
+/server
 tmp/
 *.test
 coverage.out
