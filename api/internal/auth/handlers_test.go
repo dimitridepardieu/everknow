@@ -126,8 +126,11 @@ func TestVerify_TokenIsSingleUse(t *testing.T) {
 
 	first := env.Client.Get(t, "/api/auth/verify?token="+tok)
 	first.Body.Close()
-	if first.StatusCode != http.StatusSeeOther || first.Header.Get("Location") == "/login?error=invalid_or_expired_token" {
-		t.Fatalf("first verify should succeed; got %d %s", first.StatusCode, first.Header.Get("Location"))
+	if first.StatusCode != http.StatusSeeOther {
+		t.Fatalf("first verify status: got %d want 303", first.StatusCode)
+	}
+	if loc := first.Header.Get("Location"); loc != "/onboarding" {
+		t.Fatalf("first verify location: got %q want /onboarding", loc)
 	}
 
 	// Replay from a fresh client (no cookie jar) on the SAME env — same DB,
@@ -221,6 +224,18 @@ func TestUpdateMe_RotatesSession(t *testing.T) {
 		t.Fatalf("session not rotated: old=%q new=%q", oldCookie, newCookie)
 	}
 
+	// The OLD session row must be DELETE'd from DB — not just the cookie
+	// updated on the client. Otherwise an attacker holding the old cookie
+	// could keep using it. Count == 1 means rotation deleted the prior row
+	// before issuing the new one.
+	var sessionCount int
+	if err := env.DB.QueryRow(`SELECT count(*) FROM sessions`).Scan(&sessionCount); err != nil {
+		t.Fatalf("count sessions: %v", err)
+	}
+	if sessionCount != 1 {
+		t.Fatalf("session not rotated in DB: %d rows want 1", sessionCount)
+	}
+
 	// The new cookie works for /me.
 	me := env.Client.Get(t, "/api/me")
 	me.Body.Close()
@@ -238,6 +253,19 @@ func TestLogout_ClearsSession(t *testing.T) {
 	logout.Body.Close()
 	if logout.StatusCode != http.StatusNoContent {
 		t.Fatalf("logout status: got %d want 204", logout.StatusCode)
+	}
+
+	// The session row must be DELETE'd from DB. Without this check the test
+	// would still pass if DeleteByToken silently failed (the handler logs a
+	// warn and continues) — the cookie jar would be empty so /me would 401
+	// anyway, but an attacker who captured the cookie before logout could
+	// still replay it via curl.
+	var sessionCount int
+	if err := env.DB.QueryRow(`SELECT count(*) FROM sessions`).Scan(&sessionCount); err != nil {
+		t.Fatalf("count sessions: %v", err)
+	}
+	if sessionCount != 0 {
+		t.Fatalf("session row not deleted: %d rows want 0", sessionCount)
 	}
 
 	me := env.Client.Get(t, "/api/me")

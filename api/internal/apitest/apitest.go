@@ -186,6 +186,14 @@ func openAndPing(dsn string) (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open: %w", err)
 	}
+	// Bound the test pool explicitly — Go's default MaxOpenConns is 0
+	// (unlimited), which lets concurrent test binaries burst-open more
+	// connections than Postgres's max_connections allows. A small ceiling
+	// is plenty for our serial test execution.
+	pool.SetMaxOpenConns(5)
+	pool.SetMaxIdleConns(2)
+	pool.SetConnMaxLifetime(5 * time.Minute)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	if err := pool.PingContext(ctx); err != nil {
