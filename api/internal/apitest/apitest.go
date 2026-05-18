@@ -157,11 +157,11 @@ func initDB() (*sql.DB, error) {
 	}
 
 	// Try the test DB first. The expected error on a fresh install is
-	// SQLSTATE 3D000 (invalid_catalog_name), which means "database doesn't
-	// exist" — at which point we create it via the admin DB.
+	// SQLSTATE 3D000 (invalid_catalog_name) — the DB doesn't exist yet —
+	// at which point we create it via the admin DB and retry.
 	pool, err := openAndPing(testURL)
 	if err != nil {
-		if !isMissingDatabase(err) {
+		if !strings.Contains(err.Error(), "3D000") {
 			return nil, err
 		}
 		if err := createTestDB(testURL); err != nil {
@@ -231,14 +231,6 @@ func createTestDB(testURL string) error {
 		}
 	}
 	return nil
-}
-
-func isMissingDatabase(err error) bool {
-	// lib/pq exposes the SQLSTATE via the error string; "invalid_catalog_name"
-	// or "does not exist" both signal a missing database.
-	msg := err.Error()
-	return strings.Contains(msg, "3D000") ||
-		strings.Contains(msg, "does not exist")
 }
 
 // truncate clears all user-facing tables but keeps the schema and migration
