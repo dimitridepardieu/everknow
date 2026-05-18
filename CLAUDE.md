@@ -96,3 +96,19 @@
 - Your view of a file is a snapshot from the last Read. After many edits, a long conversation, or a context compaction, **re-read before modifying** — the file may have changed (linter formatting, user edits, your own earlier writes) since your snapshot. An Edit that fails on `old_string not found` is the visible failure; the silent one is editing successfully against a stale mental model and producing incoherent code.
 - **Verify before asserting**: when you're about to claim "function X returns Y", "this route is wired", "this column has constraint Z", "this env var is set" — if you haven't grep'd / read / tested it in the current task, do that first. Memory of facts from earlier in the conversation drifts; the file system, the DB, and the running container are the source of truth.
 - This rule is the family head of Rule 8 (IDE diagnostics after TS/TSX edits), Rule 9 (Context7 for library docs), and Rule 14 (verify review-agent claims). All four share the same defence: when in doubt, fetch reality from a source other than your own memory.
+
+### Rule 17: Three buckets for a value (env, business const, test fixture)
+Every literal in the code belongs to exactly one of these three buckets — never two, never undecided. Mis-bucketing creates either silent configurability where there should be invariants, or operator-facing noise where there should be code-local fixtures.
+- **`.env` / `.env.example`** — values an **operator may configure**, that differ between environments, or that are infrastructure-dependent. Loaded via `config.Load()` and `os.Getenv`. Examples: `DATABASE_URL`, `SESSION_TTL_HOURS`, `EMAIL_PROVIDER`, `APP_BASE_URL`.
+- **Business `const`** — values that are **part of a protocol or convention** and identical in every environment. Live in the package that uses them, never read from env. Examples: `SessionCookieName="fa_session"` (cookie protocol), `migrationLockKey=0x4643414d47` (advisory-lock convention).
+- **Test fixture `const`** — synthetic values used **only by tests** that could be replaced with any equivalent and the test would still pass. Live in `_test.go` files or in an `internal/<x>test` package. Examples: `appBaseURL="https://test.flashcardacademy.local"` (apitest), `testEmail="alice@example.test"`.
+
+**Decision heuristic when introducing a new literal**:
+1. Could an operator ever want to change this without recompiling? → bucket 1.
+2. Is this used in production code? → bucket 2.
+3. Otherwise → bucket 3.
+
+**Tells of a mis-bucketed value**:
+- A test fixture in `.env.example` — pollutes operator config with values that don't actually configure anything.
+- A business constant read via `os.Getenv("FOO", default)` — invites accidental override that breaks invariants nobody documented.
+- A production value hard-coded in source — forces a code change + redeploy for what should be a config flip.
