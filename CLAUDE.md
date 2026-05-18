@@ -112,3 +112,68 @@ Every literal in the code belongs to exactly one of these three buckets — neve
 - A test fixture in `.env.example` — pollutes operator config with values that don't actually configure anything.
 - A business constant read via `os.Getenv("FOO", default)` — invites accidental override that breaks invariants nobody documented.
 - A production value hard-coded in source — forces a code change + redeploy for what should be a config flip.
+
+### Rule 18: Go architecture, Effective Go essentials & code smells (companion to Rule 13)
+
+Rule 13 covers Go idioms at the syntax level (error wrapping, context keys, vertical slice). Rule 18 covers **what to keep an eye on when designing or reviewing Go code** — naming, package boundaries, abstraction discipline, and the smells that quietly grow into rewrites.
+
+#### A. Effective Go essentials (the parts that matter daily)
+- **Package names**: short, lowercase, no underscores, no plural (`session`, not `sessions` or `session_pkg`). The package name is part of every external reference (`session.Store`) — repeating it in type names creates `session.SessionStore` (stutter). Stutter is the #1 naming bug in Go beginners.
+- **Receiver names**: 1-3 letters, consistent across all methods of a type (`func (s *Store) Create(...)` and `func (s *Store) Get(...)`, never `func (store *Store)` then `func (s *Store)` on the same type). Not `self`, not `this`.
+- **Interfaces live with the consumer, not the producer**: if `auth.Handlers` needs to send emails, `auth` declares the `Sender` interface (1-method, consumer-side). `email` exports concrete `*ConsoleSender` and `*ResendSender`. This inverts the OO instinct and is the Go default — see `io.Reader`, `io.Writer`, defined in `io` (the consumer) not in `os` (the producer).
+- **Small interfaces**: 1-3 methods. `io.Reader` has one. If an interface has 5+ methods, it's almost always a code smell (you're describing a class, not a capability).
+- **Pointer vs value receivers**: pointer when the method mutates, when the struct is large (>4 fields you actively use), or when consistency demands it (if one method needs pointer, all methods of that type use pointer). Don't mix.
+- **Doc comments**: start with the name of the identifier. `// Store persists sessions in Postgres.` not `// This is the session store.`. `go doc` relies on this.
+- **`init()` is almost always a smell**: prefer explicit constructors called from `main`. `init()` runs at import time, is hard to test, and creates implicit ordering dependencies between packages.
+
+#### B. Architecture invariants for this codebase
+- **Vertical-slice direction of dependency**: domain packages (`auth`, `session`, `user`, `email`, `token`) may depend on each other in **one direction** — from "feature" to "primitive". `auth` depends on `user` and `session` (it composes them). `user` does NOT depend on `auth`. If a primitive package needs something from a feature package, the design is upside down.
+- **No domain package may depend on `middleware`**: `middleware` is infra. Helpers that extract domain types from context (`UserFromContext`) belong in the domain package that owns the type, not in `middleware`.
+- **Single composition root**: every `*Handlers`, `*Store`, `*Sender` is wired in exactly one place per process — `main.go` for prod, `apitest.New` for tests. Adding a second wiring point (a "factory", a "registry") needs a documented reason.
+- **Each package owns its own errors**: `auth.ErrNotFound`, `session.ErrNotFound`, `user.ErrNotFound`. They are deliberately distinct: callers can `errors.Is(err, user.ErrNotFound)` without ambiguity. Don't centralise errors in a shared `errors/` package — that's the layered-architecture instinct.
+
+#### C. Code smells — what to flag, what to fix, what to ignore at MVP
+
+Flag in review **and** propose a fix:
+- **God file** (any single `.go` file > ~400 lines, or > 6 exported types/functions). Likely two responsibilities glued together.
+- **God struct** (any struct with > 8 fields, or holding a `*config.Config` pointer for only 2 values it uses). The fields probably want to be 2-3 smaller structs.
+- **Stutter** (`session.SessionStore`, `user.UserService`). Always fixable, always worth fixing.
+- **Interface with 1 implementation** that isn't a test seam. Speculative abstraction — delete it, use the concrete type, re-introduce the interface the day a second implementation arrives.
+- **Function with > 4 parameters** (excluding `ctx`). Either group into a struct or split the function. `func Foo(ctx, a, b, c, d, e)` is a tell that `Foo` does too much.
+- **Comment compensating for a bad name** (`// expire is the TTL in seconds` on a field called `expire`). Rename the field to `ttlSeconds` and delete the comment.
+- **Repeated 3-tuple of arguments** across multiple functions (e.g., always passing `email, ip, userAgent` together). Data clump — promote to a struct.
+- **`context.TODO()` anywhere outside a `main` package**. Either you have a context (use it) or you don't (accept `context.Background()` explicitly with a comment).
+
+Flag with a TODO (don't necessarily fix at MVP):
+- A 3-line function used once. Inlining costs nothing now; the abstraction earns its name when there's a second caller.
+- A package with only 1 exported symbol used once. Maybe it belongs in the calling package.
+- Tests that mock something that could be real (file system, time) when a real version is cheap.
+
+Ignore at MVP scale (per Rule 14):
+- "We could parallelize this" on a code path executed < 100x/day.
+- "We could cache this" on a function whose total latency is < 50ms.
+- Theoretical TOCTOU on operations the user does once per session.
+
+#### D. Heuristics for introducing abstractions (the "rule of 2 then 3")
+- **First time** you need a behaviour: write it inline.
+- **Second time**: copy-paste. Yes, really. Two near-duplicates teach you the *shape* of the abstraction better than premature design.
+- **Third time**: extract — and only now you know which parameters are common and which are accidental.
+
+This is the single most important heuristic against Claude's default bias toward abstraction.
+
+#### E. Tells that should trigger extra scrutiny
+
+When you (Claude) encounter any of these in code you're about to write or review, **pause and re-justify**:
+- "Let me extract a helper" → has this been written ≥ 3 times? If not, inline.
+- "I'll add an interface for testability" → can you test with the concrete type + a real or fake instance? If yes, no interface yet.
+- "I need to share this across packages" → does it belong in *both* packages (smell — wrong boundary), or in a third (likely a new vertical slice)?
+- "I'll wrap this error with more context" → does the new wrapping add information the original didn't have? If not, return raw (Rule 13).
+- "I'll add an options struct" → are there already ≥ 3 optional parameters? If not, just take the params directly.
+- "I'll make this configurable" → can the operator legitimately want to change this? If not, it's a business const (Rule 17).
+
+#### F. What to do when in doubt
+1. **Read the stdlib**. Pick a similar problem (file I/O? look at `os` + `io`. Network? look at `net/http`.) and mirror the shape.
+2. **Read the existing codebase**. If `auth` solves a similar problem one way, `user` should solve its analogous problem the same way unless there's a documented reason to diverge.
+3. **Default to less**: less interface surface, fewer packages, fewer parameters, fewer abstractions. You can always add later. Removing is harder.
+
+This rule's defaults are deliberately conservative because Claude's training-data prior is "add structure". The codebase prior is "remove structure until it hurts". Where the two conflict, the codebase wins.
