@@ -39,9 +39,7 @@ import (
 	"flashcardacademy/api/internal/user"
 )
 
-// SessionCookieName is exported so handler tests can assert cookie presence
-// against the same name the harness configures into config.Config — keeping
-// them in sync via a single constant rather than two copies that could drift.
+// SessionCookieName — single source of truth, also written into cfg below.
 const SessionCookieName = "fa_test_session"
 
 const appBaseURL = "https://test.flashcardacademy.local"
