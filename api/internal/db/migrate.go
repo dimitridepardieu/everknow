@@ -41,10 +41,15 @@ func Migrate(ctx context.Context, db *sql.DB) error {
 	// connection until ConnMaxLifetime (5 min), and a concurrent API
 	// instance booting up would block on pg_advisory_lock for that long.
 	// Uses a fresh context so a cancelled parent ctx doesn't skip cleanup.
+	// A failed unlock is logged loudly: we can't recover here, but operators
+	// need to know that the lock may still hold and that subsequent boots
+	// could stall until ConnMaxLifetime expires.
 	defer func() {
 		unlockCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		_, _ = conn.ExecContext(unlockCtx, `SELECT pg_advisory_unlock($1)`, migrationLockKey)
+		if _, err := conn.ExecContext(unlockCtx, `SELECT pg_advisory_unlock($1)`, migrationLockKey); err != nil {
+			slog.Error("advisory unlock failed — lock may hold until ConnMaxLifetime", "err", err)
+		}
 	}()
 
 	if _, err := conn.ExecContext(ctx, `
