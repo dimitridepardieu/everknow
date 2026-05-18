@@ -5,6 +5,10 @@ services:
       target: dev
       args:
         AIR_VERSION: ${AIR_VERSION}
+    environment:
+      # Only consumed by `go test`. Merged with (not replacing) the base
+      # environment declared in compose.yaml.
+      - TEST_DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${TEST_POSTGRES_DB}?sslmode=disable
     volumes:
       - ../api:/app
     ports:

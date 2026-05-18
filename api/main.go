@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -16,7 +15,7 @@ import (
 	"flashcardacademy/api/internal/config"
 	"flashcardacademy/api/internal/db"
 	"flashcardacademy/api/internal/email"
-	"flashcardacademy/api/internal/middleware"
+	"flashcardacademy/api/internal/server"
 	"flashcardacademy/api/internal/session"
 	"flashcardacademy/api/internal/user"
 )
@@ -66,24 +65,16 @@ func run() error {
 	sessionStore := session.NewStore(pool)
 	userStore := user.NewStore(pool)
 	magic := auth.NewMagicLinkSender(verificationStore, sender, cfg.AppBaseURL, cfg.MagicLinkTTL)
-	handlers := auth.NewHandlers(cfg, sessionStore, userStore, magic)
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /api/health", health(pool))
-	mux.HandleFunc("POST /api/auth/request", handlers.RequestMagicLink)
-	mux.HandleFunc("GET /api/auth/verify", handlers.Verify)
-	mux.Handle("POST /api/auth/logout", middleware.RequireUser(http.HandlerFunc(handlers.Logout)))
-	mux.Handle("GET /api/me", middleware.RequireUser(http.HandlerFunc(handlers.Me)))
-	mux.Handle("PATCH /api/me", middleware.RequireUser(http.HandlerFunc(handlers.UpdateMe)))
+	handler := server.NewHandler(server.Deps{
+		Cfg:      cfg,
+		Pool:     pool,
+		Sessions: sessionStore,
+		Users:    userStore,
+		Magic:    magic,
+	})
 
-	// Order matters: Recover (outer) → Auth (inject user) → Logger (sees user) → mux.
-	// Logger runs inside Auth so it can include user_id in the per-request log line.
-	var handler http.Handler = mux
-	handler = middleware.Logger(handler)
-	handler = middleware.Auth(cfg.SessionCookieName, sessionStore, userStore)(handler)
-	handler = middleware.Recover(handler)
-
-	server := &http.Server{
+	srv := &http.Server{
 		Addr:              cfg.APIAddr,
 		Handler:           handler,
 		ReadHeaderTimeout: 5 * time.Second,
@@ -98,7 +89,7 @@ func run() error {
 	serverErr := make(chan error, 1)
 	go func() {
 		slog.Info("api listening", "addr", cfg.APIAddr, "env", cfg.Env)
-		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			serverErr <- err
 		}
 		close(serverErr)
@@ -115,7 +106,7 @@ func run() error {
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	if err := server.Shutdown(shutdownCtx); err != nil {
+	if err := srv.Shutdown(shutdownCtx); err != nil {
 		return fmt.Errorf("graceful shutdown: %w", err)
 	}
 	slog.Info("api stopped")
@@ -131,20 +122,4 @@ func setupLogger(cfg *config.Config) {
 		handler = slog.NewJSONHandler(os.Stdout, opts)
 	}
 	slog.SetDefault(slog.New(handler))
-}
-
-// health returns 503 when the database is unreachable so the orchestrator's
-// liveness check picks up DB outages rather than letting traffic hit a
-// silently-broken instance.
-func health(pool *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
-		defer cancel()
-		if err := pool.PingContext(ctx); err != nil {
-			http.Error(w, "db unreachable", http.StatusServiceUnavailable)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, "ok")
-	}
 }

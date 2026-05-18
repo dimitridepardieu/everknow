@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 //go:embed migrations/*.sql
@@ -35,6 +36,21 @@ func Migrate(ctx context.Context, db *sql.DB) error {
 	if _, err := conn.ExecContext(ctx, `SELECT pg_advisory_lock($1)`, migrationLockKey); err != nil {
 		return fmt.Errorf("acquire advisory lock: %w", err)
 	}
+	// Release the session-scoped advisory lock before the conn is returned
+	// to the pool — otherwise the lock stays held on the underlying TCP
+	// connection until ConnMaxLifetime (5 min), and a concurrent API
+	// instance booting up would block on pg_advisory_lock for that long.
+	// Uses a fresh context so a cancelled parent ctx doesn't skip cleanup.
+	// A failed unlock is logged loudly: we can't recover here, but operators
+	// need to know that the lock may still hold and that subsequent boots
+	// could stall until ConnMaxLifetime expires.
+	defer func() {
+		unlockCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if _, err := conn.ExecContext(unlockCtx, `SELECT pg_advisory_unlock($1)`, migrationLockKey); err != nil {
+			slog.Error("advisory unlock failed — lock may hold until ConnMaxLifetime", "err", err)
+		}
+	}()
 
 	if _, err := conn.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS schema_migrations (
