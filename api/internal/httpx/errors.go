@@ -25,6 +25,10 @@ func InternalServer(msg string) *Error {
 	return &Error{Status: http.StatusInternalServerError, Code: "internal", Message: msg}
 }
 
+func TooManyRequests(msg string) *Error {
+	return &Error{Status: http.StatusTooManyRequests, Code: "rate_limited", Message: msg}
+}
+
 // WriteError serialises any error as JSON. Known *Error values keep their
 // status; everything else degrades to 500 with a generic message so internal
 // details never leak to the client.

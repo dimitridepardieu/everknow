@@ -55,6 +55,34 @@ func TestRequestMagicLink_UnknownEmail_StillReturnsOK(t *testing.T) {
 	}
 }
 
+func TestRequestMagicLink_RateLimitedPerEmail(t *testing.T) {
+	// The email bucket is 3 / hour (see server.magicLinkLimitPerEmail).
+	// Three requests succeed; the fourth must be 429 with a Retry-After
+	// header. We don't assert that the message reveals which dimension
+	// triggered (IP vs email) — that opacity is part of the design.
+	env := apitest.New(t)
+
+	for i := 0; i < 3; i++ {
+		resp := env.Client.PostJSON(t, "/api/auth/request", map[string]string{"email": testEmail})
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("request %d: status %d want 200", i+1, resp.StatusCode)
+		}
+	}
+
+	rejected := env.Client.PostJSON(t, "/api/auth/request", map[string]string{"email": testEmail})
+	defer rejected.Body.Close()
+	if rejected.StatusCode != http.StatusTooManyRequests {
+		t.Fatalf("4th request: status %d want 429", rejected.StatusCode)
+	}
+	if ra := rejected.Header.Get("Retry-After"); ra == "" {
+		t.Fatalf("Retry-After header missing on 429")
+	}
+	if env.Emails.Count() != 3 {
+		t.Fatalf("emails sent: got %d want 3 (4th must be rate-limited before send)", env.Emails.Count())
+	}
+}
+
 func TestVerify_NewUser_RedirectsToOnboarding(t *testing.T) {
 	env := apitest.New(t)
 

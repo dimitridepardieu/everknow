@@ -8,26 +8,37 @@ import (
 	"net"
 	"net/http"
 	"net/mail"
+	"strconv"
 	"strings"
 	"time"
 
 	"flashcardacademy/api/internal/config"
 	"flashcardacademy/api/internal/httpx"
 	"flashcardacademy/api/internal/middleware"
+	"flashcardacademy/api/internal/ratelimit"
 	"flashcardacademy/api/internal/session"
 	"flashcardacademy/api/internal/token"
 	"flashcardacademy/api/internal/user"
 )
 
 type Handlers struct {
-	cfg      *config.Config
-	sessions *session.Store
-	users    *user.Store
-	magic    *MagicLinkSender
+	cfg          *config.Config
+	sessions     *session.Store
+	users        *user.Store
+	magic        *MagicLinkSender
+	ipLimiter    *ratelimit.Limiter // nil = disabled
+	emailLimiter *ratelimit.Limiter // nil = disabled
 }
 
-func NewHandlers(cfg *config.Config, sessions *session.Store, users *user.Store, magic *MagicLinkSender) *Handlers {
-	return &Handlers{cfg: cfg, sessions: sessions, users: users, magic: magic}
+func NewHandlers(cfg *config.Config, sessions *session.Store, users *user.Store, magic *MagicLinkSender, ipLimiter, emailLimiter *ratelimit.Limiter) *Handlers {
+	return &Handlers{
+		cfg:          cfg,
+		sessions:     sessions,
+		users:        users,
+		magic:        magic,
+		ipLimiter:    ipLimiter,
+		emailLimiter: emailLimiter,
+	}
 }
 
 type requestMagicLinkBody struct {
@@ -46,7 +57,30 @@ func (h *Handlers) RequestMagicLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: rate-limit per email + per IP to prevent magic-link spam.
+	// Evaluate both buckets unconditionally and return the max retry-after.
+	// Returning early on the first failure would let an attacker infer which
+	// dimension is throttled (spam one IP to confirm IP-bucket, or one email
+	// from many IPs to confirm email-bucket), defeating the goal of opaque
+	// 429s. Same anti-enumeration intent as the unknown-email branch below.
+	ipKey := ""
+	if ip := extractClientIP(r); ip != nil {
+		ipKey = *ip
+	}
+	okIP, retryIP := true, time.Duration(0)
+	if ipKey != "" {
+		okIP, retryIP = h.ipLimiter.Allow(ipKey)
+	}
+	okEmail, retryEmail := h.emailLimiter.Allow(em)
+	if !okIP || !okEmail {
+		retry := retryIP
+		if retryEmail > retry {
+			retry = retryEmail
+		}
+		w.Header().Set("Retry-After", retryAfterSeconds(retry))
+		httpx.WriteError(w, httpx.TooManyRequests("too many requests"))
+		return
+	}
+
 	if err := h.magic.Request(r.Context(), em); err != nil {
 		slog.ErrorContext(r.Context(), "magic link request failed", "err", err, "email", h.redactEmail(em))
 		// Intentionally swallow the error: never reveal failure to the client
@@ -244,4 +278,18 @@ func truncate(s string, maxLen int) string {
 		return s
 	}
 	return s[:maxLen]
+}
+
+// retryAfterSeconds renders d as the integer number of seconds expected by
+// the HTTP Retry-After header (RFC 9110 §10.2.3). A sub-second remainder is
+// rounded up so the client never retries one tick too early.
+func retryAfterSeconds(d time.Duration) string {
+	secs := int64(d / time.Second)
+	if d%time.Second > 0 {
+		secs++
+	}
+	if secs < 1 {
+		secs = 1
+	}
+	return strconv.FormatInt(secs, 10)
 }
