@@ -154,12 +154,12 @@ func (h *Handlers) Verify(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) Logout(w http.ResponseWriter, r *http.Request) {
 	u := middleware.UserFromContext(r.Context())
-	if token := session.ReadCookie(r, h.cfg.SessionCookieName); token != "" {
+	if token := session.ReadCookie(r); token != "" {
 		if err := h.sessions.DeleteByToken(r.Context(), token); err != nil {
 			slog.WarnContext(r.Context(), "delete session", "err", err)
 		}
 	}
-	session.ClearCookie(w, h.cfg.SessionCookieName, true)
+	session.ClearCookie(w, true)
 	if u != nil {
 		slog.InfoContext(r.Context(), "user logged out", "user_id", u.ID)
 	}
@@ -218,7 +218,7 @@ func (h *Handlers) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	// possibly leaked before this point becomes useless. Best-effort delete
 	// of the old session — failing here would still leave the new session
 	// valid, so we only warn.
-	if oldToken := session.ReadCookie(r, h.cfg.SessionCookieName); oldToken != "" {
+	if oldToken := session.ReadCookie(r); oldToken != "" {
 		if err := h.sessions.DeleteByToken(r.Context(), oldToken); err != nil {
 			slog.WarnContext(r.Context(), "delete old session on rotation", "err", err)
 		}
@@ -246,7 +246,7 @@ func (h *Handlers) issueSession(ctx context.Context, w http.ResponseWriter, r *h
 	if err := h.sessions.Create(ctx, u.ID, raw, time.Now().Add(h.cfg.SessionTTL), ipAddr, &userAgent); err != nil {
 		return err
 	}
-	session.SetCookie(w, h.cfg.SessionCookieName, raw, h.cfg.SessionTTL, true)
+	session.SetCookie(w, raw, h.cfg.SessionTTL, true)
 	return nil
 }
 

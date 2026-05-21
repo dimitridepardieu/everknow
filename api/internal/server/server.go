@@ -58,7 +58,7 @@ func NewHandler(d Deps) http.Handler {
 	// Logger runs inside Auth so it can include user_id in the per-request log line.
 	var h http.Handler = mux
 	h = middleware.Logger(h)
-	h = middleware.Auth(d.Cfg.SessionCookieName, d.Sessions, d.Users)(h)
+	h = middleware.Auth(d.Sessions, d.Users)(h)
 	h = middleware.Recover(h)
 	return h
 }

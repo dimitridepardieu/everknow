@@ -16,16 +16,15 @@ const (
 )
 
 type Config struct {
-	Env               string
-	APIAddr           string
-	DatabaseURL       string
-	AppBaseURL        string
-	EmailProvider     EmailProvider
-	EmailFrom         string
-	ResendAPIKey      string
-	SessionCookieName string
-	SessionTTL        time.Duration
-	MagicLinkTTL      time.Duration
+	Env           string
+	APIAddr       string
+	DatabaseURL   string
+	AppBaseURL    string
+	EmailProvider EmailProvider
+	EmailFrom     string
+	ResendAPIKey  string
+	SessionTTL    time.Duration
+	MagicLinkTTL  time.Duration
 }
 
 func (c *Config) IsDev() bool  { return c.Env == "dev" }
@@ -60,16 +59,15 @@ func Load() (*Config, error) {
 	}
 
 	return &Config{
-		Env:               envOr("APP_ENV", "dev"),
-		APIAddr:           ":" + envOr("API_PORT", "8080"),
-		DatabaseURL:       dbURL,
-		AppBaseURL:        appBaseURL,
-		EmailProvider:     provider,
-		EmailFrom:         envOr("EMAIL_FROM", "hello@flashcardacademy.io"),
-		ResendAPIKey:      os.Getenv("RESEND_API_KEY"),
-		SessionCookieName: envOr("SESSION_COOKIE_NAME", "fa_session"),
-		SessionTTL:        time.Duration(sessionTTLHours) * time.Hour,
-		MagicLinkTTL:      time.Duration(magicTTLMin) * time.Minute,
+		Env:           envOr("APP_ENV", "dev"),
+		APIAddr:       ":" + envOr("API_PORT", "8080"),
+		DatabaseURL:   dbURL,
+		AppBaseURL:    appBaseURL,
+		EmailProvider: provider,
+		EmailFrom:     envOr("EMAIL_FROM", "hello@flashcardacademy.io"),
+		ResendAPIKey:  os.Getenv("RESEND_API_KEY"),
+		SessionTTL:    time.Duration(sessionTTLHours) * time.Hour,
+		MagicLinkTTL:  time.Duration(magicTTLMin) * time.Minute,
 	}, nil
 }
 
