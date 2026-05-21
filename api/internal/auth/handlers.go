@@ -65,6 +65,15 @@ func (h *Handlers) RequestMagicLink(w http.ResponseWriter, r *http.Request) {
 	ipKey := ""
 	if ip := extractClientIP(r); ip != nil {
 		ipKey = *ip
+	} else {
+		// In prod, Caddy always sets X-Real-IP (Caddyfile L38-39). A miss
+		// here means an infra regression (Caddy mis-config, future deploy
+		// without a proxy) that silently disables the IP rate-limit half
+		// of the defence. Log loudly so the warn rate itself becomes the
+		// alert; the client gets no signal.
+		slog.WarnContext(r.Context(), "magic link: no client IP, skipping IP rate limit",
+			"has_x_real_ip", r.Header.Get("X-Real-IP") != "",
+		)
 	}
 	okIP, retryIP := true, time.Duration(0)
 	if ipKey != "" {
@@ -76,6 +85,16 @@ func (h *Handlers) RequestMagicLink(w http.ResponseWriter, r *http.Request) {
 		if retryEmail > retry {
 			retry = retryEmail
 		}
+		// Server-side log carries the dimension flags so we can answer
+		// "is somebody trying to bomb a victim right now" from logs. The
+		// client response stays opaque (no dimension hint) — same
+		// anti-enumeration property as the comment above.
+		slog.WarnContext(r.Context(), "magic link rate limited",
+			"ip_bucket_exceeded", !okIP,
+			"email_bucket_exceeded", !okEmail,
+			"email", h.redactEmail(em),
+			"retry_after_seconds", retryAfterSeconds(retry),
+		)
 		w.Header().Set("Retry-After", retryAfterSeconds(retry))
 		httpx.WriteError(w, httpx.TooManyRequests("too many requests"))
 		return
