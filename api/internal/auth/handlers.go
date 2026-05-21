@@ -259,15 +259,19 @@ func (h *Handlers) redactEmail(email string) string {
 // sessions.ip_address is inet and rejects non-IP strings, so we validate
 // before returning.
 func extractClientIP(r *http.Request) *string {
-	ip := strings.TrimSpace(r.Header.Get("X-Real-IP"))
-	if net.ParseIP(ip) != nil {
-		return &ip
+	if parsed := net.ParseIP(strings.TrimSpace(r.Header.Get("X-Real-IP"))); parsed != nil {
+		s := parsed.String()
+		return &s
 	}
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil || net.ParseIP(host) == nil {
+	if err != nil {
 		return nil
 	}
-	return &host
+	if parsed := net.ParseIP(host); parsed != nil {
+		s := parsed.String()
+		return &s
+	}
+	return nil
 }
 
 // truncate caps a string at maxLen bytes. Used to bound user-controlled
