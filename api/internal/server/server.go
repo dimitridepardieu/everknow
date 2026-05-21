@@ -13,11 +13,27 @@ import (
 	"flashcardacademy/api/internal/auth"
 	"flashcardacademy/api/internal/config"
 	"flashcardacademy/api/internal/middleware"
+	"flashcardacademy/api/internal/ratelimit"
 	"flashcardacademy/api/internal/session"
 	"flashcardacademy/api/internal/user"
 )
 
+// Magic-link request limits. Defense against email-bombing a third party and
+// against runaway Resend bills. Values are protocol constants, not operator
+// config (Rule 17 #2): an "operator override" would weaken a security control
+// nobody documented changing. If we need to tune, it lands in a code review.
+const (
+	magicLinkLimitPerIP     = 5
+	magicLinkWindowPerIP    = 10 * time.Minute
+	magicLinkLimitPerEmail  = 3
+	magicLinkWindowPerEmail = time.Hour
+)
+
 type Deps struct {
+	// Ctx scopes background goroutines (e.g. rate-limit sweepers) to the
+	// server's lifetime. Cancel it to make them exit cleanly — main uses
+	// the shutdown signal context, tests use t.Context().
+	Ctx      context.Context
 	Cfg      *config.Config
 	Pool     *sql.DB
 	Sessions *session.Store
@@ -26,7 +42,9 @@ type Deps struct {
 }
 
 func NewHandler(d Deps) http.Handler {
-	handlers := auth.NewHandlers(d.Cfg, d.Sessions, d.Users, d.Magic)
+	ipLimiter := ratelimit.New(d.Ctx, magicLinkLimitPerIP, magicLinkWindowPerIP)
+	emailLimiter := ratelimit.New(d.Ctx, magicLinkLimitPerEmail, magicLinkWindowPerEmail)
+	handlers := auth.NewHandlers(d.Cfg, d.Sessions, d.Users, d.Magic, ipLimiter, emailLimiter)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/health", health(d.Pool))

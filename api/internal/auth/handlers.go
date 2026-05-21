@@ -8,26 +8,37 @@ import (
 	"net"
 	"net/http"
 	"net/mail"
+	"strconv"
 	"strings"
 	"time"
 
 	"flashcardacademy/api/internal/config"
 	"flashcardacademy/api/internal/httpx"
 	"flashcardacademy/api/internal/middleware"
+	"flashcardacademy/api/internal/ratelimit"
 	"flashcardacademy/api/internal/session"
 	"flashcardacademy/api/internal/token"
 	"flashcardacademy/api/internal/user"
 )
 
 type Handlers struct {
-	cfg      *config.Config
-	sessions *session.Store
-	users    *user.Store
-	magic    *MagicLinkSender
+	cfg          *config.Config
+	sessions     *session.Store
+	users        *user.Store
+	magic        *MagicLinkSender
+	ipLimiter    *ratelimit.Limiter
+	emailLimiter *ratelimit.Limiter
 }
 
-func NewHandlers(cfg *config.Config, sessions *session.Store, users *user.Store, magic *MagicLinkSender) *Handlers {
-	return &Handlers{cfg: cfg, sessions: sessions, users: users, magic: magic}
+func NewHandlers(cfg *config.Config, sessions *session.Store, users *user.Store, magic *MagicLinkSender, ipLimiter, emailLimiter *ratelimit.Limiter) *Handlers {
+	return &Handlers{
+		cfg:          cfg,
+		sessions:     sessions,
+		users:        users,
+		magic:        magic,
+		ipLimiter:    ipLimiter,
+		emailLimiter: emailLimiter,
+	}
 }
 
 type requestMagicLinkBody struct {
@@ -46,7 +57,46 @@ func (h *Handlers) RequestMagicLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: rate-limit per email + per IP to prevent magic-link spam.
+	// Evaluate both buckets unconditionally so the 429 doesn't leak which
+	// dimension throttled — same anti-enumeration intent as the
+	// unknown-email branch below. Side-effect: both buckets record the
+	// attempt even when one rejects, making the limiter slightly stricter
+	// than a pure leaky-bucket reading. Acceptable until false positives.
+	ipKey := ""
+	if ip := extractClientIP(r); ip != nil {
+		ipKey = *ip
+	} else {
+		// In prod, Caddy always sets X-Real-IP (Caddyfile L38-39). A miss
+		// here means an infra regression (Caddy mis-config, future deploy
+		// without a proxy) that silently disables the IP rate-limit half
+		// of the defence. Log loudly so the warn rate itself becomes the
+		// alert; the client gets no signal.
+		slog.WarnContext(r.Context(), "magic link: no client IP, skipping IP rate limit",
+			"has_x_real_ip", r.Header.Get("X-Real-IP") != "",
+		)
+	}
+	okIP, retryIP := true, time.Duration(0)
+	if ipKey != "" {
+		okIP, retryIP = h.ipLimiter.Allow(ipKey)
+	}
+	okEmail, retryEmail := h.emailLimiter.Allow(em)
+	if !okIP || !okEmail {
+		retry := retryIP
+		if retryEmail > retry {
+			retry = retryEmail
+		}
+		// Server-side log keeps the dimension flags; the 429 response stays opaque.
+		slog.WarnContext(r.Context(), "magic link rate limited",
+			"ip_bucket_exceeded", !okIP,
+			"email_bucket_exceeded", !okEmail,
+			"email", h.redactEmail(em),
+			"retry_after_seconds", retryAfterSeconds(retry),
+		)
+		w.Header().Set("Retry-After", retryAfterSeconds(retry))
+		httpx.WriteError(w, httpx.TooManyRequests("too many requests"))
+		return
+	}
+
 	if err := h.magic.Request(r.Context(), em); err != nil {
 		slog.ErrorContext(r.Context(), "magic link request failed", "err", err, "email", h.redactEmail(em))
 		// Intentionally swallow the error: never reveal failure to the client
@@ -225,15 +275,19 @@ func (h *Handlers) redactEmail(email string) string {
 // sessions.ip_address is inet and rejects non-IP strings, so we validate
 // before returning.
 func extractClientIP(r *http.Request) *string {
-	ip := strings.TrimSpace(r.Header.Get("X-Real-IP"))
-	if net.ParseIP(ip) != nil {
-		return &ip
+	if parsed := net.ParseIP(strings.TrimSpace(r.Header.Get("X-Real-IP"))); parsed != nil {
+		s := parsed.String()
+		return &s
 	}
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil || net.ParseIP(host) == nil {
+	if err != nil {
 		return nil
 	}
-	return &host
+	if parsed := net.ParseIP(host); parsed != nil {
+		s := parsed.String()
+		return &s
+	}
+	return nil
 }
 
 // truncate caps a string at maxLen bytes. Used to bound user-controlled
@@ -244,4 +298,18 @@ func truncate(s string, maxLen int) string {
 		return s
 	}
 	return s[:maxLen]
+}
+
+// retryAfterSeconds renders d as the integer number of seconds expected by
+// the HTTP Retry-After header (RFC 9110 §10.2.3). A sub-second remainder is
+// rounded up so the client never retries one tick too early.
+func retryAfterSeconds(d time.Duration) string {
+	secs := int64(d / time.Second)
+	if d%time.Second > 0 {
+		secs++
+	}
+	if secs < 1 {
+		secs = 1
+	}
+	return strconv.FormatInt(secs, 10)
 }
