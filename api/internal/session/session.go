@@ -19,26 +19,26 @@ type Session struct {
 	UpdatedAt time.Time
 }
 
-func SetCookie(w http.ResponseWriter, token string, ttl time.Duration, secure bool) {
+func SetCookie(w http.ResponseWriter, token string, ttl time.Duration) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     CookieName,
 		Value:    token,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   secure,
+		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
 		Expires:  time.Now().Add(ttl),
 		MaxAge:   int(ttl.Seconds()),
 	})
 }
 
-func ClearCookie(w http.ResponseWriter, secure bool) {
+func ClearCookie(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     CookieName,
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   secure,
+		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
 		Expires:  time.Unix(0, 0),
 		MaxAge:   -1,
