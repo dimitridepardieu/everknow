@@ -241,7 +241,14 @@ func (h *Handlers) issueSession(ctx context.Context, w http.ResponseWriter, r *h
 		return fmt.Errorf("new session token: %w", err)
 	}
 	ipAddr := extractClientIP(r)
-	userAgent := truncate(r.Header.Get("User-Agent"), 512)
+	// Bound stored User-Agent length: clients can legitimately send
+	// hundreds of bytes; an attacker can send much more. Cap before
+	// touching the DB column.
+	const userAgentMaxBytes = 512
+	userAgent := r.Header.Get("User-Agent")
+	if len(userAgent) > userAgentMaxBytes {
+		userAgent = userAgent[:userAgentMaxBytes]
+	}
 	if err := h.sessions.Create(ctx, u.ID, raw, time.Now().Add(h.cfg.SessionTTL), ipAddr, &userAgent); err != nil {
 		return err
 	}
@@ -287,16 +294,6 @@ func extractClientIP(r *http.Request) *string {
 		return &s
 	}
 	return nil
-}
-
-// truncate caps a string at maxLen bytes. Used to bound user-controlled
-// headers (User-Agent can legitimately be hundreds of bytes; an attacker
-// can send much more) before storing them in DB columns.
-func truncate(s string, maxLen int) string {
-	if len(s) <= maxLen {
-		return s
-	}
-	return s[:maxLen]
 }
 
 // retryAfterSeconds renders d as the integer number of seconds expected by
