@@ -62,6 +62,14 @@ func (h *Handlers) RequestMagicLink(w http.ResponseWriter, r *http.Request) {
 	// dimension is throttled (spam one IP to confirm IP-bucket, or one email
 	// from many IPs to confirm email-bucket), defeating the goal of opaque
 	// 429s. Same anti-enumeration intent as the unknown-email branch below.
+	//
+	// Side-effect of "evaluate both": both buckets *record* the attempt even
+	// when the other bucket is the one rejecting. Direction is conservative
+	// (the limiter ends up slightly *stricter* than a strict leaky-bucket
+	// reading would be, never more permissive). A proper peek-then-commit
+	// would need either a 2-phase API on Limiter or per-key locking across
+	// both limiters; not worth the complexity until we see false positives
+	// in prod.
 	ipKey := ""
 	if ip := extractClientIP(r); ip != nil {
 		ipKey = *ip
