@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"flashcardacademy/api/internal/apitest"
+	"flashcardacademy/api/internal/session"
 	"flashcardacademy/api/internal/token"
 )
 
@@ -125,7 +126,7 @@ func TestVerify_NewUser_RedirectsToOnboarding(t *testing.T) {
 	if loc := resp.Header.Get("Location"); loc != "/onboarding" {
 		t.Fatalf("location: got %q want /onboarding", loc)
 	}
-	if env.Client.CookieValue(t, apitest.SessionCookieName) == "" {
+	if env.Client.CookieValue(t, session.CookieName) == "" {
 		t.Fatalf("session cookie not set")
 	}
 
@@ -170,7 +171,7 @@ func TestVerify_InvalidToken_RedirectsWithError(t *testing.T) {
 	if loc := resp.Header.Get("Location"); loc != "/login?error=invalid_or_expired_token" {
 		t.Fatalf("location: got %q", loc)
 	}
-	if env.Client.CookieValue(t, apitest.SessionCookieName) != "" {
+	if env.Client.CookieValue(t, session.CookieName) != "" {
 		t.Fatalf("no session cookie should be set on failure")
 	}
 }
@@ -266,7 +267,7 @@ func TestUpdateMe_RotatesSession(t *testing.T) {
 	env := apitest.New(t)
 	verify := env.RequestAndConsumeMagicLink(t, testEmail)
 	verify.Body.Close()
-	oldCookie := env.Client.CookieValue(t, apitest.SessionCookieName)
+	oldCookie := env.Client.CookieValue(t, session.CookieName)
 	if oldCookie == "" {
 		t.Fatalf("expected session cookie after verify")
 	}
@@ -277,7 +278,7 @@ func TestUpdateMe_RotatesSession(t *testing.T) {
 	if resp.StatusCode != http.StatusNoContent {
 		t.Fatalf("status: got %d want 204", resp.StatusCode)
 	}
-	newCookie := env.Client.CookieValue(t, apitest.SessionCookieName)
+	newCookie := env.Client.CookieValue(t, session.CookieName)
 	if newCookie == "" || newCookie == oldCookie {
 		t.Fatalf("session not rotated: old=%q new=%q", oldCookie, newCookie)
 	}

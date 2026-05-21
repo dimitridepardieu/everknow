@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+// CookieName is the session cookie's protocol-level name. Stable across
+// deploys: changing it silently logs out every active user.
+const CookieName = "fa_session"
+
 type Session struct {
 	ID        int64
 	UserID    int64
@@ -15,9 +19,9 @@ type Session struct {
 	UpdatedAt time.Time
 }
 
-func SetCookie(w http.ResponseWriter, name, token string, ttl time.Duration, secure bool) {
+func SetCookie(w http.ResponseWriter, token string, ttl time.Duration, secure bool) {
 	http.SetCookie(w, &http.Cookie{
-		Name:     name,
+		Name:     CookieName,
 		Value:    token,
 		Path:     "/",
 		HttpOnly: true,
@@ -28,9 +32,9 @@ func SetCookie(w http.ResponseWriter, name, token string, ttl time.Duration, sec
 	})
 }
 
-func ClearCookie(w http.ResponseWriter, name string, secure bool) {
+func ClearCookie(w http.ResponseWriter, secure bool) {
 	http.SetCookie(w, &http.Cookie{
-		Name:     name,
+		Name:     CookieName,
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,
@@ -41,8 +45,8 @@ func ClearCookie(w http.ResponseWriter, name string, secure bool) {
 	})
 }
 
-func ReadCookie(r *http.Request, name string) string {
-	c, err := r.Cookie(name)
+func ReadCookie(r *http.Request) string {
+	c, err := r.Cookie(CookieName)
 	if err != nil {
 		return ""
 	}

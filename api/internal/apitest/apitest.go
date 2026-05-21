@@ -39,9 +39,6 @@ import (
 	"flashcardacademy/api/internal/user"
 )
 
-// SessionCookieName — single source of truth, also written into cfg below.
-const SessionCookieName = "fa_test_session"
-
 const appBaseURL = "https://test.flashcardacademy.local"
 
 // sharedDB is opened once per test binary so the CREATE DATABASE + migrate
@@ -71,11 +68,10 @@ func New(t *testing.T) *Env {
 	truncate(t, pool)
 
 	cfg := &config.Config{
-		Env:               "test",
-		AppBaseURL:        appBaseURL,
-		SessionCookieName: SessionCookieName,
-		SessionTTL:        24 * time.Hour,
-		MagicLinkTTL:      15 * time.Minute,
+		Env:          "test",
+		AppBaseURL:   appBaseURL,
+		SessionTTL:   24 * time.Hour,
+		MagicLinkTTL: 15 * time.Minute,
 	}
 
 	emails := &FakeEmailSender{}

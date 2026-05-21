@@ -18,10 +18,10 @@ type userCtxKey struct{}
 // Auth returns a middleware that loads the user owning the session cookie
 // (if any) and injects them into the request context. Anonymous requests
 // pass through; use RequireUser to enforce auth on a route.
-func Auth(cookieName string, sessions *session.Store, users *user.Store) func(http.Handler) http.Handler {
+func Auth(sessions *session.Store, users *user.Store) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			token := session.ReadCookie(r, cookieName)
+			token := session.ReadCookie(r)
 			if token == "" {
 				next.ServeHTTP(w, r)
 				return
