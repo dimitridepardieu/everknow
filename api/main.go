@@ -67,6 +67,7 @@ func run() error {
 	magic := auth.NewMagicLinkSender(verificationStore, sender, cfg.AppBaseURL, cfg.MagicLinkTTL)
 
 	handler := server.NewHandler(server.Deps{
+		Ctx:      ctx,
 		Cfg:      cfg,
 		Pool:     pool,
 		Sessions: sessionStore,

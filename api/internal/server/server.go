@@ -30,6 +30,10 @@ const (
 )
 
 type Deps struct {
+	// Ctx scopes background goroutines (e.g. rate-limit sweepers) to the
+	// server's lifetime. Cancel it to make them exit cleanly — main uses
+	// the shutdown signal context, tests use t.Context().
+	Ctx      context.Context
 	Cfg      *config.Config
 	Pool     *sql.DB
 	Sessions *session.Store
@@ -38,8 +42,8 @@ type Deps struct {
 }
 
 func NewHandler(d Deps) http.Handler {
-	ipLimiter := ratelimit.New(magicLinkLimitPerIP, magicLinkWindowPerIP)
-	emailLimiter := ratelimit.New(magicLinkLimitPerEmail, magicLinkWindowPerEmail)
+	ipLimiter := ratelimit.New(d.Ctx, magicLinkLimitPerIP, magicLinkWindowPerIP)
+	emailLimiter := ratelimit.New(d.Ctx, magicLinkLimitPerEmail, magicLinkWindowPerEmail)
 	handlers := auth.NewHandlers(d.Cfg, d.Sessions, d.Users, d.Magic, ipLimiter, emailLimiter)
 
 	mux := http.NewServeMux()

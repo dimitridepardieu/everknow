@@ -85,6 +85,9 @@ func New(t *testing.T) *Env {
 	magic := auth.NewMagicLinkSender(verificationStore, emails, cfg.AppBaseURL, cfg.MagicLinkTTL)
 
 	handler := server.NewHandler(server.Deps{
+		// t.Context() is canceled at test end, so the rate-limit sweeper
+		// goroutines exit cleanly — no orphaned goroutines across tests.
+		Ctx:      t.Context(),
 		Cfg:      cfg,
 		Pool:     pool,
 		Sessions: sessionStore,

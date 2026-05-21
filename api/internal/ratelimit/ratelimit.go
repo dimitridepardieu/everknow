@@ -4,6 +4,7 @@
 package ratelimit
 
 import (
+	"context"
 	"sync"
 	"time"
 )
@@ -20,12 +21,18 @@ type Limiter struct {
 	buckets map[string][]time.Time
 }
 
-func New(limit int, window time.Duration) *Limiter {
-	return &Limiter{
+// New constructs a Limiter and starts a background sweeper that removes
+// keys whose entire window has aged out. The sweeper stops when ctx is
+// done; pass a cancellable context (signal.NotifyContext in main, t.Context
+// in tests) so the goroutine exits on shutdown.
+func New(ctx context.Context, limit int, window time.Duration) *Limiter {
+	l := &Limiter{
 		limit:   limit,
 		window:  window,
 		buckets: make(map[string][]time.Time),
 	}
+	go l.runSweeper(ctx)
+	return l
 }
 
 // Allow records an event for key if the rolling window has capacity. Returns
@@ -60,4 +67,32 @@ func (l *Limiter) Allow(key string) (bool, time.Duration) {
 
 	l.buckets[key] = append(kept, now)
 	return true, 0
+}
+
+// runSweeper periodically removes cold keys (last event older than window)
+// so the buckets map doesn't grow unbounded as one-off IPs and emails
+// accumulate. Tick cadence matches the window: finer is wasted work,
+// coarser lets dead entries linger longer than necessary.
+func (l *Limiter) runSweeper(ctx context.Context) {
+	t := time.NewTicker(l.window)
+	defer t.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+			l.sweep()
+		}
+	}
+}
+
+func (l *Limiter) sweep() {
+	cutoff := time.Now().Add(-l.window)
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	for k, stamps := range l.buckets {
+		if len(stamps) == 0 || stamps[len(stamps)-1].Before(cutoff) {
+			delete(l.buckets, k)
+		}
+	}
 }
