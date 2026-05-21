@@ -249,7 +249,7 @@ func (h *Handlers) issueSession(ctx context.Context, w http.ResponseWriter, r *h
 	if len(userAgent) > userAgentMaxBytes {
 		userAgent = userAgent[:userAgentMaxBytes]
 	}
-	if err := h.sessions.Create(ctx, u.ID, raw, time.Now().Add(h.cfg.SessionTTL), ipAddr, &userAgent); err != nil {
+	if err := h.sessions.Create(ctx, u.ID, raw, time.Now().Add(h.cfg.SessionTTL), ipAddr, userAgent); err != nil {
 		return err
 	}
 	session.SetCookie(w, raw, h.cfg.SessionTTL)
