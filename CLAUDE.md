@@ -81,6 +81,13 @@ Every new issue must enter the Kanban project with its category label(s), Priori
 
 When asked to create an issue, propose the full triage (label, Priority, Size) **as one block** with one short justification per choice; execute the whole sequence on the developer's confirmation.
 
+**Before creating: check for duplicates.** Run `gh issue list --state all --search "<keywords from the title>"` and skim the top hits. Both states matter: closed issues are high-signal because they encode what was already shipped or explicitly rejected. Decide based on what you find:
+- **Open + same scope** → comment on the existing thread; do not open a parallel issue. Parallel threads fragment context (decisions live in one, work in the other) and force triage twice.
+- **Closed as completed** → verify the shipped behaviour matches the new intent. If yes, no new issue. If the intent is a real delta, open a new issue **and** link back to the closed one in the body for context.
+- **Closed as won't-fix / not-planned** → re-opening requires a one-line justification of what changed since the original decision (new constraint, new data, new stakeholder).
+
+Skip this only if the issue is obviously novel (a feature category that doesn't exist yet in the repo). When in doubt, search.
+
 The sequence (in order, all four steps):
 1. `gh issue create` with the body following the content guidelines above.
 2. `gh project item-add 3 --owner dimitridepardieu --url <issue-url>` — lands in Status `Backlog`.
