@@ -1,6 +1,7 @@
 package auth_test
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -52,6 +53,35 @@ func TestRequestMagicLink_UnknownEmail_StillReturnsOK(t *testing.T) {
 
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("status: got %d want 200", resp.StatusCode)
+	}
+}
+
+func TestRequestMagicLink_RateLimitedPerIP(t *testing.T) {
+	// The IP bucket is 5 / 10 min (see server.magicLinkLimitPerIP). Vary
+	// the email per call so the email bucket can't be the one that fires —
+	// only the shared IP (loopback in test) can. Five requests succeed;
+	// the sixth must be 429.
+	env := apitest.New(t)
+
+	for i := 0; i < 5; i++ {
+		email := fmt.Sprintf("user%d@example.test", i)
+		resp := env.Client.PostJSON(t, "/api/auth/request", map[string]string{"email": email})
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("request %d (%s): status %d want 200", i+1, email, resp.StatusCode)
+		}
+	}
+
+	rejected := env.Client.PostJSON(t, "/api/auth/request", map[string]string{"email": "user5@example.test"})
+	defer rejected.Body.Close()
+	if rejected.StatusCode != http.StatusTooManyRequests {
+		t.Fatalf("6th request: status %d want 429", rejected.StatusCode)
+	}
+	if ra := rejected.Header.Get("Retry-After"); ra == "" {
+		t.Fatalf("Retry-After header missing on 429")
+	}
+	if env.Emails.Count() != 5 {
+		t.Fatalf("emails sent: got %d want 5 (6th must be IP-rate-limited before send)", env.Emails.Count())
 	}
 }
 
