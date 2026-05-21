@@ -159,7 +159,7 @@ func (h *Handlers) Logout(w http.ResponseWriter, r *http.Request) {
 			slog.WarnContext(r.Context(), "delete session", "err", err)
 		}
 	}
-	session.ClearCookie(w, true)
+	session.ClearCookie(w)
 	if u != nil {
 		slog.InfoContext(r.Context(), "user logged out", "user_id", u.ID)
 	}
@@ -246,7 +246,7 @@ func (h *Handlers) issueSession(ctx context.Context, w http.ResponseWriter, r *h
 	if err := h.sessions.Create(ctx, u.ID, raw, time.Now().Add(h.cfg.SessionTTL), ipAddr, &userAgent); err != nil {
 		return err
 	}
-	session.SetCookie(w, raw, h.cfg.SessionTTL, true)
+	session.SetCookie(w, raw, h.cfg.SessionTTL)
 	return nil
 }
 
