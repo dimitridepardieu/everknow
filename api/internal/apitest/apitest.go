@@ -52,7 +52,6 @@ var (
 // Env bundles everything a handler-level test needs.
 type Env struct {
 	DB     *sql.DB
-	Cfg    *config.Config
 	Server *httptest.Server
 	Emails *FakeEmailSender
 	Client *Client
@@ -96,7 +95,6 @@ func New(t *testing.T) *Env {
 
 	return &Env{
 		DB:     pool,
-		Cfg:    cfg,
 		Server: srv,
 		Emails: emails,
 		Client: newClient(t, srv.URL),
