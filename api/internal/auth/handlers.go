@@ -14,7 +14,6 @@ import (
 
 	"flashcardacademy/api/internal/config"
 	"flashcardacademy/api/internal/httpx"
-	"flashcardacademy/api/internal/middleware"
 	"flashcardacademy/api/internal/ratelimit"
 	"flashcardacademy/api/internal/session"
 	"flashcardacademy/api/internal/token"
@@ -153,7 +152,7 @@ func (h *Handlers) Verify(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) Logout(w http.ResponseWriter, r *http.Request) {
-	u := middleware.UserFromContext(r.Context())
+	u := user.FromContext(r.Context())
 	if token := session.ReadCookie(r); token != "" {
 		if err := h.sessions.DeleteByToken(r.Context(), token); err != nil {
 			slog.WarnContext(r.Context(), "delete session", "err", err)
@@ -174,7 +173,7 @@ type meResponse struct {
 }
 
 func (h *Handlers) Me(w http.ResponseWriter, r *http.Request) {
-	u := middleware.UserFromContext(r.Context())
+	u := user.FromContext(r.Context())
 	httpx.WriteJSON(w, http.StatusOK, meResponse{
 		ID: u.ID, Email: u.Email, Name: u.Name, Role: u.Role,
 	})
@@ -185,7 +184,7 @@ type updateMeBody struct {
 }
 
 func (h *Handlers) UpdateMe(w http.ResponseWriter, r *http.Request) {
-	u := middleware.UserFromContext(r.Context())
+	u := user.FromContext(r.Context())
 	body, err := httpx.DecodeJSON[updateMeBody](r)
 	if err != nil {
 		httpx.WriteError(w, err)

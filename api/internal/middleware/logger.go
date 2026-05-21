@@ -7,11 +7,12 @@ import (
 	"log/slog"
 	"net/http"
 	"time"
+
+	"flashcardacademy/api/internal/user"
 )
 
 // requestIDKey is a distinct unexported type to prevent collisions with
-// other packages writing to the request context. Same pattern as
-// userCtxKey in auth.go.
+// other packages writing to the request context.
 type requestIDKey struct{}
 
 const requestIDHeader = "X-Request-ID"
@@ -38,7 +39,7 @@ func Logger(next http.Handler) http.Handler {
 			"status", rw.status,
 			"duration_ms", time.Since(start).Milliseconds(),
 		}
-		if u := UserFromContext(r.Context()); u != nil {
+		if u := user.FromContext(r.Context()); u != nil {
 			attrs = append(attrs, "user_id", u.ID)
 		}
 		slog.InfoContext(ctx, "http request", attrs...)
