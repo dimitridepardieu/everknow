@@ -76,6 +76,20 @@
 - PR body structure: *what changes* (user-visible) → *why* (problem solved) → *key approach* (high-level) → *notable trade-offs* only if material
 - English (Rule 1), no emojis unless requested, no auto-generated boilerplate sections
 
+#### Issue creation workflow — triage at creation, not later
+Every new issue must enter the Kanban project with its category label(s), Priority, and Size set **at creation time**. Re-opening an issue a week later to triage it is when the original context is gone — the result is sloppy assignments and noisy priorities.
+
+When asked to create an issue, propose the full triage (label, Priority, Size) **as one block** with one short justification per choice; execute the whole sequence on the developer's confirmation.
+
+The sequence (in order, all four steps):
+1. `gh issue create` with the body following the content guidelines above.
+2. `gh project item-add 3 --owner dimitridepardieu --url <issue-url>` — lands in Status `Backlog`.
+3. **Apply labels**:
+   - **First, list what exists**: `gh label list --limit 100`. Reuse before inventing.
+   - Apply at least one label. Run `gh issue edit <N> --add-label "..."`.
+   - **Creating a new label** is allowed only when no existing label genuinely captures the issue **and** the new category is likely to recur (one-off tags are noise). Propose the new label + a one-line description to the developer for approval before running `gh label create`. Follow the existing convention: **lowercase**, **kebab-case for multi-word** (e.g., `prod-readiness`, `blocks-launch`). Match the style already in the repo so the label cloud stays coherent.
+4. `gh project item-edit ... --single-select-option-id ...` for Priority and Size. Discover field/option IDs via `gh project field-list 3 --owner dimitridepardieu --format json` — do not hardcode them, they change if the project is rebuilt.
+
 ### Rule 13: Go Idioms & Anti-Overengineering
 - **Default to stdlib patterns**: when in doubt, mirror how `net/http`, `database/sql`, `errors`, `context` solve the same problem. Effective Go is the baseline; deviate only with a documented reason.
 - **Wrap errors only when adding context** (an ID, a path). `fmt.Errorf("open db: %w", err)` over a `sql.Open` error that already says "open db" creates noise like `"open db: open db: ..."`. Return `err` raw when no new info is available.
