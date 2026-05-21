@@ -10,9 +10,7 @@ import (
 )
 
 // Limiter caps the number of events for a given key within a rolling window.
-// The zero value is not usable — construct via New. A nil *Limiter behaves
-// as a no-op (every Allow returns true), so handlers can accept an optional
-// limiter without nil-guards at every call site.
+// The zero value is not usable — construct via New.
 type Limiter struct {
 	limit  int
 	window time.Duration
@@ -39,17 +37,12 @@ func New(ctx context.Context, limit int, window time.Duration) *Limiter {
 // (true, 0) when accepted; (false, retryAfter) when rejected, where
 // retryAfter is the time until the oldest event in the window expires.
 func (l *Limiter) Allow(key string) (bool, time.Duration) {
-	if l == nil {
-		return true, 0
-	}
 	now := time.Now()
 	cutoff := now.Add(-l.window)
 
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	// Drop timestamps that have aged out of the window. The retained slice
-	// represents events still "counted" against this key.
 	stamps := l.buckets[key]
 	kept := stamps[:0]
 	for _, t := range stamps {
@@ -59,7 +52,6 @@ func (l *Limiter) Allow(key string) (bool, time.Duration) {
 	}
 
 	if len(kept) >= l.limit {
-		// retryAfter: when the oldest event will fall out of the window.
 		retry := kept[0].Add(l.window).Sub(now)
 		l.buckets[key] = kept
 		return false, retry

@@ -26,8 +26,8 @@ type Handlers struct {
 	sessions     *session.Store
 	users        *user.Store
 	magic        *MagicLinkSender
-	ipLimiter    *ratelimit.Limiter // nil = disabled
-	emailLimiter *ratelimit.Limiter // nil = disabled
+	ipLimiter    *ratelimit.Limiter
+	emailLimiter *ratelimit.Limiter
 }
 
 func NewHandlers(cfg *config.Config, sessions *session.Store, users *user.Store, magic *MagicLinkSender, ipLimiter, emailLimiter *ratelimit.Limiter) *Handlers {
@@ -57,19 +57,11 @@ func (h *Handlers) RequestMagicLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Evaluate both buckets unconditionally and return the max retry-after.
-	// Returning early on the first failure would let an attacker infer which
-	// dimension is throttled (spam one IP to confirm IP-bucket, or one email
-	// from many IPs to confirm email-bucket), defeating the goal of opaque
-	// 429s. Same anti-enumeration intent as the unknown-email branch below.
-	//
-	// Side-effect of "evaluate both": both buckets *record* the attempt even
-	// when the other bucket is the one rejecting. Direction is conservative
-	// (the limiter ends up slightly *stricter* than a strict leaky-bucket
-	// reading would be, never more permissive). A proper peek-then-commit
-	// would need either a 2-phase API on Limiter or per-key locking across
-	// both limiters; not worth the complexity until we see false positives
-	// in prod.
+	// Evaluate both buckets unconditionally so the 429 doesn't leak which
+	// dimension throttled — same anti-enumeration intent as the
+	// unknown-email branch below. Side-effect: both buckets record the
+	// attempt even when one rejects, making the limiter slightly stricter
+	// than a pure leaky-bucket reading. Acceptable until false positives.
 	ipKey := ""
 	if ip := extractClientIP(r); ip != nil {
 		ipKey = *ip
@@ -93,10 +85,7 @@ func (h *Handlers) RequestMagicLink(w http.ResponseWriter, r *http.Request) {
 		if retryEmail > retry {
 			retry = retryEmail
 		}
-		// Server-side log carries the dimension flags so we can answer
-		// "is somebody trying to bomb a victim right now" from logs. The
-		// client response stays opaque (no dimension hint) — same
-		// anti-enumeration property as the comment above.
+		// Server-side log keeps the dimension flags; the 429 response stays opaque.
 		slog.WarnContext(r.Context(), "magic link rate limited",
 			"ip_bucket_exceeded", !okIP,
 			"email_bucket_exceeded", !okEmail,
