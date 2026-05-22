@@ -108,6 +108,11 @@ The sequence (in order, all four steps):
 - Review agents are calibrated for "production at scale". **Filter every finding** by probability × impact, vs complexity of the fix. At 0 users many findings are real but disproportionate.
 - Prefer **accepting a rare edge case** with an inline TODO over adding abstraction to make it impossible. Two simple functions that may race annually beat one "elegant atomic" upsert.
 - When pushing back on a finding, explain probability + impact + alternative. The dev decides; the agent is a peer, not an authority.
+- **Filter BEFORE presenting**. For each agent finding:
+  1. Is the concern proportionate for MVP scale? (Filter above.)
+  2. Is the proposed fix idiomatic in OUR codebase? (Rule 13 stdlib defaults, Rule 18 anti-overengineering, patterns in neighbouring files.)
+  3. Does it introduce abstractions, dependencies, or surface this codebase doesn't already justify?
+  Pass through only findings that survive. Don't relay an unfiltered finding as "want this fix?" — the filter is your job, not the dev's. The dev decides on what survives, not on what raw output the agent produced.
 
 ### Rule 15: Docker env vars and DB lifecycle traps
 - **`.env` changes are not picked up by `make restart`** — Docker injects env vars at container creation, not at process restart. Use `docker compose -f docker/compose.yaml -f docker/compose.dev.yaml --env-file docker/.env up -d --force-recreate <service>` (or `make rebuild`) after editing `docker/.env`. The running Go process keeps the values it had at boot.
