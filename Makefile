@@ -4,7 +4,7 @@ COMPOSE = docker compose -f docker/compose.yaml -f docker/compose.$(APP_ENV).yam
 
 .DEFAULT_GOAL := help
 
-.PHONY: help up down restart rebuild clean build logs logs-api logs-web logs-caddy logs-postgres api web caddy postgres psql exec-api exec-web exec-caddy exec-postgres exec-psql fmt test db-reset db-seed db-fresh check-versions trust-caddy-ca
+.PHONY: help up down restart rebuild clean build logs logs-api logs-web logs-caddy logs-postgres api web caddy postgres psql exec-api exec-web exec-caddy exec-postgres exec-psql fmt test test-cache-clean db-reset db-seed db-fresh db-test-clean check-versions trust-caddy-ca
 
 help:
 	@awk 'BEGIN { \
@@ -115,6 +115,9 @@ test: ## Run all tests
 	$(COMPOSE) exec api go test ./...
 	$(COMPOSE) exec web bunx --bun vitest run
 
+test-cache-clean: ## Force fresh test run (clears Go test cache — use after manual DB or external-state changes)
+	$(COMPOSE) exec api go clean -testcache
+
 ##@ DATABASE
 
 db-reset: ## ! Reset the database (drop + recreate) — DEV ONLY
@@ -149,6 +152,24 @@ db-fresh: ## ! Reset + auto-migrate + seed in one shot — DEV ONLY
 	@$(COMPOSE) restart api >/dev/null
 	@sleep 3
 	@$(MAKE) db-seed
+
+db-test-clean: ## ! Drop all flashcardacademy_test* DBs (per-binary isolation) — DEV ONLY
+	@if [ "$(APP_ENV)" != "dev" ]; then \
+		echo "Refused: db-test-clean is dev-only (APP_ENV=$(APP_ENV))."; exit 1; \
+	fi
+	@if [ "$(CONFIRM)" != "yes" ]; then \
+		read -p "Drop all flashcardacademy_test* databases? Type 'yes' to confirm: " REPLY; \
+		[ "$$REPLY" = "yes" ] || { echo "Aborted."; exit 1; }; \
+	fi
+	@dbs=$$($(COMPOSE) exec -T postgres psql -U $(POSTGRES_USER) -d postgres -tAc "SELECT datname FROM pg_database WHERE datname ~ '^flashcardacademy_test'"); \
+	if [ -z "$$dbs" ]; then \
+		echo "No flashcardacademy_test* databases found."; \
+	else \
+		for db in $$dbs; do \
+			$(COMPOSE) exec -T postgres dropdb -U $(POSTGRES_USER) --force --if-exists "$$db" && echo "Dropped $$db"; \
+		done; \
+	fi
+	@$(MAKE) test-cache-clean
 
 ##@ SETUP
 
