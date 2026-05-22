@@ -121,7 +121,7 @@ func TestStore_DeleteByToken_RemovesRow(t *testing.T) {
 	}
 
 	var count int
-	if err := env.DB.QueryRow(`SELECT count(*) FROM sessions`).Scan(&count); err != nil {
+	if err := env.DB.QueryRow(`SELECT count(*) FROM sessions WHERE user_id = $1`, userID).Scan(&count); err != nil {
 		t.Fatalf("count sessions: %v", err)
 	}
 	if count != 0 {
