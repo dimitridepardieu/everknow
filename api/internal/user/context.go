@@ -6,9 +6,9 @@ import "context"
 // writing to the request context.
 type contextKey struct{}
 
-// WithContext returns a derived context carrying u. Middleware uses it to
+// NewContext returns a derived context carrying u. Middleware uses it to
 // inject the authenticated user; handlers read it back via FromContext.
-func WithContext(ctx context.Context, u *User) context.Context {
+func NewContext(ctx context.Context, u *User) context.Context {
 	return context.WithValue(ctx, contextKey{}, u)
 }
 

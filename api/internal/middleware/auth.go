@@ -37,7 +37,7 @@ func Auth(sessions *session.Store, users *user.Store) func(http.Handler) http.Ha
 				next.ServeHTTP(w, r)
 				return
 			}
-			next.ServeHTTP(w, r.WithContext(user.WithContext(r.Context(), u)))
+			next.ServeHTTP(w, r.WithContext(user.NewContext(r.Context(), u)))
 		})
 	}
 }
