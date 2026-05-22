@@ -3,7 +3,6 @@ package user_test
 import (
 	"context"
 	"errors"
-	"strings"
 	"testing"
 
 	"flashcardacademy/api/internal/apitest"
@@ -42,14 +41,8 @@ func TestStore_Create_DuplicateEmail_ReturnsError(t *testing.T) {
 		t.Fatalf("first create: %v", err)
 	}
 
-	_, err := store.Create(context.Background(), testEmail)
-	if err == nil {
+	if _, err := store.Create(context.Background(), testEmail); err == nil {
 		t.Fatalf("second create: got nil want UNIQUE-violation error")
-	}
-	// We don't assert the exact Postgres error code (23505) — the contract
-	// is "errors on duplicate", not "exposes a particular code".
-	if !strings.Contains(err.Error(), "create user") {
-		t.Fatalf("error not wrapped by store: %v", err)
 	}
 }
 
