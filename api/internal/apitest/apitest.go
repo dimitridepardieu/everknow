@@ -25,6 +25,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -151,6 +152,16 @@ func initDB() (*sql.DB, error) {
 		return nil, errors.New("TEST_DATABASE_URL is not set (see docker/compose.dev.yaml)")
 	}
 
+	// Each test binary gets its own database (suffix = binary name). Go's
+	// default is to run packages in parallel, and apitest's harness shares
+	// state via TRUNCATE — without per-binary isolation, two packages
+	// would wipe each other's rows mid-test. Trade-off: leaves one DB per
+	// package in Postgres (drop manually if needed).
+	testURL, err := suffixDBForCurrentBinary(testURL)
+	if err != nil {
+		return nil, fmt.Errorf("derive per-binary test db url: %w", err)
+	}
+
 	// Try the test DB first. The expected error on a fresh install is
 	// SQLSTATE 3D000 (invalid_catalog_name) — the DB doesn't exist yet —
 	// at which point we create it via the admin DB and retry.
@@ -196,6 +207,28 @@ func openAndPing(dsn string) (*sql.DB, error) {
 		return nil, err
 	}
 	return pool, nil
+}
+
+// suffixDBForCurrentBinary appends a unique suffix to the database name in
+// the URL, derived from the running test binary. `go test ./...` compiles
+// one binary per package (e.g. session.test, user.test), so the suffix
+// gives each package an isolated database.
+func suffixDBForCurrentBinary(rawURL string) (string, error) {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return "", fmt.Errorf("parse: %w", err)
+	}
+	if u.Path == "" || u.Path == "/" {
+		return "", errors.New("url has no database name")
+	}
+	suffix := strings.TrimSuffix(filepath.Base(os.Args[0]), ".test")
+	// Postgres identifiers don't accept "." or "-"; replace with "_".
+	suffix = strings.NewReplacer(".", "_", "-", "_").Replace(suffix)
+	if suffix == "" {
+		return "", fmt.Errorf("empty suffix from os.Args[0]=%q", os.Args[0])
+	}
+	u.Path = u.Path + "_" + suffix
+	return u.String(), nil
 }
 
 func createTestDB(testURL string) error {
