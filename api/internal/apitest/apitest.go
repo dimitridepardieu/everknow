@@ -156,7 +156,7 @@ func initDB() (*sql.DB, error) {
 	// default is to run packages in parallel, and apitest's harness shares
 	// state via TRUNCATE — without per-binary isolation, two packages
 	// would wipe each other's rows mid-test. Trade-off: leaves one DB per
-	// package in Postgres (drop manually if needed).
+	// package in Postgres; clean them with `make db-test-clean`.
 	testURL, err := suffixDBForCurrentBinary(testURL)
 	if err != nil {
 		return nil, fmt.Errorf("derive per-binary test db url: %w", err)
