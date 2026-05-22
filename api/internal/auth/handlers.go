@@ -14,7 +14,6 @@ import (
 
 	"flashcardacademy/api/internal/config"
 	"flashcardacademy/api/internal/httpx"
-	"flashcardacademy/api/internal/middleware"
 	"flashcardacademy/api/internal/ratelimit"
 	"flashcardacademy/api/internal/session"
 	"flashcardacademy/api/internal/token"
@@ -153,7 +152,7 @@ func (h *Handlers) Verify(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) Logout(w http.ResponseWriter, r *http.Request) {
-	u := middleware.UserFromContext(r.Context())
+	u := user.FromContext(r.Context())
 	if token := session.ReadCookie(r); token != "" {
 		if err := h.sessions.DeleteByToken(r.Context(), token); err != nil {
 			slog.WarnContext(r.Context(), "delete session", "err", err)
@@ -174,7 +173,7 @@ type meResponse struct {
 }
 
 func (h *Handlers) Me(w http.ResponseWriter, r *http.Request) {
-	u := middleware.UserFromContext(r.Context())
+	u := user.FromContext(r.Context())
 	httpx.WriteJSON(w, http.StatusOK, meResponse{
 		ID: u.ID, Email: u.Email, Name: u.Name, Role: u.Role,
 	})
@@ -185,7 +184,7 @@ type updateMeBody struct {
 }
 
 func (h *Handlers) UpdateMe(w http.ResponseWriter, r *http.Request) {
-	u := middleware.UserFromContext(r.Context())
+	u := user.FromContext(r.Context())
 	body, err := httpx.DecodeJSON[updateMeBody](r)
 	if err != nil {
 		httpx.WriteError(w, err)
@@ -242,8 +241,15 @@ func (h *Handlers) issueSession(ctx context.Context, w http.ResponseWriter, r *h
 		return fmt.Errorf("new session token: %w", err)
 	}
 	ipAddr := extractClientIP(r)
-	userAgent := truncate(r.Header.Get("User-Agent"), 512)
-	if err := h.sessions.Create(ctx, u.ID, raw, time.Now().Add(h.cfg.SessionTTL), ipAddr, &userAgent); err != nil {
+	// Bound stored User-Agent length: clients can legitimately send
+	// hundreds of bytes; an attacker can send much more. Cap before
+	// touching the DB column.
+	const userAgentMaxBytes = 512
+	userAgent := r.Header.Get("User-Agent")
+	if len(userAgent) > userAgentMaxBytes {
+		userAgent = userAgent[:userAgentMaxBytes]
+	}
+	if err := h.sessions.Create(ctx, u.ID, raw, time.Now().Add(h.cfg.SessionTTL), ipAddr, userAgent); err != nil {
 		return err
 	}
 	session.SetCookie(w, raw, h.cfg.SessionTTL)
@@ -288,16 +294,6 @@ func extractClientIP(r *http.Request) *string {
 		return &s
 	}
 	return nil
-}
-
-// truncate caps a string at maxLen bytes. Used to bound user-controlled
-// headers (User-Agent can legitimately be hundreds of bytes; an attacker
-// can send much more) before storing them in DB columns.
-func truncate(s string, maxLen int) string {
-	if len(s) <= maxLen {
-		return s
-	}
-	return s[:maxLen]
 }
 
 // retryAfterSeconds renders d as the integer number of seconds expected by

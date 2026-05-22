@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"context"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -10,10 +9,6 @@ import (
 	"flashcardacademy/api/internal/session"
 	"flashcardacademy/api/internal/user"
 )
-
-// userCtxKey is a distinct unexported type to prevent collisions with other
-// packages writing to the request context.
-type userCtxKey struct{}
 
 // Auth returns a middleware that loads the user owning the session cookie
 // (if any) and injects them into the request context. Anonymous requests
@@ -42,20 +37,14 @@ func Auth(sessions *session.Store, users *user.Store) func(http.Handler) http.Ha
 				next.ServeHTTP(w, r)
 				return
 			}
-			ctx := context.WithValue(r.Context(), userCtxKey{}, u)
-			next.ServeHTTP(w, r.WithContext(ctx))
+			next.ServeHTTP(w, r.WithContext(user.NewContext(r.Context(), u)))
 		})
 	}
 }
 
-func UserFromContext(ctx context.Context) *user.User {
-	u, _ := ctx.Value(userCtxKey{}).(*user.User)
-	return u
-}
-
 func RequireUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if UserFromContext(r.Context()) == nil {
+		if user.FromContext(r.Context()) == nil {
 			httpx.WriteError(w, httpx.Unauthorized("authentication required"))
 			return
 		}

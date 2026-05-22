@@ -20,7 +20,12 @@ func NewStore(db *sql.DB) *Store { return &Store{db: db} }
 
 // Create stores the token's sha256 hash; the raw value lives only in the
 // client cookie. This way a DB read alone cannot impersonate users.
-func (s *Store) Create(ctx context.Context, userID int64, rawToken string, expiresAt time.Time, ipAddress, userAgent *string) error {
+//
+// ipAddress is *string because extractClientIP returns nil when no IP can
+// be parsed (proxy mis-config, direct tests). userAgent is plain string —
+// the header is always readable (empty if absent), so nil would not be
+// distinguishable from "" semantically.
+func (s *Store) Create(ctx context.Context, userID int64, rawToken string, expiresAt time.Time, ipAddress *string, userAgent string) error {
 	_, err := s.db.ExecContext(ctx, `
 		INSERT INTO sessions (user_id, token, expires_at, ip_address, user_agent)
 		VALUES ($1, $2, $3, $4, $5)
