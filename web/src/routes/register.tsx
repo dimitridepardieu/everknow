@@ -1,8 +1,7 @@
 import { createFileRoute, useSearch } from '@tanstack/react-router'
 
+import { AuthForm } from '@/components/auth-form'
 import { authSearchSchema } from '@/lib/schemas'
-
-import { AuthForm } from './login'
 
 export const Route = createFileRoute('/register')({
   validateSearch: authSearchSchema,
