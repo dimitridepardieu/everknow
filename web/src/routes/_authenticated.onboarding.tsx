@@ -11,7 +11,7 @@ import {
 import { useMe, useUpdateRole } from '@/lib/auth'
 import type { Role } from '@/lib/schemas'
 
-export const Route = createFileRoute('/_app/onboarding')({
+export const Route = createFileRoute('/_authenticated/onboarding')({
   component: OnboardingPage,
 })
 

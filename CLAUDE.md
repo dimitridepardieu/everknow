@@ -50,6 +50,12 @@ Versions = source de vérité dans `docker/.env`. `make fmt` avant chaque commit
 - **Une seule composition root** : `main.go` en prod, `apitest.New` en tests.
 - Chaque package possède ses propres `ErrNotFound` (`auth.ErrNotFound` ≠ `user.ErrNotFound`).
 
+## Frontend — TanStack Router + React
+- **Pathless layouts (`_xxx.tsx`)** = layout fonctionnel : auth guard, state persistant entre navigations, données préchargées partagées. **Pas pour la déduplication visuelle.** Tailwind utility classes dupliquées sont OK ; extraire un composant React uniquement si Rule of 2-then-3 est dépassée.
+- **Auth boundary** : `_authenticated.tsx` (convention documentée par TanStack).
+- **Routes avec sous-routes** : utiliser des **directories** (`_authenticated/decks/$deckId.tsx`), pas la version flat. Le coût d'inversion plus tard est élevé (le nom de fichier = l'URL).
+- **Composants partagés entre routes** : vivent dans `components/` (ex: `components/auth-form.tsx`). `components/ui/` est réservé aux primitives shadcn — pas de composants métier dedans.
+
 ## Logging — slog
 - Utiliser `slog.InfoContext` / `WarnContext` / `ErrorContext` (jamais `slog.Info`) pour propager `request_id`, `user_id`.
 - Attributs en `(key, value)`, **jamais** `fmt.Sprintf` dans le message.
