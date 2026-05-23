@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useLogout, useMe } from '@/lib/auth'
 
-export const Route = createFileRoute('/_app/learn')({
+export const Route = createFileRoute('/_authenticated/learn')({
   component: LearnPage,
 })
 
@@ -13,8 +13,8 @@ function LearnPage() {
   const navigate = useNavigate()
   const mutation = useLogout()
 
-  // _app guarantees me is non-null here (it redirects to /login otherwise),
-  // but TS doesn't know that. Bail defensively rather than assert.
+  // _authenticated guarantees me is non-null here (it redirects to /login
+  // otherwise), but TS doesn't know that. Bail defensively rather than assert.
   if (!me) return null
   if (!me.role) return <Navigate to="/onboarding" />
 
