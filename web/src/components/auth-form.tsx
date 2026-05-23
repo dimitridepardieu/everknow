@@ -23,8 +23,8 @@ const errorMessages: Record<string, string> = {
 }
 
 interface AuthFormProps {
-  mode: 'login' | 'register'
-  errorCode?: string
+  readonly mode: 'login' | 'register'
+  readonly errorCode?: string
 }
 
 export function AuthForm({ mode, errorCode }: AuthFormProps) {
