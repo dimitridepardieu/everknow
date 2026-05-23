@@ -1,0 +1,42 @@
+[
+  {
+    "skills": ["priorities"],
+    "query": "Qu'est-ce que je devrais faire maintenant ?",
+    "expected_behavior": [
+      "Fetches the curated board (owner dimitridepardieu, project 3) with Priority + Size per issue before deciding.",
+      "Recommends exactly ONE issue — not a ranked table or a list.",
+      "Selects from the highest-Priority tier, preferring the smallest Size within that tier.",
+      "Justifies the pick against the alternatives and names the trade-off (what this choice delays).",
+      "Does not bundle other modes (no quick-win list, audit, or sprint plan in the same answer)."
+    ]
+  },
+  {
+    "skills": ["priorities"],
+    "query": "J'ai 1h, je fais quoi ?",
+    "expected_behavior": [
+      "Returns only issues that fit the stated ~1h budget (XS≈1h, S≈4h), excluding S/M/L items.",
+      "Ranks the suggestions by Priority, then by smaller Size.",
+      "Includes a total time estimate for the suggested set.",
+      "Does not collapse to a single next action or expand into a full sprint plan."
+    ]
+  },
+  {
+    "skills": ["priorities"],
+    "query": "Audite ma curation",
+    "expected_behavior": [
+      "Reports drift only: issues outside the project, items missing Priority/Size, label/field mismatches, and Priority/Size hierarchy degeneracy.",
+      "Does NOT re-triage or reassign Priority/Size from scratch (that is create-issue's job).",
+      "When no drift exists, states the board is consistent instead of inventing problems."
+    ]
+  },
+  {
+    "skills": ["priorities"],
+    "query": "Plan my next 2 days",
+    "expected_behavior": [
+      "Uses a 16h budget (2 days) and the Size→hours mapping (XS=1, S=4, M=8, L=16, XL=32).",
+      "Greedily fills the highest-Priority issues first within the budget.",
+      "Separates issues that fit from those that don't, flagging the over-budget leftovers.",
+      "Does not output a single next action or a full triage table."
+    ]
+  }
+]
