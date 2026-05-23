@@ -52,8 +52,8 @@ Versions = source de vérité dans `docker/.env`. `make fmt` avant chaque commit
 
 ## Frontend — TanStack Router + React
 - **Pathless layouts (`_xxx.tsx`)** = layout fonctionnel : auth guard, state persistant entre navigations, données préchargées partagées. **Pas pour la déduplication visuelle.** Tailwind utility classes dupliquées sont OK ; extraire un composant React uniquement si Rule of 2-then-3 est dépassée.
-- **Auth boundary** : `_authenticated.tsx` (convention documentée par TanStack).
-- **Routes avec sous-routes** : utiliser des **directories** (`_authenticated/decks/$deckId.tsx`), pas la version flat. Le coût d'inversion plus tard est élevé (le nom de fichier = l'URL).
+- **Auth boundary** : `_authenticated/route.tsx` (convention documentée par TanStack).
+- **Fichiers de routes** : un groupe (layout + ses enfants, ou route + ses sous-routes) vit dans un **directory** avec `route.tsx` comme layout — ex: `_authenticated/route.tsx`, `_authenticated/learn.tsx`, `_authenticated/decks/$deckId.tsx`. **Pas** la notation pointée (`_authenticated.learn.tsx`) : ne pas mélanger les deux styles dans un même sous-arbre. Routes racine isolées (`login.tsx`, `index.tsx`) = fichiers plats.
 - **Composants partagés entre routes** : vivent dans `components/` (ex: `components/auth-form.tsx`). `components/ui/` est réservé aux primitives shadcn — pas de composants métier dedans.
 
 ## Logging — slog
