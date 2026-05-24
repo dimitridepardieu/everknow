@@ -61,7 +61,14 @@ export function Pip({
   )
   const wowEye = (cx: number) => (
     <g key={cx}>
-      <circle cx={cx} cy="68" r="7.5" fill="white" stroke={INK} strokeWidth="2.5" />
+      <circle
+        cx={cx}
+        cy="68"
+        r="7.5"
+        fill="white"
+        stroke={INK}
+        strokeWidth="2.5"
+      />
       <circle cx={cx + 1} cy="70" r="3.5" fill={INK} />
     </g>
   )
@@ -168,7 +175,14 @@ export function Pip({
         opacity="0.18"
       />
       {/* belly */}
-      <ellipse cx="70" cy="95" rx="30" ry="22" fill={blueLight} opacity="0.65" />
+      <ellipse
+        cx="70"
+        cy="95"
+        rx="30"
+        ry="22"
+        fill={blueLight}
+        opacity="0.65"
+      />
       {/* leaf antenna */}
       <path d="M70 36 C 56 18 66 8 72 12 C 84 18 80 32 70 36 Z" fill={LEAF} />
       <path
@@ -208,8 +222,22 @@ export function Pip({
       {/* think bubbles */}
       {mood === 'think' && (
         <g>
-          <circle cx="110" cy="50" r="4" fill="white" stroke={INK} strokeWidth="2" />
-          <circle cx="120" cy="38" r="6" fill="white" stroke={INK} strokeWidth="2" />
+          <circle
+            cx="110"
+            cy="50"
+            r="4"
+            fill="white"
+            stroke={INK}
+            strokeWidth="2"
+          />
+          <circle
+            cx="120"
+            cy="38"
+            r="6"
+            fill="white"
+            stroke={INK}
+            strokeWidth="2"
+          />
           <text
             x="115"
             y="42"
@@ -240,6 +268,8 @@ function shade(hex: string, amt: number): string {
   }
   return (
     '#' +
-    [adj(r), adj(g), adj(b)].map((v) => v.toString(16).padStart(2, '0')).join('')
+    [adj(r), adj(g), adj(b)]
+      .map((v) => v.toString(16).padStart(2, '0'))
+      .join('')
   )
 }
