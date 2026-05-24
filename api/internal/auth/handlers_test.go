@@ -142,7 +142,7 @@ func TestVerify_NewUser_RedirectsToOnboarding(t *testing.T) {
 func TestVerify_ExistingUser_RedirectsToLearn(t *testing.T) {
 	env := apitest.New(t)
 	if _, err := env.DB.Exec(
-		`INSERT INTO users (email, email_verified, role) VALUES ($1, true, 'parent')`,
+		`INSERT INTO users (email, email_verified, role) VALUES ($1, true, 'family')`,
 		testEmail,
 	); err != nil {
 		t.Fatalf("seed user: %v", err)
@@ -272,7 +272,7 @@ func TestUpdateMe_RotatesSession(t *testing.T) {
 		t.Fatalf("expected session cookie after verify")
 	}
 
-	resp := env.Client.PatchJSON(t, "/api/me", map[string]string{"role": "parent"})
+	resp := env.Client.PatchJSON(t, "/api/me", map[string]string{"role": "family"})
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusNoContent {

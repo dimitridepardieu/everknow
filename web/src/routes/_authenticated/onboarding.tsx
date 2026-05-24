@@ -40,19 +40,19 @@ function OnboardingPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <Button
-            onClick={() => handleChoice('parent')}
+            onClick={() => handleChoice('family')}
             disabled={mutation.isPending}
             className="cursor-pointer"
           >
-            Je suis un parent
+            Je suis une famille
           </Button>
           <Button
             variant="secondary"
-            onClick={() => handleChoice('student')}
+            onClick={() => handleChoice('individual')}
             disabled={mutation.isPending}
             className="cursor-pointer"
           >
-            J’apprends pour moi
+            Je suis un élève
           </Button>
         </CardContent>
       </Card>

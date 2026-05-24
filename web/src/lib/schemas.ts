@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 export const emailSchema = z.email("Format d'email invalide")
 
-export const roleSchema = z.enum(['parent', 'student'])
+export const roleSchema = z.enum(['family', 'individual'])
 export type Role = z.infer<typeof roleSchema>
 
 export const meSchema = z.object({
