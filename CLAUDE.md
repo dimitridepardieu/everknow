@@ -56,6 +56,7 @@ Versions = source de vérité dans `docker/.env`. `make fmt` avant chaque commit
 - **Fichiers de routes** : un groupe (layout + ses enfants, ou route + ses sous-routes) vit dans un **directory** avec `route.tsx` comme layout — ex: `_authenticated/route.tsx`, `_authenticated/learn.tsx`, `_authenticated/decks/$deckId.tsx`. **Pas** la notation pointée (`_authenticated.learn.tsx`) : ne pas mélanger les deux styles dans un même sous-arbre. Routes racine isolées (`login.tsx`, `index.tsx`) = fichiers plats.
 - **Composants partagés entre routes** : vivent dans `components/` (ex: `components/auth-form.tsx`). `components/ui/` est réservé aux primitives shadcn — pas de composants métier dedans.
 - **Contrôles & boutons = primitives shadcn** (`Input`, `Label`, `Button`…), jamais de `<input>`/`<button>`/`<label>` natifs en code applicatif (le natif ne vit que dans `components/ui/`, à l'intérieur des primitives). Lien stylé en bouton = `buttonVariants()` sur `<Link>`/`<a>`.
+- **`useEffect` = synchro avec un système externe** (timer, subscription, widget non-React, fetch lié aux deps avec cleanup). **Pas** pour : dériver/transformer des données (calcul au render ; `useMemo` si coûteux), réagir à un événement (event handler), reset d'état sur changement de prop (`key`), ni enchaîner des `setState`. Réf: [You Might Not Need an Effect](https://react.dev/learn/you-might-not-need-an-effect).
 
 ## Logging — slog
 - Utiliser `slog.InfoContext` / `WarnContext` / `ErrorContext` (jamais `slog.Info`) pour propager `request_id`, `user_id`.
