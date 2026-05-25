@@ -27,11 +27,14 @@ interface AuthSentProps {
 export function AuthSent({ email, isSignup, onResend }: AuthSentProps) {
   const [secondsLeft, setSecondsLeft] = useState(RESEND_COOLDOWN_SECONDS)
 
+  // One interval for the component's lifetime: it ticks down to zero, and the
+  // resend handler resets the counter which this same interval picks up.
   useEffect(() => {
-    if (secondsLeft <= 0) return
-    const id = setInterval(() => setSecondsLeft((s) => s - 1), 1000)
+    const id = setInterval(() => {
+      setSecondsLeft((s) => (s <= 0 ? 0 : s - 1))
+    }, 1000)
     return () => clearInterval(id)
-  }, [secondsLeft])
+  }, [])
 
   const canResend = secondsLeft <= 0
 
