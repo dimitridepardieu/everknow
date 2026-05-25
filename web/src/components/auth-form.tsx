@@ -185,15 +185,22 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
       </div>
 
       <div className="flex flex-col gap-3.5">
-        <Button
-          type="submit"
-          form="auth-form"
-          disabled={mutation.isPending || !form.state.canSubmit}
-          className="w-full"
-        >
-          <Sparkle size={18} />
-          {mutation.isPending ? 'Envoi…' : 'Recevoir mon lien magique'}
-        </Button>
+        <form.Subscribe selector={(s) => s.values.email}>
+          {(email) => (
+            <Button
+              type="submit"
+              form="auth-form"
+              disabled={
+                mutation.isPending ||
+                !emailSchema.safeParse(email.trim()).success
+              }
+              className="w-full"
+            >
+              <Sparkle size={18} />
+              {mutation.isPending ? 'Envoi…' : 'Recevoir mon lien magique'}
+            </Button>
+          )}
+        </form.Subscribe>
 
         <p className="text-ink-soft font-heading text-center text-[13px] font-medium">
           {isSignup ? 'Tu as déjà un compte ?' : 'Pas encore de compte ?'}{' '}
