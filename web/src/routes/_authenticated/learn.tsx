@@ -32,7 +32,6 @@ function LearnPage() {
           size="sm"
           onClick={handleLogout}
           disabled={mutation.isPending}
-          className="cursor-pointer"
         >
           Déconnexion
         </Button>

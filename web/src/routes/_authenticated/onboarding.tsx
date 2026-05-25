@@ -42,7 +42,6 @@ function OnboardingPage() {
           <Button
             onClick={() => handleChoice('family')}
             disabled={mutation.isPending}
-            className="cursor-pointer"
           >
             Je suis une famille
           </Button>
@@ -50,7 +49,6 @@ function OnboardingPage() {
             variant="secondary"
             onClick={() => handleChoice('individual')}
             disabled={mutation.isPending}
-            className="cursor-pointer"
           >
             Je suis un élève
           </Button>
