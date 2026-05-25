@@ -7,6 +7,8 @@ import { AuthSent } from '@/components/auth-sent'
 import { Pip } from '@/components/pip'
 import { Sparkle } from '@/components/sparkle'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { useRequestMagicLink } from '@/lib/auth'
 import { emailSchema } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
@@ -119,20 +121,20 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
                 field.state.meta.isTouched && field.state.meta.errors.length > 0
               return (
                 <>
-                  <label
+                  <Label
                     htmlFor={field.name}
                     className="font-heading text-ink-muted mb-2 block text-xs font-semibold tracking-[1.5px] uppercase"
                   >
                     Ton email
-                  </label>
-                  <div className="flex items-center gap-2 rounded-2xl bg-white pr-2 pl-[18px] shadow-[inset_0_0_0_2px_var(--border),0_4px_0_#1b1b3a14] focus-within:shadow-[inset_0_0_0_2px_var(--primary),0_4px_0_var(--primary-dark)]">
+                  </Label>
+                  <div className="relative">
                     <Link2
                       className={cn(
-                        'size-[18px] shrink-0',
+                        'pointer-events-none absolute top-1/2 left-4 size-[18px] -translate-y-1/2',
                         valid ? 'text-primary' : 'text-ink-muted',
                       )}
                     />
-                    <input
+                    <Input
                       id={field.name}
                       name={field.name}
                       type="email"
@@ -143,7 +145,7 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       onBlur={field.handleBlur}
-                      className="text-ink placeholder:text-ink-muted flex-1 bg-transparent py-3.5 text-[18px] font-semibold outline-none"
+                      className="text-ink placeholder:text-ink-muted border-border focus-visible:border-primary h-auto rounded-2xl border-2 bg-white py-3.5 pr-4 pl-12 text-[18px] font-semibold shadow-[0_4px_0_#1b1b3a14] transition-shadow focus-visible:shadow-[0_4px_0_var(--primary-dark)] focus-visible:ring-0 md:text-[18px]"
                     />
                   </div>
                   <p className="text-ink-muted mx-1 mt-2.5 text-xs font-bold">

@@ -5,6 +5,8 @@ import { ArrowLeft } from 'lucide-react'
 
 import { Pip } from '@/components/pip'
 import { Sparkle } from '@/components/sparkle'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 // Backend rate-limits to 3 requests/hour per email; a short cooldown keeps
 // users from hammering "resend" and burning that budget by accident.
@@ -79,7 +81,10 @@ export function AuthSent({ email, isSignup, onResend }: AuthSentProps) {
               href={app.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-heading text-ink flex flex-1 cursor-pointer items-center justify-center rounded-2xl bg-white px-2 py-3 text-[13px] font-semibold shadow-[inset_0_0_0_2px_var(--border),0_3px_0_var(--border)]"
+              className={cn(
+                buttonVariants({ variant: 'secondary', size: 'sm' }),
+                'flex-1',
+              )}
             >
               {app.label}
             </a>
@@ -91,19 +96,21 @@ export function AuthSent({ email, isSignup, onResend }: AuthSentProps) {
         <p className="text-ink-soft font-heading text-[13px] font-medium">
           Tu n’as rien reçu&nbsp;?
         </p>
-        <button
+        <Button
           type="button"
+          variant="link"
+          size="sm"
           disabled={!canResend}
           onClick={() => {
             onResend()
             setSecondsLeft(RESEND_COOLDOWN_SECONDS)
           }}
-          className="text-primary font-heading disabled:text-ink-muted cursor-pointer px-3 py-1.5 text-sm font-semibold underline underline-offset-4 disabled:cursor-not-allowed disabled:no-underline"
+          className="disabled:text-ink-muted underline disabled:no-underline disabled:opacity-100"
         >
           {canResend
             ? 'Renvoyer le lien'
             : `Renvoyer le lien (dans ${secondsLeft}s)`}
-        </button>
+        </Button>
       </div>
     </main>
   )
