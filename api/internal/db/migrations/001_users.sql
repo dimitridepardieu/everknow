@@ -1,4 +1,4 @@
-CREATE TYPE user_role AS ENUM ('parent', 'student');
+CREATE TYPE user_role AS ENUM ('family', 'individual');
 
 CREATE TABLE users (
     id              bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

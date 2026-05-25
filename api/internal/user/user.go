@@ -3,8 +3,8 @@ package user
 import "time"
 
 const (
-	RoleParent  = "parent"
-	RoleStudent = "student"
+	RoleFamily     = "family"
+	RoleIndividual = "individual"
 )
 
 type User struct {
@@ -18,5 +18,5 @@ type User struct {
 }
 
 func IsValidRole(r string) bool {
-	return r == RoleParent || r == RoleStudent
+	return r == RoleFamily || r == RoleIndividual
 }

@@ -191,7 +191,7 @@ func (h *Handlers) UpdateMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !user.IsValidRole(body.Role) {
-		httpx.WriteError(w, httpx.BadRequest("invalid role (expected 'parent' or 'student')"))
+		httpx.WriteError(w, httpx.BadRequest("invalid role (expected 'family' or 'individual')"))
 		return
 	}
 	oldRole := "<nil>"

@@ -106,7 +106,7 @@ func TestStore_UpdateRole_HappyPath(t *testing.T) {
 		t.Fatalf("seed user: %v", err)
 	}
 
-	if err := store.UpdateRole(context.Background(), created.ID, user.RoleParent); err != nil {
+	if err := store.UpdateRole(context.Background(), created.ID, user.RoleFamily); err != nil {
 		t.Fatalf("update role: %v", err)
 	}
 
@@ -114,8 +114,8 @@ func TestStore_UpdateRole_HappyPath(t *testing.T) {
 	if err != nil {
 		t.Fatalf("re-read user: %v", err)
 	}
-	if updated.Role == nil || *updated.Role != user.RoleParent {
-		t.Fatalf("role: got %v want %q", updated.Role, user.RoleParent)
+	if updated.Role == nil || *updated.Role != user.RoleFamily {
+		t.Fatalf("role: got %v want %q", updated.Role, user.RoleFamily)
 	}
 }
 
@@ -126,7 +126,7 @@ func TestStore_UpdateRole_Nonexistent_ReturnsNotFound(t *testing.T) {
 	// The store distinguishes "row didn't exist" from a SQL error by
 	// inspecting RowsAffected — callers rely on this so e.g. an admin
 	// endpoint can return 404 instead of 500 for a deleted user.
-	if err := store.UpdateRole(context.Background(), 99999, user.RoleParent); !errors.Is(err, user.ErrNotFound) {
+	if err := store.UpdateRole(context.Background(), 99999, user.RoleFamily); !errors.Is(err, user.ErrNotFound) {
 		t.Fatalf("update on nonexistent: got err=%v want ErrNotFound", err)
 	}
 }
