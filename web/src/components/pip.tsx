@@ -259,9 +259,9 @@ export function Pip({
 // amt in [-1, 1]. Used to derive Pip's body shading from its base color.
 function shade(hex: string, amt: number): string {
   const h = hex.replace('#', '')
-  const r = parseInt(h.slice(0, 2), 16)
-  const g = parseInt(h.slice(2, 4), 16)
-  const b = parseInt(h.slice(4, 6), 16)
+  const r = Number.parseInt(h.slice(0, 2), 16)
+  const g = Number.parseInt(h.slice(2, 4), 16)
+  const b = Number.parseInt(h.slice(4, 6), 16)
   const adj = (c: number) => {
     const v = amt > 0 ? c + (255 - c) * amt : c * (1 + amt)
     return Math.round(Math.max(0, Math.min(255, v)))
