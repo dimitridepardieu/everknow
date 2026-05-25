@@ -20,12 +20,12 @@ export const Route = createFileRoute('/')({
 })
 
 // Decorative sparkles scattered over the gradient (purely visual).
-const SPARKLES: { style: CSSProperties; size: number }[] = [
-  { style: { top: '12%', left: '14%' }, size: 18 },
-  { style: { top: '20%', right: '18%' }, size: 14 },
-  { style: { top: '50%', left: '8%' }, size: 22 },
-  { style: { top: '54%', right: '10%' }, size: 16 },
-  { style: { bottom: '32%', left: '20%' }, size: 12 },
+const SPARKLES: { id: string; style: CSSProperties; size: number }[] = [
+  { id: 'top-left', style: { top: '12%', left: '14%' }, size: 18 },
+  { id: 'top-right', style: { top: '20%', right: '18%' }, size: 14 },
+  { id: 'mid-left', style: { top: '50%', left: '8%' }, size: 22 },
+  { id: 'mid-right', style: { top: '54%', right: '10%' }, size: 16 },
+  { id: 'bottom-left', style: { bottom: '32%', left: '20%' }, size: 12 },
 ]
 
 function SplashPage() {
@@ -40,9 +40,9 @@ function SplashPage() {
           'linear-gradient(170deg, #FFC93C 0%, #FF8FB1 60%, #6B4EFF 130%)',
       }}
     >
-      {SPARKLES.map((s, i) => (
+      {SPARKLES.map((s) => (
         <Sparkle
-          key={i}
+          key={s.id}
           className="absolute text-white/55"
           style={s.style}
           size={s.size}
