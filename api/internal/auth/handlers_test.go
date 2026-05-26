@@ -263,6 +263,41 @@ func TestMe_AuthenticatedReturnsUser(t *testing.T) {
 	}
 }
 
+func TestMe_ExpiredSession_ClearsCookie(t *testing.T) {
+	env := apitest.New(t)
+	verify := env.RequestAndConsumeMagicLink(t, testEmail)
+	verify.Body.Close()
+
+	// Expire the session directly — the TTL check is in the SQL WHERE clause
+	// of GetByToken, so a past expires_at makes the lookup miss. One row only
+	// (truncated DB), so an unscoped UPDATE is fine, like TestLogout's count.
+	if _, err := env.DB.Exec(`UPDATE sessions SET expires_at = now() - interval '1 second'`); err != nil {
+		t.Fatalf("expire session: %v", err)
+	}
+
+	resp := env.Client.Get(t, "/api/me")
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("status: got %d want 401", resp.StatusCode)
+	}
+
+	// Go writes MaxAge<0 as "Max-Age=0" on the wire; resp.Cookies() parses it
+	// back to MaxAge == -1. Assert via the parsed cookie, not the header.
+	var cleared *http.Cookie
+	for _, c := range resp.Cookies() {
+		if c.Name == session.CookieName {
+			cleared = c
+		}
+	}
+	if cleared == nil {
+		t.Fatalf("expected a clearing Set-Cookie for %q", session.CookieName)
+	}
+	if cleared.MaxAge != -1 || cleared.Value != "" {
+		t.Fatalf("cookie not cleared: MaxAge=%d Value=%q", cleared.MaxAge, cleared.Value)
+	}
+}
+
 func TestUpdateMe_RotatesSession(t *testing.T) {
 	env := apitest.New(t)
 	verify := env.RequestAndConsumeMagicLink(t, testEmail)
