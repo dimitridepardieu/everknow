@@ -23,7 +23,9 @@ func Auth(sessions *session.Store, users *user.Store) func(http.Handler) http.Ha
 			}
 			sess, err := sessions.GetByToken(r.Context(), token)
 			if err != nil {
-				if !errors.Is(err, session.ErrNotFound) {
+				if errors.Is(err, session.ErrNotFound) {
+					session.ClearCookie(w)
+				} else {
 					slog.WarnContext(r.Context(), "session lookup failed", "err", err)
 				}
 				next.ServeHTTP(w, r)
@@ -31,7 +33,9 @@ func Auth(sessions *session.Store, users *user.Store) func(http.Handler) http.Ha
 			}
 			u, err := users.FindByID(r.Context(), sess.UserID)
 			if err != nil {
-				if !errors.Is(err, user.ErrNotFound) {
+				if errors.Is(err, user.ErrNotFound) {
+					session.ClearCookie(w)
+				} else {
 					slog.WarnContext(r.Context(), "user lookup failed", "err", err)
 				}
 				next.ServeHTTP(w, r)
