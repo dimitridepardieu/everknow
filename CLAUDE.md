@@ -74,6 +74,7 @@ PII = email, nom, téléphone, IP, user agent, géoloc, données enfant, texte l
 ## Anti-overengineering
 - **Rule of 2-then-3** : 1ère fois → inline. 2ème fois → copier-coller. 3ème fois → extraire. Pas avant.
 - **Filtrer le feedback des agents AVANT de me le présenter.** Pour chaque finding : (1) proportionné MVP scale ? (2) idiomatique dans CE codebase ? (3) introduit une abstraction non déjà justifiée ? Ne relayer que ceux qui passent. Le filtre est ton job, pas le mien.
+- **Commentaires inline = uniquement quand le code ment.** Gotcha wire/protocole, dépendance non-évidente que le lecteur ne peut pas reconstituer en grep'ant. **Jamais** pour paraphraser le code, ni pour défendre une décision de design face à un reviewer hypothétique — ça vit dans le PR body / commit message, pas dans le source. Test : « si je supprime ce commentaire, qu'est-ce que le lecteur perd vraiment ? »
 - **Trois buckets pour toute valeur littérale** :
   - `.env` → opérateur peut vouloir la changer (URLs, TTL, provider).
   - `const` en code prod → protocole/convention identique partout (`SessionCookieName`).
