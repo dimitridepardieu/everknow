@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"flashcardacademy/api/internal/config"
 	"flashcardacademy/api/internal/httpx"
@@ -271,7 +272,9 @@ func (h *Handlers) redactEmail(email string) string {
 	if at <= 1 {
 		return "***"
 	}
-	return email[:1] + "***" + email[at:]
+	// email[:1] would split a multi-byte first rune into invalid UTF-8.
+	first, _ := utf8.DecodeRuneInString(email)
+	return string(first) + "***" + email[at:]
 }
 
 // extractClientIP reads X-Real-IP, which Caddy sets from its own observation
