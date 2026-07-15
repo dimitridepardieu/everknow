@@ -33,7 +33,13 @@ Versions = source de vérité dans `docker/.env`. `make fmt` avant chaque commit
 - Messages en anglais, **body obligatoire** expliquant le *why*.
 - **Jamais de `Co-Authored-By`**.
 - Issues + PRs accessibles à un non-dev (PM, designer) **et** à un senior dev en <30s. PR body : *what* (user-visible) → *why* → *key approach* (1-2 phrases, pas le diff).
-- Pour créer une issue triée (labels + Priority + Size posés à la création), utiliser le skill `create-issue`.
+- Pour créer une issue triée (label + Priority + Size + milestone posés à la création), utiliser le skill `create-issue`.
+
+## Milestones
+- Le **milestone porte le *quoi*** (quel effort cette issue sert), la **Priority porte le *quand***. Toute issue ouverte en a un — sans milestone, elle est invisible des vues qui comptent.
+- **La définition fait foi dans la description GitHub du milestone**, pas ici : `gh api repos/dimitridepardieu/flashcardacademy/milestones --jq '.[] | "\(.title): \(.description)"'`. La liste évolue ; la dupliquer ici la ferait pourrir.
+- Un milestone est un **objectif de sortie**, pas un tiroir. S'il faut forcer une issue dedans, c'est qu'il manque un milestone — en proposer un plutôt que gonfler un existant.
+- Chaque milestone a un **journal** : une issue unique, ouverte le temps du milestone, qui porte la chronologie des arbitrages. Elle se ferme avec lui.
 
 ## Go — Effective Go is the baseline
 **YOU MUST treat [Effective Go](https://go.dev/doc/effective_go) as the reference.** When unsure, mirror the stdlib (`net/http`, `database/sql`, `errors`, `context`). Deviate only with a documented reason.
@@ -80,6 +86,21 @@ PII = email, nom, téléphone, IP, user agent, géoloc, données enfant, texte l
   - `const` en code prod → protocole/convention identique partout (`SessionCookieName`).
   - `const` en test → valeur synthétique, n'importe quelle équivalente marcherait.
   Une seule des trois, jamais en doute.
+
+## Écrit — ce qui périme, ce qui date
+**Un écrit qui prétend décrire l'état actuel pourrit en silence.** Il ne s'annonce jamais faux, il s'annonce à jour — c'est ce qui le rend pire que rien. Un écrit *daté* ne pourrit pas : « le 15/07 on a décidé X » reste vrai pour toujours.
+
+| Artefact | Vit | Contenu |
+|---|---|---|
+| **Journal** (1 issue / milestone) | meurt avec le milestone | Chronologie des arbitrages. Append-only : **commenter**, jamais éditer le body. |
+| **ADR** (`docs/decisions/`) | permanent, immuable | « Le JJ/MM on a décidé X parce que Y. » |
+| **Issue pilier** | meurt à la PR | Une user story courte. Le détail se brainstorme à l'ouverture, pas à l'écriture. |
+| **Runbook** (`docs/*.md`) | tant que la procédure existe | Comment faire un truc (ex: `tailscale.md`). |
+| **Le code** | — | Comment ça marche vraiment. |
+
+- **Jamais** de doc d'état (`PROJECT_STATUS.md`), de spec détaillée, ni de plan d'implémentation. Le code appartient à la codebase, l'intention aux issues. Un doc « pour donner le contexte à un agent » est le pire cas : il sera lu comme la vérité.
+- Test avant d'écrire : « **est-ce que ça prétend être vrai *maintenant* ?** » Si oui → soit c'est daté (journal/ADR), soit ça n'existe pas.
+- **Identifiants externes volatils** (IDs d'artboard Claude Design, noms d'écrans, chemins d'un autre repo) : légitimes dans un instantané daté, **pointeurs qui pendent** dans une consigne lue plus tard. Dans une issue → décrire ce que la chose *fait*. L'intention survit au renommage, pas le nom.
 
 ## Gotchas — project-specific
 - **`.env` changes ne sont PAS pris par `make restart`** → `make rebuild` ou `docker compose ... up -d --force-recreate <service>`.
