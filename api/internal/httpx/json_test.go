@@ -46,6 +46,7 @@ func TestDecodeJSON(t *testing.T) {
 			// Go exposes no typed error for DisallowUnknownFields or for a
 			// truncated document, so both land on the generic default.
 			{"unknown field", `{"email":"a@b.com","admin":true}`, "invalid request body"},
+			{"pii in field name", `{"alice@example.com":1}`, "invalid request body"},
 			{"truncated", `{"email":`, "invalid request body"},
 		}
 
@@ -67,21 +68,6 @@ func TestDecodeJSON(t *testing.T) {
 					t.Errorf("message: got %q, want %q", e.Message, tc.want)
 				}
 			})
-		}
-	})
-
-	// The reason this package exists: a decoder error must never reach the
-	// client verbatim, or a custom UnmarshalJSON echoing its input would ship
-	// the user's PII in a 400.
-	t.Run("never echoes the raw decoder error", func(t *testing.T) {
-		_, err := decode(t, `{"email":"a@b.com","alice@example.com":1}`)
-
-		var e *httpx.Error
-		if !errors.As(err, &e) {
-			t.Fatalf("got %T (%v), want *httpx.Error", err, err)
-		}
-		if strings.Contains(e.Message, "alice@example.com") {
-			t.Fatalf("message %q echoes the offending input back to the client", e.Message)
 		}
 	})
 }
