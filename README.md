@@ -98,7 +98,10 @@ container — wait ~15s.
 
 ## Documentation
 
-- `docs/PROJECT_STATUS.md` — full project state and roadmap
+- **GitHub issues and milestones** — what is being built, and why. Each milestone
+  has a journal issue carrying the decisions behind its scope. There is no status
+  doc: it would claim to be current and rot.
+- `docs/decisions/` — ADRs. Dated, immutable: "on DD/MM we decided X because Y".
 - `docs/tailscale.md` — testing on physical devices (iPhone, iPad)
 - `docker/README.md` — Docker stack internals (compose, Dockerfiles)
 - `CLAUDE.md` — project rules (language, tooling, commits, formatting)
