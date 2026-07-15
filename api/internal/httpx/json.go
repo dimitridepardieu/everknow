@@ -47,6 +47,7 @@ func WriteJSON(w http.ResponseWriter, status int, v any) {
 func decodeError(err error) error {
 	var syn *json.SyntaxError
 	var typ *json.UnmarshalTypeError
+	var tooLarge *http.MaxBytesError
 	switch {
 	case errors.As(err, &syn):
 		return BadRequest(fmt.Sprintf("malformed JSON at byte %d", syn.Offset))
@@ -54,7 +55,9 @@ func decodeError(err error) error {
 		return BadRequest(fmt.Sprintf("invalid type for field %q (expected %s)", typ.Field, typ.Type))
 	case errors.Is(err, io.EOF):
 		return BadRequest("request body must not be empty")
+	case errors.As(err, &tooLarge):
+		return BadRequest("request body too large")
 	default:
-		return BadRequest(err.Error())
+		return BadRequest("invalid request body")
 	}
 }
