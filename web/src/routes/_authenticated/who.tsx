@@ -2,14 +2,39 @@ import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 
 import { Pip } from '@/components/pip'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Sparkle } from '@/components/sparkle'
 import { useActiveProfileId } from '@/lib/active-profile-context'
 import { useProfiles } from '@/lib/profiles'
-import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_authenticated/who')({
   component: WhoPage,
 })
+
+// Presentation-only: profiles carry no stored colour yet, so each Pip is
+// tinted by position. Deterministic, so a profile keeps the same colour.
+const AVATAR_COLORS = ['#FFD86A', '#FF8FB1', '#4FC1F0', '#7AD9C8', '#C5A8FF']
+
+function PipAvatar({
+  color,
+  size = 84,
+}: {
+  readonly color: string
+  readonly size?: number
+}) {
+  return (
+    <div
+      className="flex shrink-0 items-center justify-center overflow-hidden rounded-full"
+      style={{
+        width: size,
+        height: size,
+        background: 'var(--background)',
+        boxShadow: `0 0 0 4px white, 0 0 0 6px ${color}`,
+      }}
+    >
+      <Pip size={size * 1.05} mood="happy" color={color} />
+    </div>
+  )
+}
 
 function WhoPage() {
   const { data: profiles } = useProfiles()
@@ -24,51 +49,79 @@ function WhoPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col px-6 py-8">
-      <div className="mb-8 flex flex-col items-center text-center">
-        <Pip size={88} mood="happy" />
-        <h1 className="font-heading mt-3 text-[26px] font-semibold">
-          Qui révise ?
-        </h1>
-        <p className="text-ink-soft mt-1 text-sm font-bold">
-          Choisis ton profil pour commencer.
-        </p>
-      </div>
+    <main
+      className="relative flex min-h-dvh flex-col overflow-hidden px-6 py-12 text-white"
+      style={{
+        background:
+          'linear-gradient(170deg, var(--primary) 0%, var(--primary-dark) 100%)',
+      }}
+    >
+      <Sparkle
+        size={16}
+        className="absolute top-[12%] left-[10%]"
+        style={{ color: '#FFC93C', opacity: 0.55 }}
+      />
+      <Sparkle
+        size={12}
+        className="absolute top-[20%] right-[14%]"
+        style={{ color: '#FFC93C', opacity: 0.5 }}
+      />
+      <Sparkle
+        size={14}
+        className="absolute bottom-[34%] left-[14%]"
+        style={{ color: '#FFC93C', opacity: 0.5 }}
+      />
 
-      {profiles.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-          <p className="text-ink-soft text-sm font-bold">
-            Aucun profil pour l’instant.
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-9 text-center">
+        <div>
+          <p className="font-heading text-xs font-medium tracking-[2px] text-white/70 uppercase">
+            Ta famille
           </p>
-          <Link to="/profile-new" className={buttonVariants()}>
-            <Plus className="size-5" strokeWidth={3} />
-            Créer un profil
-          </Link>
+          <h1 className="font-heading mt-1.5 text-[32px] leading-tight font-semibold">
+            Qui est-ce ?
+          </h1>
         </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {profiles.map((p) => (
-            <Button
-              key={p.id}
-              variant="secondary"
-              onClick={() => pick(p.id)}
-              className="h-14 justify-start text-base"
+
+        {profiles.length === 0 ? (
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-sm font-bold text-white/80">
+              Aucun profil pour l’instant.
+            </p>
+            <Link
+              to="/profiles/new"
+              className="text-primary font-heading flex cursor-pointer items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold uppercase shadow-[0_5px_0_rgba(0,0,0,0.18)]"
             >
-              {p.name ?? 'Sans nom'}
-            </Button>
-          ))}
-          <Link
-            to="/profile-new"
-            className={cn(
-              buttonVariants({ variant: 'ghost' }),
-              'text-ink-soft mt-1 gap-2',
-            )}
-          >
-            <Plus className="size-5" strokeWidth={3} />
-            Ajouter un profil
-          </Link>
-        </div>
-      )}
+              <Plus className="size-5" strokeWidth={3} />
+              Créer un profil
+            </Link>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-wrap justify-center gap-5">
+              {profiles.map((p, i) => (
+                <button
+                  key={p.id}
+                  onClick={() => pick(p.id)}
+                  className="flex cursor-pointer flex-col items-center gap-2"
+                >
+                  <PipAvatar color={AVATAR_COLORS[i % AVATAR_COLORS.length]} />
+                  <span className="font-heading text-sm font-semibold">
+                    {p.name ?? 'Sans nom'}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <Link
+              to="/profiles/new"
+              className="font-heading mx-auto flex cursor-pointer items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-white/85"
+            >
+              <Plus className="size-4" strokeWidth={3} />
+              Ajouter un enfant
+            </Link>
+          </div>
+        )}
+      </div>
     </main>
   )
 }
