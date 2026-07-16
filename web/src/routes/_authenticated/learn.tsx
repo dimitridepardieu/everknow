@@ -13,7 +13,7 @@ export const Route = createFileRoute('/_authenticated/learn')({
 function LearnPage() {
   const { data: me } = useMe()
   const { data: profiles } = useProfiles()
-  const { activeProfileId } = useActiveProfileId()
+  const { activeProfileId, setActiveProfileId } = useActiveProfileId()
   const navigate = useNavigate()
   const mutation = useLogout()
 
@@ -36,6 +36,8 @@ function LearnPage() {
 
   const handleLogout = async () => {
     await mutation.mutateAsync()
+    // Drop the picked profile so the next account on this browser starts clean.
+    setActiveProfileId(null)
     void navigate({ to: '/login' })
   }
 
