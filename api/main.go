@@ -15,6 +15,7 @@ import (
 	"flashcardacademy/api/internal/config"
 	"flashcardacademy/api/internal/db"
 	"flashcardacademy/api/internal/email"
+	"flashcardacademy/api/internal/profile"
 	"flashcardacademy/api/internal/server"
 	"flashcardacademy/api/internal/session"
 	"flashcardacademy/api/internal/user"
@@ -64,6 +65,7 @@ func run() error {
 	verificationStore := auth.NewStore(pool)
 	sessionStore := session.NewStore(pool)
 	userStore := user.NewStore(pool)
+	profileStore := profile.NewStore(pool)
 	magic := auth.NewMagicLinkSender(verificationStore, sender, cfg.AppBaseURL, cfg.MagicLinkTTL)
 
 	handler := server.NewHandler(server.Deps{
@@ -72,6 +74,7 @@ func run() error {
 		Pool:     pool,
 		Sessions: sessionStore,
 		Users:    userStore,
+		Profiles: profileStore,
 		Magic:    magic,
 	})
 

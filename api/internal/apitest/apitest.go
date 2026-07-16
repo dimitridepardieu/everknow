@@ -35,6 +35,7 @@ import (
 	"flashcardacademy/api/internal/config"
 	"flashcardacademy/api/internal/db"
 	"flashcardacademy/api/internal/email"
+	"flashcardacademy/api/internal/profile"
 	"flashcardacademy/api/internal/server"
 	"flashcardacademy/api/internal/session"
 	"flashcardacademy/api/internal/user"
@@ -78,6 +79,7 @@ func New(t *testing.T) *Env {
 	verificationStore := auth.NewStore(pool)
 	sessionStore := session.NewStore(pool)
 	userStore := user.NewStore(pool)
+	profileStore := profile.NewStore(pool)
 	magic := auth.NewMagicLinkSender(verificationStore, emails, cfg.AppBaseURL, cfg.MagicLinkTTL)
 
 	handler := server.NewHandler(server.Deps{
@@ -88,6 +90,7 @@ func New(t *testing.T) *Env {
 		Pool:     pool,
 		Sessions: sessionStore,
 		Users:    userStore,
+		Profiles: profileStore,
 		Magic:    magic,
 	})
 
@@ -266,7 +269,7 @@ func createTestDB(testURL string) error {
 // predictable (user 1 in test A and test B both have id=1).
 func truncate(t *testing.T, pool *sql.DB) {
 	t.Helper()
-	_, err := pool.Exec(`TRUNCATE users, sessions, verifications RESTART IDENTITY CASCADE`)
+	_, err := pool.Exec(`TRUNCATE users, sessions, verifications, profiles RESTART IDENTITY CASCADE`)
 	if err != nil {
 		t.Fatalf("truncate: %v", err)
 	}

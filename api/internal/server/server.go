@@ -13,6 +13,7 @@ import (
 	"flashcardacademy/api/internal/auth"
 	"flashcardacademy/api/internal/config"
 	"flashcardacademy/api/internal/middleware"
+	"flashcardacademy/api/internal/profile"
 	"flashcardacademy/api/internal/ratelimit"
 	"flashcardacademy/api/internal/session"
 	"flashcardacademy/api/internal/user"
@@ -38,13 +39,15 @@ type Deps struct {
 	Pool     *sql.DB
 	Sessions *session.Store
 	Users    *user.Store
+	Profiles *profile.Store
 	Magic    *auth.MagicLinkSender
 }
 
 func NewHandler(d Deps) http.Handler {
 	ipLimiter := ratelimit.New(d.Ctx, magicLinkLimitPerIP, magicLinkWindowPerIP)
 	emailLimiter := ratelimit.New(d.Ctx, magicLinkLimitPerEmail, magicLinkWindowPerEmail)
-	handlers := auth.NewHandlers(d.Cfg, d.Sessions, d.Users, d.Magic, ipLimiter, emailLimiter)
+	handlers := auth.NewHandlers(d.Cfg, d.Sessions, d.Users, d.Profiles, d.Magic, ipLimiter, emailLimiter)
+	profiles := profile.NewHandlers(d.Profiles)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/health", health(d.Pool))
@@ -53,6 +56,8 @@ func NewHandler(d Deps) http.Handler {
 	mux.Handle("POST /api/auth/logout", middleware.RequireUser(http.HandlerFunc(handlers.Logout)))
 	mux.Handle("GET /api/me", middleware.RequireUser(http.HandlerFunc(handlers.Me)))
 	mux.Handle("PATCH /api/me", middleware.RequireUser(http.HandlerFunc(handlers.UpdateMe)))
+	mux.Handle("POST /api/profiles", middleware.RequireUser(http.HandlerFunc(profiles.Create)))
+	mux.Handle("GET /api/profiles", middleware.RequireUser(http.HandlerFunc(profiles.List)))
 
 	// Order matters: Recover (outer) → Auth (inject user) → Logger (sees user) → mux.
 	// Logger runs inside Auth so it can include user_id in the per-request log line.

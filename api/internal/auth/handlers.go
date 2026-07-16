@@ -15,6 +15,7 @@ import (
 
 	"flashcardacademy/api/internal/config"
 	"flashcardacademy/api/internal/httpx"
+	"flashcardacademy/api/internal/profile"
 	"flashcardacademy/api/internal/ratelimit"
 	"flashcardacademy/api/internal/session"
 	"flashcardacademy/api/internal/token"
@@ -25,16 +26,18 @@ type Handlers struct {
 	cfg          *config.Config
 	sessions     *session.Store
 	users        *user.Store
+	profiles     *profile.Store
 	magic        *MagicLinkSender
 	ipLimiter    *ratelimit.Limiter
 	emailLimiter *ratelimit.Limiter
 }
 
-func NewHandlers(cfg *config.Config, sessions *session.Store, users *user.Store, magic *MagicLinkSender, ipLimiter, emailLimiter *ratelimit.Limiter) *Handlers {
+func NewHandlers(cfg *config.Config, sessions *session.Store, users *user.Store, profiles *profile.Store, magic *MagicLinkSender, ipLimiter, emailLimiter *ratelimit.Limiter) *Handlers {
 	return &Handlers{
 		cfg:          cfg,
 		sessions:     sessions,
 		users:        users,
+		profiles:     profiles,
 		magic:        magic,
 		ipLimiter:    ipLimiter,
 		emailLimiter: emailLimiter,
@@ -205,6 +208,20 @@ func (h *Handlers) UpdateMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	slog.InfoContext(r.Context(), "user role updated", "user_id", u.ID, "from", oldRole, "to", body.Role)
+
+	// An individual account is its own sole learner, but spaced repetition is
+	// scoped per profile — so every account needs at least one. A family names
+	// its children explicitly; an individual gets one unnamed profile here, at
+	// the onboarding transition. Gated on oldRole == nil so a later PATCH can't
+	// mint duplicates.
+	if oldRole == "<nil>" && body.Role == user.RoleIndividual {
+		if _, err := h.profiles.Create(r.Context(), u.ID, nil, nil); err != nil {
+			slog.ErrorContext(r.Context(), "create individual profile", "err", err)
+			httpx.WriteError(w, httpx.InternalServer("failed to set up profile"))
+			return
+		}
+		slog.InfoContext(r.Context(), "individual profile created", "user_id", u.ID)
+	}
 
 	// TODO (post-MVP): wrap UpdateRole + DeleteByToken + issueSession in a
 	// single tx. Today they are three separate statements; if the process
