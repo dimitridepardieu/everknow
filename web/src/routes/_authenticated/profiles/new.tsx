@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useCreateProfile } from '@/lib/profiles'
+import { profileAgeSchema } from '@/lib/schemas'
 
 export const Route = createFileRoute('/_authenticated/profiles/new')({
   component: NewProfilePage,
@@ -53,14 +54,17 @@ function NewProfilePage() {
   const [age, setAge] = useState('')
 
   const trimmedName = name.trim()
-  const canSubmit = trimmedName.length > 0 && !mutation.isPending
-  const ageNum = Number(age)
-  const showAge = age.trim() !== '' && Number.isInteger(ageNum)
+  const trimmedAge = age.trim()
+  const ageResult =
+    trimmedAge === '' ? null : profileAgeSchema.safeParse(trimmedAge)
+  const ageError =
+    ageResult && !ageResult.success ? ageResult.error.issues[0]?.message : null
+  const canSubmit = trimmedName.length > 0 && !ageError && !mutation.isPending
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (!canSubmit) return
-    const parsedAge = showAge ? ageNum : undefined
+    const parsedAge = ageResult?.success ? ageResult.data : undefined
     mutation.mutate(
       { name: trimmedName, age: parsedAge },
       { onSuccess: () => void navigate({ to: '/who' }) },
@@ -90,9 +94,9 @@ function NewProfilePage() {
         <p className="font-heading text-ink mt-2 text-[17px] font-semibold">
           {trimmedName || 'Prénom'}
         </p>
-        {showAge && (
+        {ageResult?.success && (
           <p className="font-heading text-ink-muted mt-0.5 text-xs font-medium">
-            {ageNum} ans
+            {ageResult.data} ans
           </p>
         )}
       </div>
@@ -124,11 +128,18 @@ function NewProfilePage() {
           inputMode="numeric"
           min={0}
           max={150}
+          step={1}
           value={age}
           onChange={(e) => setAge(e.target.value)}
           placeholder="8"
+          aria-invalid={ageError !== null}
           className={`${inputClass} px-4`}
         />
+        {ageError && (
+          <p className="text-destructive mx-1 mt-2 text-xs font-bold">
+            {ageError}
+          </p>
+        )}
 
         {mutation.isError && (
           <p className="text-destructive mx-1 mt-4 text-xs font-bold">
