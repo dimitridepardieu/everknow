@@ -11,7 +11,8 @@ export const Route = createFileRoute('/_authenticated/who')({
 })
 
 // Presentation-only: profiles carry no stored colour yet, so each Pip is
-// tinted by position. Deterministic, so a profile keeps the same colour.
+// tinted by list position. Stable while the list is (ordered by created_at,
+// no deletion yet) — revisit when profiles can be removed or reordered.
 const AVATAR_COLORS = ['#FFD86A', '#FF8FB1', '#4FC1F0', '#7AD9C8', '#C5A8FF']
 
 function PipAvatar({
