@@ -24,12 +24,15 @@ function LearnPage() {
   if (profiles === undefined) return null
 
   // An individual is its own sole learner (one auto-created profile); a family
-  // must have picked one on /who. No stored pick for a family → send them there.
+  // must have picked one on /who. No stored pick for a family → send them there,
+  // but a family with no profiles yet skips the empty picker and creates first.
   const activeProfile =
     me.role === 'individual'
       ? (profiles[0] ?? null)
       : (profiles.find((p) => p.id === activeProfileId) ?? null)
-  if (me.role === 'family' && !activeProfile) return <Navigate to="/who" />
+  if (me.role === 'family' && !activeProfile) {
+    return <Navigate to={profiles.length === 0 ? '/profiles/new' : '/who'} />
+  }
 
   const handleLogout = async () => {
     await mutation.mutateAsync()
