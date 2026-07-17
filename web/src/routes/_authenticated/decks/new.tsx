@@ -45,7 +45,7 @@ function NewDeckPage() {
         text={text}
         onChange={setText}
         onBack={() => setStep('hub')}
-        onGenerate={() => mutation.mutate(text)}
+        onGenerate={() => mutation.mutate(text.trim())}
         isError={mutation.isError}
       />
     )
