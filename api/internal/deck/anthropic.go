@@ -31,8 +31,9 @@ const (
 // API's structured-output mode (output_config.format): on opus-4-8 it
 // degenerates on richer inputs — empty fields, repetition loops — where a
 // plain "answer in this JSON shape" instruction is stable (verified against
-// the live API, see #38 2026-07-17). We parse the text block ourselves and
-// tolerate a stray markdown fence.
+// the live API, see #38 2026-07-17). The model returns bare JSON, so the
+// text block is unmarshalled as-is; a wrapper or prose would fail the parse
+// and surface as an error rather than a bad card.
 const systemPrompt = `Tu fabriques des flashcards de révision pour un enfant de 6 à 9 ans, à partir d'un texte fourni par son parent.
 
 - Écris les cartes dans la langue du texte source.
