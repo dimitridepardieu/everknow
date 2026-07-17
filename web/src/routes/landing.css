@@ -1,0 +1,95 @@
+/* Landing hero — orbiting flashcards around Pip. Not expressible in Tailwind
+   utilities (a rotating ring whose cards counter-rotate to stay upright), so
+   it lives here. Prefixed lp- to stay out of the global namespace. */
+
+@keyframes lp-orbit-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes lp-orbit-counter {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@keyframes lp-float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes lp-pulse-soft {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.15;
+  }
+}
+
+.lp-orbit-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lp-orbit-glow {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--primary), transparent 75%) 0%,
+    transparent 70%
+  );
+  animation: lp-pulse-soft 3s ease-in-out infinite;
+}
+.lp-orbit-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--ring-size);
+  height: var(--ring-size);
+  margin-top: calc(var(--ring-size) / -2);
+  margin-left: calc(var(--ring-size) / -2);
+  animation: lp-orbit-rotate var(--ring-dur, 22s) linear infinite;
+}
+.lp-orbit-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(var(--ang, 0deg))
+    translateX(calc(var(--ring-size) / 2));
+  transform-origin: 0 0;
+}
+.lp-orbit-card-body {
+  transform: rotate(calc(var(--ang, 0deg) * -1));
+  animation: lp-orbit-counter var(--ring-dur, 22s) linear infinite;
+}
+.lp-float {
+  animation: lp-float-y 4s ease-in-out infinite;
+}
+
+.lp-bg-grid {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(27, 27, 58, 0.07) 1px,
+    transparent 0
+  );
+  background-size: 24px 24px;
+}
+
+/* Respect users who ask for less motion: freeze the ring, keep cards upright. */
+@media (prefers-reduced-motion: reduce) {
+  .lp-orbit-glow,
+  .lp-orbit-ring,
+  .lp-orbit-card-body,
+  .lp-float {
+    animation: none;
+  }
+}
