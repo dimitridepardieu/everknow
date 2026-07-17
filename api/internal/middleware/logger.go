@@ -66,3 +66,10 @@ func (s *statusRecorder) WriteHeader(code int) {
 	s.wroteHeader = true
 	s.ResponseWriter.WriteHeader(code)
 }
+
+// Unwrap lets http.ResponseController reach the underlying writer through
+// this wrapper — without it, the wrapper hides capabilities it doesn't
+// implement itself and SetWriteDeadline fails with "feature not supported"
+// (see net/http's ResponseController docs). Card generation depends on it:
+// it lifts main.go's 15s WriteTimeout for its own long response.
+func (s *statusRecorder) Unwrap() http.ResponseWriter { return s.ResponseWriter }

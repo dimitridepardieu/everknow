@@ -18,6 +18,7 @@ services:
       - EMAIL_FROM=${EMAIL_FROM}
       - SESSION_TTL_HOURS=${SESSION_TTL_HOURS}
       - MAGIC_LINK_TTL_MINUTES=${MAGIC_LINK_TTL_MINUTES}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
     networks:
       - public
       - private
