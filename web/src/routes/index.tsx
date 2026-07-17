@@ -189,8 +189,8 @@ function LandingPage() {
     <main className="bg-background min-h-dvh">
       <LandingNav />
 
-      <section className="lp-bg-grid px-5 pt-9 pb-14 md:px-10 md:pt-16 md:pb-20">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-[1.05fr_1fr] md:gap-14">
+      <section className="lp-bg-grid flex min-h-[calc(100dvh-4rem)] items-center px-5 py-12 md:px-10">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-10 md:grid-cols-[1.05fr_1fr] md:gap-14">
           {/* Text column — left-aligned on desktop, centred stacked on mobile */}
           <div className="flex flex-col items-center text-center md:items-start md:text-left">
             <span className="text-primary font-heading mb-3.5 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold shadow-[0_2px_0_var(--border)]">
@@ -244,21 +244,14 @@ function LandingPage() {
         </div>
       </section>
 
-      <footer className="bg-ink px-5 py-9 text-white">
-        <div className="mx-auto flex max-w-2xl flex-col items-center gap-2 text-center">
-          <div className="flex items-center gap-2.5">
-            <Pip size={40} mood="happy" />
-            <span className="font-heading text-lg font-semibold">
-              Flashcard Academy
-            </span>
-          </div>
-          <p className="text-[13px] font-semibold text-white/65">
-            Les flashcards malines, pour les enfants curieux.
-          </p>
-          <p className="mt-3 text-[11px] font-semibold text-white/45">
-            © 2026 Flashcard Academy
-          </p>
+      <footer className="bg-ink flex items-center justify-between gap-4 px-4 py-4 text-white md:px-10">
+        <div className="flex items-center gap-2">
+          <Pip size={28} mood="happy" />
+          <span className="font-heading text-base font-semibold">
+            Flashcard Academy
+          </span>
         </div>
+        <p className="text-[11px] font-semibold text-white/50">© 2026</p>
       </footer>
     </main>
   )
