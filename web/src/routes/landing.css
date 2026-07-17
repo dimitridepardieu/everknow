@@ -1,0 +1,50 @@
+/* Landing hero — flashcards arranged in a ring around Pip. Static by design:
+   an earlier version rotated the ring, which read as too distracting. The
+   transforms below only place the cards; nothing animates. */
+
+.lp-orbit-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lp-orbit-glow {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.3;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--primary), transparent 78%) 0%,
+    transparent 70%
+  );
+}
+.lp-orbit-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--ring-size);
+  height: var(--ring-size);
+  margin-top: calc(var(--ring-size) / -2);
+  margin-left: calc(var(--ring-size) / -2);
+}
+.lp-orbit-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(var(--ang, 0deg))
+    translateX(calc(var(--ring-size) / 2));
+  transform-origin: 0 0;
+}
+/* Counter-rotate the body so each card sits upright at its ring position. */
+.lp-orbit-card-body {
+  transform: rotate(calc(var(--ang, 0deg) * -1));
+}
+
+.lp-bg-grid {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(27, 27, 58, 0.07) 1px,
+    transparent 0
+  );
+  background-size: 24px 24px;
+}

@@ -38,7 +38,7 @@ function LearnPage() {
     await mutation.mutateAsync()
     // Drop the picked profile so the next account on this browser starts clean.
     setActiveProfileId(null)
-    void navigate({ to: '/login' })
+    void navigate({ to: '/' })
   }
 
   return (
