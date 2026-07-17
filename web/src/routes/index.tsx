@@ -118,14 +118,9 @@ function OrbitHero({
 
       <div
         className="lp-orbit-ring"
-        style={
-          {
-            '--ring-size': `${size}px`,
-            '--ring-dur': '22s',
-          } as React.CSSProperties
-        }
+        style={{ '--ring-size': `${size}px` } as React.CSSProperties}
       >
-        {ORBIT_CARDS.map((c, i) => (
+        {ORBIT_CARDS.map((c) => (
           <div
             key={c.cat}
             className="lp-orbit-card"
@@ -133,10 +128,9 @@ function OrbitHero({
           >
             <div className="lp-orbit-card-body">
               <div
-                className="lp-float min-w-[88px] rounded-[14px] bg-white px-2.5 py-2"
+                className="min-w-[88px] rounded-[14px] bg-white px-2.5 py-2"
                 style={{
                   boxShadow: `0 4px 0 ${c.dark}, 0 0 0 2.5px ${c.color} inset`,
-                  animationDelay: `${i * 0.4}s`,
                 }}
               >
                 <p
