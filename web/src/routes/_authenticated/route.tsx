@@ -1,5 +1,6 @@
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
 
+import { ActiveProfileProvider } from '@/lib/active-profile'
 import { meQueryOptions } from '@/lib/auth'
 
 export const Route = createFileRoute('/_authenticated')({
@@ -16,5 +17,9 @@ export const Route = createFileRoute('/_authenticated')({
 })
 
 function AppLayout() {
-  return <Outlet />
+  return (
+    <ActiveProfileProvider>
+      <Outlet />
+    </ActiveProfileProvider>
+  )
 }

@@ -13,8 +13,10 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedWhoRouteImport } from './routes/_authenticated/who'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedLearnRouteImport } from './routes/_authenticated/learn'
+import { Route as AuthenticatedProfilesNewRouteImport } from './routes/_authenticated/profiles/new'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -35,6 +37,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedWhoRoute = AuthenticatedWhoRouteImport.update({
+  id: '/who',
+  path: '/who',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -45,6 +52,12 @@ const AuthenticatedLearnRoute = AuthenticatedLearnRouteImport.update({
   path: '/learn',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProfilesNewRoute =
+  AuthenticatedProfilesNewRouteImport.update({
+    id: '/profiles/new',
+    path: '/profiles/new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -52,6 +65,8 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/learn': typeof AuthenticatedLearnRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/who': typeof AuthenticatedWhoRoute
+  '/profiles/new': typeof AuthenticatedProfilesNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -59,6 +74,8 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/learn': typeof AuthenticatedLearnRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/who': typeof AuthenticatedWhoRoute
+  '/profiles/new': typeof AuthenticatedProfilesNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -68,12 +85,28 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/_authenticated/learn': typeof AuthenticatedLearnRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/who': typeof AuthenticatedWhoRoute
+  '/_authenticated/profiles/new': typeof AuthenticatedProfilesNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/register' | '/learn' | '/onboarding'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/register'
+    | '/learn'
+    | '/onboarding'
+    | '/who'
+    | '/profiles/new'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/register' | '/learn' | '/onboarding'
+  to:
+    | '/'
+    | '/login'
+    | '/register'
+    | '/learn'
+    | '/onboarding'
+    | '/who'
+    | '/profiles/new'
   id:
     | '__root__'
     | '/'
@@ -82,6 +115,8 @@ export interface FileRouteTypes {
     | '/register'
     | '/_authenticated/learn'
     | '/_authenticated/onboarding'
+    | '/_authenticated/who'
+    | '/_authenticated/profiles/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -121,6 +156,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/who': {
+      id: '/_authenticated/who'
+      path: '/who'
+      fullPath: '/who'
+      preLoaderRoute: typeof AuthenticatedWhoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
       path: '/onboarding'
@@ -135,17 +177,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLearnRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profiles/new': {
+      id: '/_authenticated/profiles/new'
+      path: '/profiles/new'
+      fullPath: '/profiles/new'
+      preLoaderRoute: typeof AuthenticatedProfilesNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedLearnRoute: typeof AuthenticatedLearnRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedWhoRoute: typeof AuthenticatedWhoRoute
+  AuthenticatedProfilesNewRoute: typeof AuthenticatedProfilesNewRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLearnRoute: AuthenticatedLearnRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedWhoRoute: AuthenticatedWhoRoute,
+  AuthenticatedProfilesNewRoute: AuthenticatedProfilesNewRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
