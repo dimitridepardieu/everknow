@@ -237,9 +237,16 @@ function LandingPage() {
             </Link>
           </div>
 
-          {/* Orbit column — reflows below the text on mobile, beside it on desktop */}
+          {/* Orbit column — reflows below the text on mobile, beside it on
+              desktop. Two sizes per the design (260 / 420); only the matching
+              one renders, the other is display:none so it never animates. */}
           <div className="flex justify-center">
-            <OrbitHero size={300} pipSize={140} />
+            <div className="xl:hidden">
+              <OrbitHero size={260} pipSize={120} />
+            </div>
+            <div className="hidden xl:block">
+              <OrbitHero size={420} pipSize={200} />
+            </div>
           </div>
         </div>
       </section>
