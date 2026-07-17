@@ -34,6 +34,7 @@ import (
 	"flashcardacademy/api/internal/auth"
 	"flashcardacademy/api/internal/config"
 	"flashcardacademy/api/internal/db"
+	"flashcardacademy/api/internal/deck"
 	"flashcardacademy/api/internal/email"
 	"flashcardacademy/api/internal/profile"
 	"flashcardacademy/api/internal/server"
@@ -56,6 +57,7 @@ type Env struct {
 	DB     *sql.DB
 	Server *httptest.Server
 	Emails *FakeEmailSender
+	Cards  *FakeGenerator
 	Client *Client
 }
 
@@ -76,6 +78,7 @@ func New(t *testing.T) *Env {
 	}
 
 	emails := &FakeEmailSender{}
+	cards := &FakeGenerator{}
 	verificationStore := auth.NewStore(pool)
 	sessionStore := session.NewStore(pool)
 	userStore := user.NewStore(pool)
@@ -92,6 +95,7 @@ func New(t *testing.T) *Env {
 		Users:    userStore,
 		Profiles: profileStore,
 		Magic:    magic,
+		Cards:    cards,
 	})
 
 	srv := httptest.NewServer(handler)
@@ -101,6 +105,7 @@ func New(t *testing.T) *Env {
 		DB:     pool,
 		Server: srv,
 		Emails: emails,
+		Cards:  cards,
 		Client: newClient(t, srv.URL),
 	}
 }
@@ -317,6 +322,61 @@ func (f *FakeEmailSender) LastFor(email string) string {
 		}
 	}
 	return ""
+}
+
+// ─── Fake card generator ────────────────────────────────────────
+
+// FakeGenerator stands in for the Anthropic call. Unlike FakeEmailSender it
+// is configurable: Cards and Err let a test drive the handler's success and
+// failure branches without a network round-trip.
+type FakeGenerator struct {
+	mu    sync.Mutex
+	texts []string
+
+	// Cards is returned on success. Nil yields one placeholder card, which
+	// is enough for tests that only care that generation was wired up.
+	Cards []deck.Card
+	// Err, when set, is returned instead of Cards.
+	Err error
+}
+
+// Compile-time check: FakeGenerator must satisfy deck.Generator so an
+// interface change breaks the build here rather than at the call site.
+var _ deck.Generator = (*FakeGenerator)(nil)
+
+func (f *FakeGenerator) Generate(_ context.Context, text string) ([]deck.Card, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.texts = append(f.texts, text)
+	if f.Err != nil {
+		return nil, f.Err
+	}
+	if f.Cards != nil {
+		return f.Cards, nil
+	}
+	return []deck.Card{{
+		Question: "Combien de planètes dans le système solaire ?",
+		Answer:   "Huit.",
+		Category: "Astronomie",
+	}}, nil
+}
+
+func (f *FakeGenerator) Count() int {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return len(f.texts)
+}
+
+// LastText returns the text handed to the most recent Generate call, or ""
+// if it was never called. Lets tests assert what actually reached the
+// provider (e.g. that the handler trimmed it).
+func (f *FakeGenerator) LastText() string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if len(f.texts) == 0 {
+		return ""
+	}
+	return f.texts[len(f.texts)-1]
 }
 
 // ─── HTTP client ────────────────────────────────────────────────

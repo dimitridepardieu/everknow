@@ -18,6 +18,7 @@ import { Route as AuthenticatedWhoRouteImport } from './routes/_authenticated/wh
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedLearnRouteImport } from './routes/_authenticated/learn'
 import { Route as AuthenticatedProfilesNewRouteImport } from './routes/_authenticated/profiles/new'
+import { Route as AuthenticatedDecksNewRouteImport } from './routes/_authenticated/decks/new'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -64,6 +65,11 @@ const AuthenticatedProfilesNewRoute =
     path: '/profiles/new',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDecksNewRoute = AuthenticatedDecksNewRouteImport.update({
+  id: '/decks/new',
+  path: '/decks/new',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/learn': typeof AuthenticatedLearnRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/who': typeof AuthenticatedWhoRoute
+  '/decks/new': typeof AuthenticatedDecksNewRoute
   '/profiles/new': typeof AuthenticatedProfilesNewRoute
 }
 export interface FileRoutesByTo {
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/learn': typeof AuthenticatedLearnRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/who': typeof AuthenticatedWhoRoute
+  '/decks/new': typeof AuthenticatedDecksNewRoute
   '/profiles/new': typeof AuthenticatedProfilesNewRoute
 }
 export interface FileRoutesById {
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/_authenticated/learn': typeof AuthenticatedLearnRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/who': typeof AuthenticatedWhoRoute
+  '/_authenticated/decks/new': typeof AuthenticatedDecksNewRoute
   '/_authenticated/profiles/new': typeof AuthenticatedProfilesNewRoute
 }
 export interface FileRouteTypes {
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/learn'
     | '/onboarding'
     | '/who'
+    | '/decks/new'
     | '/profiles/new'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/learn'
     | '/onboarding'
     | '/who'
+    | '/decks/new'
     | '/profiles/new'
   id:
     | '__root__'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/_authenticated/learn'
     | '/_authenticated/onboarding'
     | '/_authenticated/who'
+    | '/_authenticated/decks/new'
     | '/_authenticated/profiles/new'
   fileRoutesById: FileRoutesById
 }
@@ -204,6 +216,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfilesNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/decks/new': {
+      id: '/_authenticated/decks/new'
+      path: '/decks/new'
+      fullPath: '/decks/new'
+      preLoaderRoute: typeof AuthenticatedDecksNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -211,6 +230,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLearnRoute: typeof AuthenticatedLearnRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedWhoRoute: typeof AuthenticatedWhoRoute
+  AuthenticatedDecksNewRoute: typeof AuthenticatedDecksNewRoute
   AuthenticatedProfilesNewRoute: typeof AuthenticatedProfilesNewRoute
 }
 
@@ -218,6 +238,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLearnRoute: AuthenticatedLearnRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedWhoRoute: AuthenticatedWhoRoute,
+  AuthenticatedDecksNewRoute: AuthenticatedDecksNewRoute,
   AuthenticatedProfilesNewRoute: AuthenticatedProfilesNewRoute,
 }
 

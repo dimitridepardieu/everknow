@@ -1,5 +1,6 @@
 import { Navigate, createFileRoute, useNavigate } from '@tanstack/react-router'
 
+import { Sparkle } from '@/components/sparkle'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useActiveProfileId } from '@/lib/active-profile-context'
@@ -61,10 +62,14 @@ function LearnPage() {
             Bonjour{activeProfile?.name ? ` ${activeProfile.name}` : ''} !
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-4">
           <p className="text-muted-foreground text-sm">
-            Le reste de l’app arrive bientôt.
+            Colle une leçon et Pip la transforme en flashcards.
           </p>
+          <Button onClick={() => void navigate({ to: '/decks/new' })}>
+            <Sparkle size={18} />
+            Créer des cartes
+          </Button>
         </CardContent>
       </Card>
 

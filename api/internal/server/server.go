@@ -12,6 +12,7 @@ import (
 
 	"flashcardacademy/api/internal/auth"
 	"flashcardacademy/api/internal/config"
+	"flashcardacademy/api/internal/deck"
 	"flashcardacademy/api/internal/middleware"
 	"flashcardacademy/api/internal/profile"
 	"flashcardacademy/api/internal/ratelimit"
@@ -41,6 +42,9 @@ type Deps struct {
 	Users    *user.Store
 	Profiles *profile.Store
 	Magic    *auth.MagicLinkSender
+	// Cards is an interface, not a store: generation has no database
+	// behind it, and tests swap in a fake rather than call Anthropic.
+	Cards deck.Generator
 }
 
 func NewHandler(d Deps) http.Handler {
@@ -48,6 +52,7 @@ func NewHandler(d Deps) http.Handler {
 	emailLimiter := ratelimit.New(d.Ctx, magicLinkLimitPerEmail, magicLinkWindowPerEmail)
 	handlers := auth.NewHandlers(d.Cfg, d.Sessions, d.Users, d.Profiles, d.Magic, ipLimiter, emailLimiter)
 	profiles := profile.NewHandlers(d.Profiles)
+	decks := deck.NewHandlers(d.Cards)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/health", health(d.Pool))
@@ -58,6 +63,7 @@ func NewHandler(d Deps) http.Handler {
 	mux.Handle("PATCH /api/me", middleware.RequireUser(http.HandlerFunc(handlers.UpdateMe)))
 	mux.Handle("POST /api/profiles", middleware.RequireUser(http.HandlerFunc(profiles.Create)))
 	mux.Handle("GET /api/profiles", middleware.RequireUser(http.HandlerFunc(profiles.List)))
+	mux.Handle("POST /api/decks/generate", middleware.RequireUser(http.HandlerFunc(decks.Generate)))
 
 	// Order matters: Recover (outer) → Auth (inject user) → Logger (sees user) → mux.
 	// Logger runs inside Auth so it can include user_id in the per-request log line.

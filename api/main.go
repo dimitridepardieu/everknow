@@ -14,6 +14,7 @@ import (
 	"flashcardacademy/api/internal/auth"
 	"flashcardacademy/api/internal/config"
 	"flashcardacademy/api/internal/db"
+	"flashcardacademy/api/internal/deck"
 	"flashcardacademy/api/internal/email"
 	"flashcardacademy/api/internal/profile"
 	"flashcardacademy/api/internal/server"
@@ -67,6 +68,7 @@ func run() error {
 	userStore := user.NewStore(pool)
 	profileStore := profile.NewStore(pool)
 	magic := auth.NewMagicLinkSender(verificationStore, sender, cfg.AppBaseURL, cfg.MagicLinkTTL)
+	generator := deck.NewAnthropicGenerator(cfg.AnthropicAPIKey)
 
 	handler := server.NewHandler(server.Deps{
 		Ctx:      ctx,
@@ -76,6 +78,7 @@ func run() error {
 		Users:    userStore,
 		Profiles: profileStore,
 		Magic:    magic,
+		Cards:    generator,
 	})
 
 	srv := &http.Server{
