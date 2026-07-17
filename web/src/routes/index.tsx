@@ -189,53 +189,57 @@ function LandingPage() {
     <main className="bg-background min-h-dvh">
       <LandingNav />
 
-      <section className="lp-bg-grid relative px-5 pt-9 pb-14 text-center">
-        <div className="mx-auto flex max-w-2xl flex-col items-center">
-          <span className="text-primary font-heading mb-3.5 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold shadow-[0_2px_0_var(--border)]">
-            <Sparkle size={14} className="text-primary" />
-            Nouveau · IA pour les enfants
-          </span>
+      <section className="lp-bg-grid px-5 pt-9 pb-14 md:px-10 md:pt-16 md:pb-20">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-[1.05fr_1fr] md:gap-14">
+          {/* Text column — left-aligned on desktop, centred stacked on mobile */}
+          <div className="flex flex-col items-center text-center md:items-start md:text-left">
+            <span className="text-primary font-heading mb-3.5 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold shadow-[0_2px_0_var(--border)]">
+              <Sparkle size={14} className="text-primary" />
+              Nouveau · IA pour les enfants
+            </span>
 
-          <h1 className="font-heading text-ink text-[36px] leading-[1.05] font-semibold text-balance md:text-[52px]">
-            Transforme tes cours en{' '}
-            <span className="text-primary relative whitespace-nowrap">
-              flashcards
-              <svg
-                viewBox="0 0 200 12"
-                preserveAspectRatio="none"
-                className="absolute -bottom-1.5 left-0 h-2 w-full"
-                aria-hidden="true"
-              >
-                <path
-                  d="M2 8 Q 50 2 100 6 T 198 5"
-                  stroke="var(--gold)"
-                  strokeWidth="4"
-                  fill="none"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </span>{' '}
-            en 10 secondes.
-          </h1>
+            <h1 className="font-heading text-ink text-[36px] leading-[1.05] font-semibold text-balance md:text-[56px] lg:text-[64px]">
+              Transforme tes cours en{' '}
+              <span className="text-primary relative whitespace-nowrap">
+                flashcards
+                <svg
+                  viewBox="0 0 200 12"
+                  preserveAspectRatio="none"
+                  className="absolute -bottom-1.5 left-0 h-2 w-full"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M2 8 Q 50 2 100 6 T 198 5"
+                    stroke="var(--gold)"
+                    strokeWidth="4"
+                    fill="none"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>{' '}
+              en 10 secondes.
+            </h1>
 
-          <p className="text-ink-soft mx-4 mt-3.5 text-[15px] leading-relaxed font-semibold text-pretty md:text-lg">
-            Pip transforme tes cours en flashcards malines. Réviser devient un
-            jeu — et tes parents adorent.
-          </p>
+            <p className="text-ink-soft mt-3.5 text-[15px] leading-relaxed font-semibold text-pretty md:mt-6 md:max-w-[520px] md:text-lg">
+              Pip transforme tes cours en flashcards malines. Réviser devient un
+              jeu — et tes parents adorent.
+            </p>
 
-          <Link
-            to="/welcome"
-            className={cn(
-              buttonVariants({ size: 'lg' }),
-              'mt-6 shadow-[0_6px_0_var(--primary-dark)] active:shadow-[0_2px_0_var(--primary-dark)]',
-            )}
-          >
-            <Wand2 />
-            C’est parti !
-          </Link>
+            <Link
+              to="/welcome"
+              className={cn(
+                buttonVariants({ size: 'lg' }),
+                'mt-6 shadow-[0_6px_0_var(--primary-dark)] active:shadow-[0_2px_0_var(--primary-dark)] md:mt-8',
+              )}
+            >
+              <Wand2 />
+              C’est parti !
+            </Link>
+          </div>
 
-          <div className="mt-6 flex justify-center">
-            <OrbitHero />
+          {/* Orbit column — reflows below the text on mobile, beside it on desktop */}
+          <div className="flex justify-center">
+            <OrbitHero size={300} pipSize={140} />
           </div>
         </div>
       </section>
