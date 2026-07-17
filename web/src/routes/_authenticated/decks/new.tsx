@@ -113,14 +113,15 @@ function HubScreen({
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col px-5 pt-[50px] pb-9">
       <div className="mb-2 flex items-center gap-3">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={onClose}
           aria-label="Fermer"
-          className="text-ink-muted hover:bg-foreground/5 flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-xl"
+          className="text-ink-muted shrink-0"
         >
           <X className="size-[22px]" strokeWidth={3} />
-        </button>
+        </Button>
         <h1 className="font-heading text-lg font-semibold">Créer un paquet</h1>
       </div>
 
@@ -206,14 +207,15 @@ function PasteScreen({
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col px-5 pt-[50px] pb-9">
       <div className="mb-2 flex items-center gap-3">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={onBack}
           aria-label="Retour"
-          className="text-ink-muted hover:bg-foreground/5 flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-xl"
+          className="text-ink-muted shrink-0"
         >
           <ArrowLeft className="size-[22px]" strokeWidth={3} />
-        </button>
+        </Button>
         <h1 className="font-heading text-lg font-semibold">Du texte</h1>
       </div>
 
