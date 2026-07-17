@@ -36,3 +36,26 @@ export const profileAgeSchema = z.coerce
 export const authSearchSchema = z.object({
   error: z.string().optional(),
 })
+
+// A flashcard the AI generated from pasted text, not yet saved. The parent
+// reviews these before any land in a deck (#42 owns the save).
+export const generatedCardSchema = z.object({
+  question: z.string(),
+  answer: z.string(),
+  category: z.string(),
+})
+export type GeneratedCard = z.infer<typeof generatedCardSchema>
+
+export const generateResultSchema = z.object({
+  cards: z.array(generatedCardSchema),
+})
+export type GenerateResult = z.infer<typeof generateResultSchema>
+
+// Mirrors the API's rune bounds (deck/handlers.go). The floor keeps a paid
+// generation from firing on a scrap of text; the ceiling matches the model
+// budget. Messages live here so the paste screen reads them off the parse.
+export const sourceTextSchema = z
+  .string()
+  .trim()
+  .min(100, 'Colle un peu plus de texte pour de bonnes cartes.')
+  .max(5000, 'Ce texte est trop long. Garde l’essentiel.')
