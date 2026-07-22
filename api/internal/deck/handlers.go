@@ -2,6 +2,7 @@ package deck
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -33,16 +34,16 @@ type Generator interface {
 
 type Handlers struct {
 	generator Generator
+	store     *Store
 }
 
-func NewHandlers(generator Generator) *Handlers {
-	return &Handlers{generator: generator}
+func NewHandlers(generator Generator, store *Store) *Handlers {
+	return &Handlers{generator: generator, store: store}
 }
 
 type cardResponse struct {
 	Question string `json:"question"`
 	Answer   string `json:"answer"`
-	Category string `json:"category"`
 }
 
 type generateResponse struct {
@@ -96,7 +97,96 @@ func (h *Handlers) Generate(w http.ResponseWriter, r *http.Request) {
 
 	out := make([]cardResponse, 0, len(cards))
 	for _, c := range cards {
-		out = append(out, cardResponse{Question: c.Question, Answer: c.Answer, Category: c.Category})
+		out = append(out, cardResponse{Question: c.Question, Answer: c.Answer})
 	}
 	httpx.WriteJSON(w, http.StatusOK, generateResponse{Cards: out})
+}
+
+const (
+	maxDeckNameRunes  = 100
+	maxCardFieldRunes = 2000
+	// maxCardsPerDeck bounds one save. Generation caps well below this
+	// (systemPrompt asks for 5–15); the ceiling is a guard against a crafted
+	// request, not a product limit.
+	maxCardsPerDeck = 200
+)
+
+type saveCardBody struct {
+	Question string `json:"question"`
+	Answer   string `json:"answer"`
+}
+
+type saveDeckBody struct {
+	ProfileID int64          `json:"profile_id"`
+	Name      string         `json:"name"`
+	Cards     []saveCardBody `json:"cards"`
+}
+
+type saveDeckResponse struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
+// Save persists a reviewed set of cards as a new deck under the parent's
+// chosen profile. The profile is not trusted from the body alone: the store
+// verifies it belongs to the caller, so a forged profile_id yields 404.
+func (h *Handlers) Save(w http.ResponseWriter, r *http.Request) {
+	u := user.FromContext(r.Context())
+	body, err := httpx.DecodeJSON[saveDeckBody](r)
+	if err != nil {
+		httpx.WriteError(w, err)
+		return
+	}
+
+	name := strings.TrimSpace(body.Name)
+	if name == "" {
+		httpx.WriteError(w, httpx.BadRequest("name is required"))
+		return
+	}
+	if utf8.RuneCountInString(name) > maxDeckNameRunes {
+		httpx.WriteError(w, httpx.BadRequest("name is too long"))
+		return
+	}
+	if body.ProfileID <= 0 {
+		httpx.WriteError(w, httpx.BadRequest("profile_id is required"))
+		return
+	}
+	if len(body.Cards) == 0 {
+		httpx.WriteError(w, httpx.BadRequest("at least one card is required"))
+		return
+	}
+	if len(body.Cards) > maxCardsPerDeck {
+		httpx.WriteError(w, httpx.BadRequest("too many cards"))
+		return
+	}
+
+	cards := make([]Card, 0, len(body.Cards))
+	for _, c := range body.Cards {
+		q := strings.TrimSpace(c.Question)
+		a := strings.TrimSpace(c.Answer)
+		if q == "" || a == "" {
+			httpx.WriteError(w, httpx.BadRequest("each card needs a question and an answer"))
+			return
+		}
+		if utf8.RuneCountInString(q) > maxCardFieldRunes || utf8.RuneCountInString(a) > maxCardFieldRunes {
+			httpx.WriteError(w, httpx.BadRequest("card text is too long"))
+			return
+		}
+		cards = append(cards, Card{Question: q, Answer: a})
+	}
+
+	d, err := h.store.Create(r.Context(), u.ID, body.ProfileID, name, cards)
+	if errors.Is(err, ErrProfileNotFound) {
+		httpx.WriteError(w, httpx.NotFound("profile not found"))
+		return
+	}
+	if err != nil {
+		slog.ErrorContext(r.Context(), "save deck", "err", err, "user_id", u.ID)
+		httpx.WriteError(w, httpx.InternalServer("failed to save deck"))
+		return
+	}
+
+	slog.InfoContext(r.Context(), "deck saved",
+		"user_id", u.ID, "profile_id", d.ProfileID, "deck_id", d.ID, "card_count", len(cards))
+	httpx.WriteJSON(w, http.StatusCreated, saveDeckResponse{ID: d.ID, Name: d.Name})
 }

@@ -69,6 +69,7 @@ func run() error {
 	profileStore := profile.NewStore(pool)
 	magic := auth.NewMagicLinkSender(verificationStore, sender, cfg.AppBaseURL, cfg.MagicLinkTTL)
 	generator := deck.NewAnthropicGenerator(cfg.AnthropicAPIKey)
+	deckStore := deck.NewStore(pool)
 
 	handler := server.NewHandler(server.Deps{
 		Ctx:      ctx,
@@ -79,6 +80,7 @@ func run() error {
 		Profiles: profileStore,
 		Magic:    magic,
 		Cards:    generator,
+		Decks:    deckStore,
 	})
 
 	srv := &http.Server{
