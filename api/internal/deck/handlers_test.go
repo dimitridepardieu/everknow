@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"flashcardacademy/api/internal/apitest"
-	"flashcardacademy/api/internal/deck"
+	"flashcardacademy/api/internal/card"
 )
 
 // sourceText is a synthetic passage comfortably over minSourceRunes; any
@@ -25,11 +25,6 @@ type generateJSON struct {
 	Cards []cardJSON `json:"cards"`
 }
 
-func login(t *testing.T, env *apitest.Env, email string) {
-	t.Helper()
-	env.RequestAndConsumeMagicLink(t, email).Body.Close()
-}
-
 func TestGenerate_RequiresAuth(t *testing.T) {
 	env := apitest.New(t)
 
@@ -38,15 +33,15 @@ func TestGenerate_RequiresAuth(t *testing.T) {
 	if resp.StatusCode != http.StatusUnauthorized {
 		t.Fatalf("status: got %d want 401", resp.StatusCode)
 	}
-	if env.Cards.Count() != 0 {
-		t.Fatalf("generator calls: got %d want 0 (an anonymous request must not reach the provider)", env.Cards.Count())
+	if env.Generator.Count() != 0 {
+		t.Fatalf("generator calls: got %d want 0 (an anonymous request must not reach the provider)", env.Generator.Count())
 	}
 }
 
 func TestGenerate_ReturnsCards(t *testing.T) {
 	env := apitest.New(t)
-	login(t, env, "parent@example.test")
-	env.Cards.Cards = []deck.Card{
+	env.Login(t, "parent@example.test")
+	env.Generator.Cards = []card.Draft{
 		{Question: "Combien de planètes ?", Answer: "Huit."},
 		{Question: "Quelle est la plus grosse ?", Answer: "Jupiter."},
 	}
@@ -72,19 +67,19 @@ func TestGenerate_ReturnsCards(t *testing.T) {
 
 func TestGenerate_TrimsTextBeforeCallingProvider(t *testing.T) {
 	env := apitest.New(t)
-	login(t, env, "parent@example.test")
+	env.Login(t, "parent@example.test")
 
 	env.Client.PostJSON(t, "/api/cards/generate",
 		map[string]any{"text": "\n\t  " + sourceText + "  \n"}).Body.Close()
 
-	if got := env.Cards.LastText(); got != sourceText {
+	if got := env.Generator.LastText(); got != sourceText {
 		t.Fatalf("provider received untrimmed text: got %q", got)
 	}
 }
 
 func TestGenerate_ShortText_RejectedWithoutCallingProvider(t *testing.T) {
 	env := apitest.New(t)
-	login(t, env, "parent@example.test")
+	env.Login(t, "parent@example.test")
 
 	resp := env.Client.PostJSON(t, "/api/cards/generate", map[string]any{"text": "Bonjour."})
 	defer resp.Body.Close()
@@ -93,14 +88,14 @@ func TestGenerate_ShortText_RejectedWithoutCallingProvider(t *testing.T) {
 	}
 	// The point of the floor is cost: a generation that cannot work should
 	// never reach a paid provider.
-	if env.Cards.Count() != 0 {
-		t.Fatalf("generator calls: got %d want 0", env.Cards.Count())
+	if env.Generator.Count() != 0 {
+		t.Fatalf("generator calls: got %d want 0", env.Generator.Count())
 	}
 }
 
 func TestGenerate_LongText_RejectedWithoutCallingProvider(t *testing.T) {
 	env := apitest.New(t)
-	login(t, env, "parent@example.test")
+	env.Login(t, "parent@example.test")
 
 	resp := env.Client.PostJSON(t, "/api/cards/generate",
 		map[string]any{"text": strings.Repeat("é", 5001)})
@@ -108,8 +103,8 @@ func TestGenerate_LongText_RejectedWithoutCallingProvider(t *testing.T) {
 	if resp.StatusCode != http.StatusBadRequest {
 		t.Fatalf("status: got %d want 400", resp.StatusCode)
 	}
-	if env.Cards.Count() != 0 {
-		t.Fatalf("generator calls: got %d want 0", env.Cards.Count())
+	if env.Generator.Count() != 0 {
+		t.Fatalf("generator calls: got %d want 0", env.Generator.Count())
 	}
 }
 
@@ -117,7 +112,7 @@ func TestGenerate_LongText_RejectedWithoutCallingProvider(t *testing.T) {
 // bytes, and a byte-based limit would reject valid French text.
 func TestGenerate_MultibyteTextAtCeiling_Accepted(t *testing.T) {
 	env := apitest.New(t)
-	login(t, env, "parent@example.test")
+	env.Login(t, "parent@example.test")
 
 	resp := env.Client.PostJSON(t, "/api/cards/generate",
 		map[string]any{"text": strings.Repeat("é", 5000)})
@@ -129,8 +124,8 @@ func TestGenerate_MultibyteTextAtCeiling_Accepted(t *testing.T) {
 
 func TestGenerate_ProviderError_IsOpaqueToClient(t *testing.T) {
 	env := apitest.New(t)
-	login(t, env, "parent@example.test")
-	env.Cards.Err = errors.New("anthropic status 529")
+	env.Login(t, "parent@example.test")
+	env.Generator.Err = errors.New("anthropic status 529")
 
 	resp := env.Client.PostJSON(t, "/api/cards/generate", map[string]any{"text": sourceText})
 	if resp.StatusCode != http.StatusInternalServerError {
@@ -149,8 +144,8 @@ func TestGenerate_ProviderError_IsOpaqueToClient(t *testing.T) {
 
 func TestGenerate_NoCardsProduced_IsBadRequest(t *testing.T) {
 	env := apitest.New(t)
-	login(t, env, "parent@example.test")
-	env.Cards.Cards = []deck.Card{}
+	env.Login(t, "parent@example.test")
+	env.Generator.Cards = []card.Draft{}
 
 	resp := env.Client.PostJSON(t, "/api/cards/generate", map[string]any{"text": sourceText})
 	defer resp.Body.Close()
@@ -195,7 +190,7 @@ func TestSave_RequiresAuth(t *testing.T) {
 
 func TestSave_PersistsDeckAndCards(t *testing.T) {
 	env := apitest.New(t)
-	login(t, env, "parent@example.test")
+	env.Login(t, "parent@example.test")
 	profileID := createProfile(t, env, "Léo")
 
 	resp := env.Client.PostJSON(t, "/api/decks", map[string]any{
@@ -242,12 +237,12 @@ func TestSave_PersistsDeckAndCards(t *testing.T) {
 
 func TestSave_ForeignProfile_IsNotFoundAndCreatesNothing(t *testing.T) {
 	env := apitest.New(t)
-	login(t, env, "owner@example.test")
+	env.Login(t, "owner@example.test")
 	profileID := createProfile(t, env, "Léo")
 
 	// A different account, same browser client: the new session replaces the
 	// old, so env.Client now acts as the intruder.
-	login(t, env, "intruder@example.test")
+	env.Login(t, "intruder@example.test")
 	resp := env.Client.PostJSON(t, "/api/decks", map[string]any{
 		"profile_id": profileID,
 		"name":       "Volé",
@@ -269,7 +264,7 @@ func TestSave_ForeignProfile_IsNotFoundAndCreatesNothing(t *testing.T) {
 
 func TestSave_EmptyName_IsBadRequest(t *testing.T) {
 	env := apitest.New(t)
-	login(t, env, "parent@example.test")
+	env.Login(t, "parent@example.test")
 	profileID := createProfile(t, env, "Léo")
 
 	resp := env.Client.PostJSON(t, "/api/decks", map[string]any{
@@ -285,7 +280,7 @@ func TestSave_EmptyName_IsBadRequest(t *testing.T) {
 
 func TestSave_NoCards_IsBadRequest(t *testing.T) {
 	env := apitest.New(t)
-	login(t, env, "parent@example.test")
+	env.Login(t, "parent@example.test")
 	profileID := createProfile(t, env, "Léo")
 
 	resp := env.Client.PostJSON(t, "/api/decks", map[string]any{
@@ -301,7 +296,7 @@ func TestSave_NoCards_IsBadRequest(t *testing.T) {
 
 func TestSave_BlankCard_IsBadRequest(t *testing.T) {
 	env := apitest.New(t)
-	login(t, env, "parent@example.test")
+	env.Login(t, "parent@example.test")
 	profileID := createProfile(t, env, "Léo")
 
 	resp := env.Client.PostJSON(t, "/api/decks", map[string]any{

@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
+	"flashcardacademy/api/internal/card"
 )
 
 type Store struct {
@@ -18,7 +20,7 @@ func NewStore(db *sql.DB) *Store { return &Store{db: db} }
 // on profiles.user_id, so a profile that isn't the user's inserts no row and
 // yields ErrProfileNotFound — no separate ownership query, and no way to probe
 // whether another user's profile exists.
-func (s *Store) Create(ctx context.Context, userID, profileID int64, name string, cards []Card) (*Deck, error) {
+func (s *Store) Create(ctx context.Context, userID, profileID int64, name string, drafts []card.Draft) (*Deck, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("begin tx: %w", err)
@@ -39,13 +41,9 @@ func (s *Store) Create(ctx context.Context, userID, profileID int64, name string
 		return nil, fmt.Errorf("insert deck: %w", err)
 	}
 
-	for _, c := range cards {
-		if _, err := tx.ExecContext(ctx, `
-			INSERT INTO cards (deck_id, question, answer)
-			VALUES ($1, $2, $3)
-		`, d.ID, c.Question, c.Answer); err != nil {
-			return nil, fmt.Errorf("insert card: %w", err)
-		}
+	// The cards table belongs to package card, including this write.
+	if err := card.InsertTx(ctx, tx, profileID, &d.ID, drafts); err != nil {
+		return nil, err
 	}
 
 	if err := tx.Commit(); err != nil {
