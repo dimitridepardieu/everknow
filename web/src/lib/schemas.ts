@@ -38,11 +38,10 @@ export const authSearchSchema = z.object({
 })
 
 // A flashcard the AI generated from pasted text, not yet saved. The parent
-// reviews these before any land in a deck (#42 owns the save).
+// reviews these — accept / edit / reject — before the kept ones land in a deck.
 export const generatedCardSchema = z.object({
   question: z.string(),
   answer: z.string(),
-  category: z.string(),
 })
 export type GeneratedCard = z.infer<typeof generatedCardSchema>
 
@@ -50,6 +49,21 @@ export const generateResultSchema = z.object({
   cards: z.array(generatedCardSchema),
 })
 export type GenerateResult = z.infer<typeof generateResultSchema>
+
+// A saved paquet, as returned by the save endpoint.
+export const deckSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+})
+export type Deck = z.infer<typeof deckSchema>
+
+// The paquet name the parent types on the review screen. Messages live here so
+// the field reads them off the parse; the ceiling mirrors the API's rune bound.
+export const deckNameSchema = z
+  .string()
+  .trim()
+  .min(1, 'Donne un nom à ton paquet.')
+  .max(100, 'Ce nom est trop long.')
 
 // Mirrors the API's rune bounds (deck/handlers.go). The floor keeps a paid
 // generation from firing on a scrap of text; the ceiling matches the model

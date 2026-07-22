@@ -1,20 +1,30 @@
 import { useMutation } from '@tanstack/react-query'
 
 import { apiFetch } from './api'
-import type { GenerateResult } from './schemas'
-import { generateResultSchema } from './schemas'
+import type { Deck, GeneratedCard } from './schemas'
+import { deckSchema } from './schemas'
 
-// A mutation, not a query: generation is a POST triggered by the parent
-// pasting text, not cached data. The result is transient — shown once, then
-// handed to review (#42) — so there's nothing to invalidate.
-export function useGenerateFlashcards() {
+interface SaveDeckInput {
+  profileId: number
+  name: string
+  cards: readonly GeneratedCard[]
+}
+
+// Persist the reviewed cards as a new paquet under the active profile. There's
+// no deck list in the app yet, so nothing to invalidate — a plain mutation.
+// The list query (and "add to an existing paquet") lands with #58.
+export function useSaveDeck() {
   return useMutation({
-    mutationFn: async (text: string): Promise<GenerateResult> => {
-      const data = await apiFetch<unknown>('/api/decks/generate', {
+    mutationFn: async ({
+      profileId,
+      name,
+      cards,
+    }: SaveDeckInput): Promise<Deck> => {
+      const data = await apiFetch<unknown>('/api/decks', {
         method: 'POST',
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ profile_id: profileId, name, cards }),
       })
-      return generateResultSchema.parse(data)
+      return deckSchema.parse(data)
     },
   })
 }

@@ -17,8 +17,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedWhoRouteImport } from './routes/_authenticated/who'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedLearnRouteImport } from './routes/_authenticated/learn'
+import { Route as AuthenticatedCreateIndexRouteImport } from './routes/_authenticated/create/index'
 import { Route as AuthenticatedProfilesNewRouteImport } from './routes/_authenticated/profiles/new'
-import { Route as AuthenticatedDecksNewRouteImport } from './routes/_authenticated/decks/new'
+import { Route as AuthenticatedCreateReviewRouteImport } from './routes/_authenticated/create/review'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -59,17 +60,24 @@ const AuthenticatedLearnRoute = AuthenticatedLearnRouteImport.update({
   path: '/learn',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCreateIndexRoute =
+  AuthenticatedCreateIndexRouteImport.update({
+    id: '/create/',
+    path: '/create/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProfilesNewRoute =
   AuthenticatedProfilesNewRouteImport.update({
     id: '/profiles/new',
     path: '/profiles/new',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedDecksNewRoute = AuthenticatedDecksNewRouteImport.update({
-  id: '/decks/new',
-  path: '/decks/new',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
+const AuthenticatedCreateReviewRoute =
+  AuthenticatedCreateReviewRouteImport.update({
+    id: '/create/review',
+    path: '/create/review',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -79,8 +87,9 @@ export interface FileRoutesByFullPath {
   '/learn': typeof AuthenticatedLearnRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/who': typeof AuthenticatedWhoRoute
-  '/decks/new': typeof AuthenticatedDecksNewRoute
+  '/create/review': typeof AuthenticatedCreateReviewRoute
   '/profiles/new': typeof AuthenticatedProfilesNewRoute
+  '/create/': typeof AuthenticatedCreateIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -90,8 +99,9 @@ export interface FileRoutesByTo {
   '/learn': typeof AuthenticatedLearnRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/who': typeof AuthenticatedWhoRoute
-  '/decks/new': typeof AuthenticatedDecksNewRoute
+  '/create/review': typeof AuthenticatedCreateReviewRoute
   '/profiles/new': typeof AuthenticatedProfilesNewRoute
+  '/create': typeof AuthenticatedCreateIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -103,8 +113,9 @@ export interface FileRoutesById {
   '/_authenticated/learn': typeof AuthenticatedLearnRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/who': typeof AuthenticatedWhoRoute
-  '/_authenticated/decks/new': typeof AuthenticatedDecksNewRoute
+  '/_authenticated/create/review': typeof AuthenticatedCreateReviewRoute
   '/_authenticated/profiles/new': typeof AuthenticatedProfilesNewRoute
+  '/_authenticated/create/': typeof AuthenticatedCreateIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -116,8 +127,9 @@ export interface FileRouteTypes {
     | '/learn'
     | '/onboarding'
     | '/who'
-    | '/decks/new'
+    | '/create/review'
     | '/profiles/new'
+    | '/create/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -127,8 +139,9 @@ export interface FileRouteTypes {
     | '/learn'
     | '/onboarding'
     | '/who'
-    | '/decks/new'
+    | '/create/review'
     | '/profiles/new'
+    | '/create'
   id:
     | '__root__'
     | '/'
@@ -139,8 +152,9 @@ export interface FileRouteTypes {
     | '/_authenticated/learn'
     | '/_authenticated/onboarding'
     | '/_authenticated/who'
-    | '/_authenticated/decks/new'
+    | '/_authenticated/create/review'
     | '/_authenticated/profiles/new'
+    | '/_authenticated/create/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -209,6 +223,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLearnRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/create/': {
+      id: '/_authenticated/create/'
+      path: '/create'
+      fullPath: '/create/'
+      preLoaderRoute: typeof AuthenticatedCreateIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profiles/new': {
       id: '/_authenticated/profiles/new'
       path: '/profiles/new'
@@ -216,11 +237,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfilesNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/decks/new': {
-      id: '/_authenticated/decks/new'
-      path: '/decks/new'
-      fullPath: '/decks/new'
-      preLoaderRoute: typeof AuthenticatedDecksNewRouteImport
+    '/_authenticated/create/review': {
+      id: '/_authenticated/create/review'
+      path: '/create/review'
+      fullPath: '/create/review'
+      preLoaderRoute: typeof AuthenticatedCreateReviewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -230,16 +251,18 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLearnRoute: typeof AuthenticatedLearnRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedWhoRoute: typeof AuthenticatedWhoRoute
-  AuthenticatedDecksNewRoute: typeof AuthenticatedDecksNewRoute
+  AuthenticatedCreateReviewRoute: typeof AuthenticatedCreateReviewRoute
   AuthenticatedProfilesNewRoute: typeof AuthenticatedProfilesNewRoute
+  AuthenticatedCreateIndexRoute: typeof AuthenticatedCreateIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLearnRoute: AuthenticatedLearnRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedWhoRoute: AuthenticatedWhoRoute,
-  AuthenticatedDecksNewRoute: AuthenticatedDecksNewRoute,
+  AuthenticatedCreateReviewRoute: AuthenticatedCreateReviewRoute,
   AuthenticatedProfilesNewRoute: AuthenticatedProfilesNewRoute,
+  AuthenticatedCreateIndexRoute: AuthenticatedCreateIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

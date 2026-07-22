@@ -41,11 +41,10 @@ const systemPrompt = `Tu fabriques des flashcards de révision pour un enfant de
 - Les questions sont courtes et concrètes : l'enfant doit pouvoir y répondre à voix haute en une phrase.
 - Les réponses sont exactes et tiennent en une phrase. Jamais de renvoi au texte ni de « voir plus haut ».
 - Ne pose de question que sur ce qui est écrit dans le texte. N'invente rien, n'ajoute aucune connaissance extérieure.
-- category nomme le thème en un ou deux mots (ex. « Astronomie »), le même pour les cartes d'un même thème.
 - Produis entre 5 et 15 cartes selon la richesse du texte. Un texte pauvre donne peu de cartes : mieux vaut trois bonnes cartes que douze remplissages.
 
 Réponds UNIQUEMENT avec un objet JSON de cette forme, sans aucun texte autour ni bloc de code markdown :
-{"cards": [{"question": "...", "answer": "...", "category": "..."}]}`
+{"cards": [{"question": "...", "answer": "..."}]}`
 
 // AnthropicGenerator calls the Messages API over plain net/http. The SDK
 // would buy retries and typed structs, but we use one endpoint and the
@@ -135,7 +134,6 @@ func (g *AnthropicGenerator) Generate(ctx context.Context, text string) ([]Card,
 		Cards []struct {
 			Question string `json:"question"`
 			Answer   string `json:"answer"`
-			Category string `json:"category"`
 		} `json:"cards"`
 	}
 	if err := json.Unmarshal([]byte(raw), &wire); err != nil {
@@ -144,7 +142,7 @@ func (g *AnthropicGenerator) Generate(ctx context.Context, text string) ([]Card,
 
 	cards := make([]Card, 0, len(wire.Cards))
 	for _, c := range wire.Cards {
-		cards = append(cards, Card{Question: c.Question, Answer: c.Answer, Category: c.Category})
+		cards = append(cards, Card{Question: c.Question, Answer: c.Answer})
 	}
 	return cards, nil
 }

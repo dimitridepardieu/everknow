@@ -83,6 +83,7 @@ func New(t *testing.T) *Env {
 	sessionStore := session.NewStore(pool)
 	userStore := user.NewStore(pool)
 	profileStore := profile.NewStore(pool)
+	deckStore := deck.NewStore(pool)
 	magic := auth.NewMagicLinkSender(verificationStore, emails, cfg.AppBaseURL, cfg.MagicLinkTTL)
 
 	handler := server.NewHandler(server.Deps{
@@ -96,6 +97,7 @@ func New(t *testing.T) *Env {
 		Profiles: profileStore,
 		Magic:    magic,
 		Cards:    cards,
+		Decks:    deckStore,
 	})
 
 	srv := httptest.NewServer(handler)
@@ -274,7 +276,7 @@ func createTestDB(testURL string) error {
 // predictable (user 1 in test A and test B both have id=1).
 func truncate(t *testing.T, pool *sql.DB) {
 	t.Helper()
-	_, err := pool.Exec(`TRUNCATE users, sessions, verifications, profiles RESTART IDENTITY CASCADE`)
+	_, err := pool.Exec(`TRUNCATE users, sessions, verifications, profiles, decks, cards RESTART IDENTITY CASCADE`)
 	if err != nil {
 		t.Fatalf("truncate: %v", err)
 	}
@@ -357,7 +359,6 @@ func (f *FakeGenerator) Generate(_ context.Context, text string) ([]deck.Card, e
 	return []deck.Card{{
 		Question: "Combien de planètes dans le système solaire ?",
 		Answer:   "Huit.",
-		Category: "Astronomie",
 	}}, nil
 }
 

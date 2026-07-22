@@ -45,6 +45,9 @@ type Deps struct {
 	// Cards is an interface, not a store: generation has no database
 	// behind it, and tests swap in a fake rather than call Anthropic.
 	Cards deck.Generator
+	// Decks persists reviewed cards. Unlike Cards it is a real store — the
+	// save path is plain SQL with no provider to fake.
+	Decks *deck.Store
 }
 
 func NewHandler(d Deps) http.Handler {
@@ -52,7 +55,7 @@ func NewHandler(d Deps) http.Handler {
 	emailLimiter := ratelimit.New(d.Ctx, magicLinkLimitPerEmail, magicLinkWindowPerEmail)
 	handlers := auth.NewHandlers(d.Cfg, d.Sessions, d.Users, d.Profiles, d.Magic, ipLimiter, emailLimiter)
 	profiles := profile.NewHandlers(d.Profiles)
-	decks := deck.NewHandlers(d.Cards)
+	decks := deck.NewHandlers(d.Cards, d.Decks)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/health", health(d.Pool))
@@ -63,7 +66,8 @@ func NewHandler(d Deps) http.Handler {
 	mux.Handle("PATCH /api/me", middleware.RequireUser(http.HandlerFunc(handlers.UpdateMe)))
 	mux.Handle("POST /api/profiles", middleware.RequireUser(http.HandlerFunc(profiles.Create)))
 	mux.Handle("GET /api/profiles", middleware.RequireUser(http.HandlerFunc(profiles.List)))
-	mux.Handle("POST /api/decks/generate", middleware.RequireUser(http.HandlerFunc(decks.Generate)))
+	mux.Handle("POST /api/cards/generate", middleware.RequireUser(http.HandlerFunc(decks.Generate)))
+	mux.Handle("POST /api/decks", middleware.RequireUser(http.HandlerFunc(decks.Save)))
 
 	// Order matters: Recover (outer) → Auth (inject user) → Logger (sees user) → mux.
 	// Logger runs inside Auth so it can include user_id in the per-request log line.

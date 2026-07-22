@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useActiveProfileId } from '@/lib/active-profile-context'
 import { useLogout, useMe } from '@/lib/auth'
 import { useProfiles } from '@/lib/profiles'
+import { useActiveProfile } from '@/lib/use-active-profile'
 
 export const Route = createFileRoute('/_authenticated/learn')({
   component: LearnPage,
@@ -14,7 +15,8 @@ export const Route = createFileRoute('/_authenticated/learn')({
 function LearnPage() {
   const { data: me } = useMe()
   const { data: profiles } = useProfiles()
-  const { activeProfileId, setActiveProfileId } = useActiveProfileId()
+  const { setActiveProfileId } = useActiveProfileId()
+  const { profile: activeProfile } = useActiveProfile()
   const navigate = useNavigate()
   const mutation = useLogout()
 
@@ -24,13 +26,9 @@ function LearnPage() {
   if (!me.role) return <Navigate to="/onboarding" />
   if (profiles === undefined) return null
 
-  // An individual is its own sole learner (one auto-created profile); a family
-  // must have picked one on /who. No stored pick for a family → send them there,
-  // but a family with no profiles yet skips the empty picker and creates first.
-  const activeProfile =
-    me.role === 'individual'
-      ? (profiles[0] ?? null)
-      : (profiles.find((p) => p.id === activeProfileId) ?? null)
+  // A family that hasn't picked a learner goes to /who — or straight to
+  // creation if it has no profiles yet. (An individual always resolves to its
+  // sole profile, so this only gates families.)
   if (me.role === 'family' && !activeProfile) {
     return <Navigate to={profiles.length === 0 ? '/profiles/new' : '/who'} />
   }
@@ -66,7 +64,7 @@ function LearnPage() {
           <p className="text-muted-foreground text-sm">
             Colle une leçon et Pip la transforme en flashcards.
           </p>
-          <Button onClick={() => void navigate({ to: '/decks/new' })}>
+          <Button onClick={() => void navigate({ to: '/create' })}>
             <Sparkle size={18} />
             Créer des cartes
           </Button>

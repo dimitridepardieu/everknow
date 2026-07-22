@@ -21,6 +21,10 @@ func Unauthorized(msg string) *Error {
 	return &Error{Status: http.StatusUnauthorized, Code: "unauthorized", Message: msg}
 }
 
+func NotFound(msg string) *Error {
+	return &Error{Status: http.StatusNotFound, Code: "not_found", Message: msg}
+}
+
 func InternalServer(msg string) *Error {
 	return &Error{Status: http.StatusInternalServerError, Code: "internal", Message: msg}
 }
