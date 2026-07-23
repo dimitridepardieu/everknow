@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"flashcardacademy/api/internal/auth"
+	"flashcardacademy/api/internal/card"
 	"flashcardacademy/api/internal/config"
 	"flashcardacademy/api/internal/db"
 	"flashcardacademy/api/internal/deck"
@@ -54,11 +55,11 @@ var (
 
 // Env bundles everything a handler-level test needs.
 type Env struct {
-	DB     *sql.DB
-	Server *httptest.Server
-	Emails *FakeEmailSender
-	Cards  *FakeGenerator
-	Client *Client
+	DB        *sql.DB
+	Server    *httptest.Server
+	Emails    *FakeEmailSender
+	Generator *FakeGenerator
+	Client    *Client
 }
 
 // New builds an Env, truncating any leftover data from a previous test so
@@ -78,38 +79,47 @@ func New(t *testing.T) *Env {
 	}
 
 	emails := &FakeEmailSender{}
-	cards := &FakeGenerator{}
+	generator := &FakeGenerator{}
 	verificationStore := auth.NewStore(pool)
 	sessionStore := session.NewStore(pool)
 	userStore := user.NewStore(pool)
 	profileStore := profile.NewStore(pool)
+	cardStore := card.NewStore(pool)
 	deckStore := deck.NewStore(pool)
 	magic := auth.NewMagicLinkSender(verificationStore, emails, cfg.AppBaseURL, cfg.MagicLinkTTL)
 
 	handler := server.NewHandler(server.Deps{
 		// t.Context() is canceled at test end, so the rate-limit sweeper
 		// goroutines exit cleanly — no orphaned goroutines across tests.
-		Ctx:      t.Context(),
-		Cfg:      cfg,
-		Pool:     pool,
-		Sessions: sessionStore,
-		Users:    userStore,
-		Profiles: profileStore,
-		Magic:    magic,
-		Cards:    cards,
-		Decks:    deckStore,
+		Ctx:       t.Context(),
+		Cfg:       cfg,
+		Pool:      pool,
+		Sessions:  sessionStore,
+		Users:     userStore,
+		Profiles:  profileStore,
+		Magic:     magic,
+		Generator: generator,
+		Cards:     cardStore,
+		Decks:     deckStore,
 	})
 
 	srv := httptest.NewServer(handler)
 	t.Cleanup(srv.Close)
 
 	return &Env{
-		DB:     pool,
-		Server: srv,
-		Emails: emails,
-		Cards:  cards,
-		Client: newClient(t, srv.URL),
+		DB:        pool,
+		Server:    srv,
+		Emails:    emails,
+		Generator: generator,
+		Client:    newClient(t, srv.URL),
 	}
+}
+
+// Login signs the client in as email, ignoring the redirect response. Most
+// tests only need a logged-in user, not the details of how they got there.
+func (e *Env) Login(t *testing.T, email string) {
+	t.Helper()
+	e.RequestAndConsumeMagicLink(t, email).Body.Close()
 }
 
 // RequestAndConsumeMagicLink runs the full "request + click link" dance for
@@ -337,7 +347,7 @@ type FakeGenerator struct {
 
 	// Cards is returned on success. Nil yields one placeholder card, which
 	// is enough for tests that only care that generation was wired up.
-	Cards []deck.Card
+	Cards []card.Draft
 	// Err, when set, is returned instead of Cards.
 	Err error
 }
@@ -346,7 +356,7 @@ type FakeGenerator struct {
 // interface change breaks the build here rather than at the call site.
 var _ deck.Generator = (*FakeGenerator)(nil)
 
-func (f *FakeGenerator) Generate(_ context.Context, text string) ([]deck.Card, error) {
+func (f *FakeGenerator) Generate(_ context.Context, text string) ([]card.Draft, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.texts = append(f.texts, text)
@@ -356,7 +366,7 @@ func (f *FakeGenerator) Generate(_ context.Context, text string) ([]deck.Card, e
 	if f.Cards != nil {
 		return f.Cards, nil
 	}
-	return []deck.Card{{
+	return []card.Draft{{
 		Question: "Combien de planètes dans le système solaire ?",
 		Answer:   "Huit.",
 	}}, nil

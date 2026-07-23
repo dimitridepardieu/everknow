@@ -13,11 +13,6 @@ type profileJSON struct {
 	Age  *int    `json:"age"`
 }
 
-func login(t *testing.T, env *apitest.Env, email string) {
-	t.Helper()
-	env.RequestAndConsumeMagicLink(t, email).Body.Close()
-}
-
 func TestCreateProfile_RequiresAuth(t *testing.T) {
 	env := apitest.New(t)
 
@@ -30,7 +25,7 @@ func TestCreateProfile_RequiresAuth(t *testing.T) {
 
 func TestCreateProfile_PersistsAndLists(t *testing.T) {
 	env := apitest.New(t)
-	login(t, env, "parent@example.test")
+	env.Login(t, "parent@example.test")
 
 	created := env.Client.PostJSON(t, "/api/profiles", map[string]any{"name": "Léa", "age": 7})
 	if created.StatusCode != http.StatusCreated {
@@ -59,7 +54,7 @@ func TestCreateProfile_PersistsAndLists(t *testing.T) {
 
 func TestCreateProfile_EmptyName_Rejected(t *testing.T) {
 	env := apitest.New(t)
-	login(t, env, "parent@example.test")
+	env.Login(t, "parent@example.test")
 
 	resp := env.Client.PostJSON(t, "/api/profiles", map[string]any{"name": "   "})
 	defer resp.Body.Close()
@@ -70,12 +65,12 @@ func TestCreateProfile_EmptyName_Rejected(t *testing.T) {
 
 func TestListProfiles_ScopedToOwner(t *testing.T) {
 	env := apitest.New(t)
-	login(t, env, "owner@example.test")
+	env.Login(t, "owner@example.test")
 	env.Client.PostJSON(t, "/api/profiles", map[string]any{"name": "Ana"}).Body.Close()
 
 	// A second login on the same client swaps the session to another user.
 	// That user must not see the first user's profiles.
-	login(t, env, "other@example.test")
+	env.Login(t, "other@example.test")
 	list := env.Client.Get(t, "/api/profiles")
 	var profiles []profileJSON
 	apitest.DecodeJSON(t, list, &profiles)
@@ -86,7 +81,7 @@ func TestListProfiles_ScopedToOwner(t *testing.T) {
 
 func TestOnboardIndividual_AutoCreatesOneProfile(t *testing.T) {
 	env := apitest.New(t)
-	login(t, env, "solo@example.test")
+	env.Login(t, "solo@example.test")
 
 	patch := env.Client.PatchJSON(t, "/api/me", map[string]any{"role": "individual"})
 	patch.Body.Close()
@@ -107,7 +102,7 @@ func TestOnboardIndividual_AutoCreatesOneProfile(t *testing.T) {
 
 func TestOnboardFamily_NoAutoProfile(t *testing.T) {
 	env := apitest.New(t)
-	login(t, env, "family@example.test")
+	env.Login(t, "family@example.test")
 
 	patch := env.Client.PatchJSON(t, "/api/me", map[string]any{"role": "family"})
 	patch.Body.Close()

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"flashcardacademy/api/internal/auth"
+	"flashcardacademy/api/internal/card"
 	"flashcardacademy/api/internal/config"
 	"flashcardacademy/api/internal/deck"
 	"flashcardacademy/api/internal/middleware"
@@ -42,10 +43,13 @@ type Deps struct {
 	Users    *user.Store
 	Profiles *profile.Store
 	Magic    *auth.MagicLinkSender
-	// Cards is an interface, not a store: generation has no database
+	// Generator is an interface, not a store: generation has no database
 	// behind it, and tests swap in a fake rather than call Anthropic.
-	Cards deck.Generator
-	// Decks persists reviewed cards. Unlike Cards it is a real store — the
+	Generator deck.Generator
+	// Cards owns the cards table: the spaced schedule reads and writes it,
+	// and saving a deck goes through it too.
+	Cards *card.Store
+	// Decks names a set of cards. Unlike Generator it is a real store — the
 	// save path is plain SQL with no provider to fake.
 	Decks *deck.Store
 }
@@ -55,7 +59,8 @@ func NewHandler(d Deps) http.Handler {
 	emailLimiter := ratelimit.New(d.Ctx, magicLinkLimitPerEmail, magicLinkWindowPerEmail)
 	handlers := auth.NewHandlers(d.Cfg, d.Sessions, d.Users, d.Profiles, d.Magic, ipLimiter, emailLimiter)
 	profiles := profile.NewHandlers(d.Profiles)
-	decks := deck.NewHandlers(d.Cards, d.Decks)
+	decks := deck.NewHandlers(d.Generator, d.Decks)
+	cards := card.NewHandlers(d.Cards)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/health", health(d.Pool))
@@ -68,6 +73,8 @@ func NewHandler(d Deps) http.Handler {
 	mux.Handle("GET /api/profiles", middleware.RequireUser(http.HandlerFunc(profiles.List)))
 	mux.Handle("POST /api/cards/generate", middleware.RequireUser(http.HandlerFunc(decks.Generate)))
 	mux.Handle("POST /api/decks", middleware.RequireUser(http.HandlerFunc(decks.Save)))
+	mux.Handle("GET /api/cards/due", middleware.RequireUser(http.HandlerFunc(cards.Due)))
+	mux.Handle("POST /api/cards/{id}/review", middleware.RequireUser(http.HandlerFunc(cards.Review)))
 
 	// Order matters: Recover (outer) → Auth (inject user) → Logger (sees user) → mux.
 	// Logger runs inside Auth so it can include user_id in the per-request log line.

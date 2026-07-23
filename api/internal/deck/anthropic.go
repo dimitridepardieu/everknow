@@ -9,6 +9,8 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"flashcardacademy/api/internal/card"
 )
 
 const (
@@ -70,7 +72,7 @@ type anthropicResponse struct {
 	} `json:"content"`
 }
 
-func (g *AnthropicGenerator) Generate(ctx context.Context, text string) ([]Card, error) {
+func (g *AnthropicGenerator) Generate(ctx context.Context, text string) ([]card.Draft, error) {
 	payload := map[string]any{
 		"model":         generateModel,
 		"max_tokens":    generateMaxTokens,
@@ -140,9 +142,9 @@ func (g *AnthropicGenerator) Generate(ctx context.Context, text string) ([]Card,
 		return nil, fmt.Errorf("unmarshal generated cards: %w", err)
 	}
 
-	cards := make([]Card, 0, len(wire.Cards))
+	cards := make([]card.Draft, 0, len(wire.Cards))
 	for _, c := range wire.Cards {
-		cards = append(cards, Card{Question: c.Question, Answer: c.Answer})
+		cards = append(cards, card.Draft{Question: c.Question, Answer: c.Answer})
 	}
 	return cards, nil
 }

@@ -9,6 +9,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"flashcardacademy/api/internal/card"
 	"flashcardacademy/api/internal/httpx"
 	"flashcardacademy/api/internal/user"
 )
@@ -29,7 +30,7 @@ const (
 // side: these handlers are the only caller, and the seam exists because
 // integration tests must not reach the real provider.
 type Generator interface {
-	Generate(ctx context.Context, text string) ([]Card, error)
+	Generate(ctx context.Context, text string) ([]card.Draft, error)
 }
 
 type Handlers struct {
@@ -160,7 +161,7 @@ func (h *Handlers) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cards := make([]Card, 0, len(body.Cards))
+	drafts := make([]card.Draft, 0, len(body.Cards))
 	for _, c := range body.Cards {
 		q := strings.TrimSpace(c.Question)
 		a := strings.TrimSpace(c.Answer)
@@ -172,10 +173,10 @@ func (h *Handlers) Save(w http.ResponseWriter, r *http.Request) {
 			httpx.WriteError(w, httpx.BadRequest("card text is too long"))
 			return
 		}
-		cards = append(cards, Card{Question: q, Answer: a})
+		drafts = append(drafts, card.Draft{Question: q, Answer: a})
 	}
 
-	d, err := h.store.Create(r.Context(), u.ID, body.ProfileID, name, cards)
+	d, err := h.store.Create(r.Context(), u.ID, body.ProfileID, name, drafts)
 	if errors.Is(err, ErrProfileNotFound) {
 		httpx.WriteError(w, httpx.NotFound("profile not found"))
 		return
@@ -187,6 +188,6 @@ func (h *Handlers) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	slog.InfoContext(r.Context(), "deck saved",
-		"user_id", u.ID, "profile_id", d.ProfileID, "deck_id", d.ID, "card_count", len(cards))
+		"user_id", u.ID, "profile_id", d.ProfileID, "deck_id", d.ID, "card_count", len(drafts))
 	httpx.WriteJSON(w, http.StatusCreated, saveDeckResponse{ID: d.ID, Name: d.Name})
 }
