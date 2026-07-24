@@ -170,8 +170,10 @@ func TestReview_CorrectAnswerClimbsAndPostponesTheCard(t *testing.T) {
 	if got.Rank != 2 {
 		t.Fatalf("rank: got %d want 2", got.Rank)
 	}
-	if got.DueAt == nil || time.Until(*got.DueAt) < 2*24*time.Hour {
-		t.Fatalf("due date: got %v want about three days out", got.DueAt)
+	// On the daily grid: due in the future, at the day-start hour — the exact
+	// day count is pinned by the pure schedule tests.
+	if got.DueAt == nil || !got.DueAt.After(time.Now()) || parisHour(t, *got.DueAt) != 6 {
+		t.Fatalf("due date: got %v want a future 6am", got.DueAt)
 	}
 
 	// And it leaves today's pile, which is the whole point.
@@ -195,14 +197,27 @@ func TestReview_WrongAnswerAtTheBottomComesBackTomorrow(t *testing.T) {
 	if got.Rank != card.RankNew {
 		t.Fatalf("rank: got %d want %d", got.Rank, card.RankNew)
 	}
-	// Tomorrow, not again in this session — a child who blocks on a card
-	// should not be handed it in a loop.
-	if got.DueAt == nil || got.DueAt.Before(time.Now().Add(20*time.Hour)) {
-		t.Fatalf("due date: got %v want about a day out", got.DueAt)
+	// Tomorrow morning, not again in this session — a child who blocks on a
+	// card should not be handed it in a loop. It leaves today's pile (checked
+	// below) and lands on the next day's grid slot.
+	if got.DueAt == nil || !got.DueAt.After(time.Now()) || parisHour(t, *got.DueAt) != 6 {
+		t.Fatalf("due date: got %v want a future 6am", got.DueAt)
 	}
 	if len(due(t, env, profileID)) != 1 {
 		t.Fatal("the missed card is still due today")
 	}
+}
+
+// parisHour is the hour a due date falls on in the family's timezone. Due dates
+// snap to a daily grid at 6am Europe/Paris (card.Schedule), so every review
+// result should report hour 6 there whatever the wall clock reads.
+func parisHour(t *testing.T, due time.Time) int {
+	t.Helper()
+	loc, err := time.LoadLocation("Europe/Paris")
+	if err != nil {
+		t.Fatalf("load Europe/Paris: %v", err)
+	}
+	return due.In(loc).Hour()
 }
 
 func TestReview_EnoughCorrectAnswersMasterTheCardForGood(t *testing.T) {
