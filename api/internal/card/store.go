@@ -62,44 +62,45 @@ func (s *Store) DueByProfile(ctx context.Context, userID, profileID int64) ([]Ca
 	return cards, nil
 }
 
-// Review records how a card was answered and moves it along the schedule.
+// Review records how a card was answered and moves it along the schedule. It
+// returns the rank before and after the answer — the caller logs the
+// transition, which is what makes a scheduling problem legible in one line.
 // The card must belong to userID, through its profile — a card that isn't
 // theirs yields ErrNotFound, indistinguishable from one that doesn't exist.
 //
 // The read and the write share a transaction, and the row is locked between
 // them: two devices answering the same card at once would otherwise both read
 // the old rank and one update would be lost.
-func (s *Store) Review(ctx context.Context, userID, cardID int64, correct bool) (Rank, *time.Time, error) {
+func (s *Store) Review(ctx context.Context, userID, cardID int64, correct bool) (before, after Rank, dueAt *time.Time, err error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
-		return 0, nil, fmt.Errorf("begin tx: %w", err)
+		return 0, 0, nil, fmt.Errorf("begin tx: %w", err)
 	}
 	defer tx.Rollback()
 
-	var current Rank
 	err = tx.QueryRowContext(ctx, `
 		SELECT c.rank
 		FROM cards c
 		JOIN profiles p ON p.id = c.profile_id
 		WHERE c.id = $1 AND p.user_id = $2
 		FOR UPDATE OF c
-	`, cardID, userID).Scan(&current)
+	`, cardID, userID).Scan(&before)
 	if errors.Is(err, sql.ErrNoRows) {
-		return 0, nil, ErrNotFound
+		return 0, 0, nil, ErrNotFound
 	}
 	if err != nil {
-		return 0, nil, fmt.Errorf("load card rank: %w", err)
+		return 0, 0, nil, fmt.Errorf("load card rank: %w", err)
 	}
 
-	rank, dueAt := Schedule(current, correct, time.Now())
+	after, dueAt = Schedule(before, correct, time.Now())
 	if _, err := tx.ExecContext(ctx, `
 		UPDATE cards SET rank = $2, due_at = $3 WHERE id = $1
-	`, cardID, rank, dueAt); err != nil {
-		return 0, nil, fmt.Errorf("update card schedule: %w", err)
+	`, cardID, after, dueAt); err != nil {
+		return 0, 0, nil, fmt.Errorf("update card schedule: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return 0, nil, fmt.Errorf("commit: %w", err)
+		return 0, 0, nil, fmt.Errorf("commit: %w", err)
 	}
-	return rank, dueAt, nil
+	return before, after, dueAt, nil
 }
