@@ -73,3 +73,25 @@ export const sourceTextSchema = z
   .trim()
   .min(100, 'Colle un peu plus de texte pour de bonnes cartes.')
   .max(5000, 'Ce texte est trop long. Garde l’essentiel.')
+
+// A card the active learner has to answer now. The answer travels with the
+// question: the child reveals it and grades themselves against it.
+export const dueCardSchema = z.object({
+  id: z.number(),
+  question: z.string(),
+  answer: z.string(),
+  rank: z.number(),
+})
+export type DueCard = z.infer<typeof dueCardSchema>
+
+export const dueCardsSchema = z.object({
+  cards: z.array(dueCardSchema),
+})
+
+// Where a card landed after being answered. A null due_at means mastered —
+// that, not the rank number, is what says the card never comes back.
+export const reviewResultSchema = z.object({
+  rank: z.number(),
+  due_at: z.string().nullable(),
+})
+export type ReviewResult = z.infer<typeof reviewResultSchema>

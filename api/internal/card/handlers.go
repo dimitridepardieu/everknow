@@ -84,7 +84,7 @@ func (h *Handlers) Review(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rank, dueAt, err := h.store.Review(r.Context(), u.ID, cardID, *body.Correct)
+	before, after, dueAt, err := h.store.Review(r.Context(), u.ID, cardID, *body.Correct)
 	if errors.Is(err, ErrNotFound) {
 		httpx.WriteError(w, httpx.NotFound("card not found"))
 		return
@@ -96,6 +96,7 @@ func (h *Handlers) Review(w http.ResponseWriter, r *http.Request) {
 	}
 
 	slog.InfoContext(r.Context(), "card reviewed",
-		"user_id", u.ID, "card_id", cardID, "correct", *body.Correct, "rank", rank)
-	httpx.WriteJSON(w, http.StatusOK, reviewResponse{Rank: rank, DueAt: dueAt})
+		"user_id", u.ID, "card_id", cardID, "correct", *body.Correct,
+		"rank_before", before, "rank_after", after)
+	httpx.WriteJSON(w, http.StatusOK, reviewResponse{Rank: after, DueAt: dueAt})
 }

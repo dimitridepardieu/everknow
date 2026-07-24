@@ -28,7 +28,9 @@
   --muted-foreground: #9ca0b8; /* ink-muted */
   --accent: #efebff; /* primary-soft */
   --accent-foreground: #4d33cc; /* primary-dark */
-  --destructive: #ff5e5e; /* corail */
+  --destructive: #ff5e5e; /* corail — --error in the design */
+  --destructive-dark: #cc4040; /* design --error-dark, for the 3D shadow */
+  --destructive-soft: #ffe5e5; /* design --error-soft, for tinted surfaces */
   --border: rgba(27, 27, 58, 0.12);
   --input: rgba(27, 27, 58, 0.14);
   --ring: #6b4eff;
@@ -84,6 +86,8 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-dark: var(--destructive-dark);
+  --color-destructive-soft: var(--destructive-soft);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

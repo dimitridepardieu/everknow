@@ -22,7 +22,9 @@ const buttonVariants = cva(
         ghost:
           'hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50',
         destructive:
-          'bg-destructive text-white shadow-[0_5px_0_color-mix(in_oklab,var(--destructive),black_22%)] hover:bg-destructive/95 active:shadow-[0_2px_0_color-mix(in_oklab,var(--destructive),black_22%)]',
+          'bg-destructive text-white shadow-[0_5px_0_var(--destructive-dark)] hover:bg-destructive/95 active:shadow-[0_2px_0_var(--destructive-dark)]',
+        success:
+          'bg-success text-white shadow-[0_5px_0_var(--success-dark)] hover:bg-success/95 active:shadow-[0_2px_0_var(--success-dark)]',
         link: 'font-sans tracking-normal normal-case text-primary underline-offset-4 hover:underline active:translate-y-0',
       },
       size: {

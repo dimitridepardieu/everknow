@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useActiveProfileId } from '@/lib/active-profile-context'
 import { useLogout, useMe } from '@/lib/auth'
+import { useDueCards } from '@/lib/cards'
 import { useProfiles } from '@/lib/profiles'
 import { useActiveProfile } from '@/lib/use-active-profile'
 
@@ -17,6 +18,7 @@ function LearnPage() {
   const { data: profiles } = useProfiles()
   const { setActiveProfileId } = useActiveProfileId()
   const { profile: activeProfile } = useActiveProfile()
+  const { data: dueCards } = useDueCards(activeProfile?.id)
   const navigate = useNavigate()
   const mutation = useLogout()
 
@@ -61,13 +63,36 @@ function LearnPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <p className="text-muted-foreground text-sm">
-            Colle une leçon et Pip la transforme en flashcards.
-          </p>
-          <Button onClick={() => void navigate({ to: '/create' })}>
-            <Sparkle size={18} />
-            Créer des cartes
-          </Button>
+          {dueCards && dueCards.length > 0 ? (
+            <>
+              <p className="text-muted-foreground text-sm">
+                {dueCards.length} carte{dueCards.length > 1 ? 's' : ''} à
+                réviser aujourd’hui.
+              </p>
+              <Button onClick={() => void navigate({ to: '/train' })}>
+                Réviser
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => void navigate({ to: '/create' })}
+              >
+                <Sparkle size={18} />
+                Créer des cartes
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-muted-foreground text-sm">
+                {dueCards
+                  ? 'Tout est à jour ! Colle une leçon et Pip la transforme en flashcards.'
+                  : 'Colle une leçon et Pip la transforme en flashcards.'}
+              </p>
+              <Button onClick={() => void navigate({ to: '/create' })}>
+                <Sparkle size={18} />
+                Créer des cartes
+              </Button>
+            </>
+          )}
         </CardContent>
       </Card>
 

@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedWhoRouteImport } from './routes/_authenticated/who'
+import { Route as AuthenticatedTrainRouteImport } from './routes/_authenticated/train'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedLearnRouteImport } from './routes/_authenticated/learn'
 import { Route as AuthenticatedCreateIndexRouteImport } from './routes/_authenticated/create/index'
@@ -48,6 +49,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedWhoRoute = AuthenticatedWhoRouteImport.update({
   id: '/who',
   path: '/who',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTrainRoute = AuthenticatedTrainRouteImport.update({
+  id: '/train',
+  path: '/train',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof WelcomeRoute
   '/learn': typeof AuthenticatedLearnRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/train': typeof AuthenticatedTrainRoute
   '/who': typeof AuthenticatedWhoRoute
   '/create/review': typeof AuthenticatedCreateReviewRoute
   '/profiles/new': typeof AuthenticatedProfilesNewRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/welcome': typeof WelcomeRoute
   '/learn': typeof AuthenticatedLearnRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/train': typeof AuthenticatedTrainRoute
   '/who': typeof AuthenticatedWhoRoute
   '/create/review': typeof AuthenticatedCreateReviewRoute
   '/profiles/new': typeof AuthenticatedProfilesNewRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/welcome': typeof WelcomeRoute
   '/_authenticated/learn': typeof AuthenticatedLearnRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/train': typeof AuthenticatedTrainRoute
   '/_authenticated/who': typeof AuthenticatedWhoRoute
   '/_authenticated/create/review': typeof AuthenticatedCreateReviewRoute
   '/_authenticated/profiles/new': typeof AuthenticatedProfilesNewRoute
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/learn'
     | '/onboarding'
+    | '/train'
     | '/who'
     | '/create/review'
     | '/profiles/new'
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/learn'
     | '/onboarding'
+    | '/train'
     | '/who'
     | '/create/review'
     | '/profiles/new'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/_authenticated/learn'
     | '/_authenticated/onboarding'
+    | '/_authenticated/train'
     | '/_authenticated/who'
     | '/_authenticated/create/review'
     | '/_authenticated/profiles/new'
@@ -209,6 +221,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWhoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/train': {
+      id: '/_authenticated/train'
+      path: '/train'
+      fullPath: '/train'
+      preLoaderRoute: typeof AuthenticatedTrainRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
       path: '/onboarding'
@@ -250,6 +269,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedLearnRoute: typeof AuthenticatedLearnRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedTrainRoute: typeof AuthenticatedTrainRoute
   AuthenticatedWhoRoute: typeof AuthenticatedWhoRoute
   AuthenticatedCreateReviewRoute: typeof AuthenticatedCreateReviewRoute
   AuthenticatedProfilesNewRoute: typeof AuthenticatedProfilesNewRoute
@@ -259,6 +279,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLearnRoute: AuthenticatedLearnRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedTrainRoute: AuthenticatedTrainRoute,
   AuthenticatedWhoRoute: AuthenticatedWhoRoute,
   AuthenticatedCreateReviewRoute: AuthenticatedCreateReviewRoute,
   AuthenticatedProfilesNewRoute: AuthenticatedProfilesNewRoute,
