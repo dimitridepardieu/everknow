@@ -10,6 +10,10 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	// Embed the IANA timezone database so time.LoadLocation works in a
+	// container that ships no system tzdata — the spaced schedule loads
+	// Europe/Paris at startup (card.Schedule).
+	_ "time/tzdata"
 
 	"flashcardacademy/api/internal/auth"
 	"flashcardacademy/api/internal/card"
