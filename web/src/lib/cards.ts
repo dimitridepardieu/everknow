@@ -33,6 +33,15 @@ export const dueCardsQueryOptions = (profileId: number | undefined) =>
       return dueCardsSchema.parse(data).cards
     },
     enabled: profileId !== undefined,
+    // A training session freezes the list it starts with, so it must start
+    // from fresh data — never a cached list from a previous session, which
+    // would replay already-answered cards and read their stale ranks. Always
+    // refetch on entry; never refetch on focus or reconnect, so the only fetch
+    // is the one on mount and a mid-session blip can't yank the list out from
+    // under a child who is answering.
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   })
 
 export function useDueCards(profileId: number | undefined) {
@@ -53,10 +62,13 @@ export function useReviewCard() {
       cardId,
       correct,
     }: ReviewInput): Promise<ReviewResult> => {
-      const data = await apiFetch<unknown>(`/api/cards/${String(cardId)}/review`, {
-        method: 'POST',
-        body: JSON.stringify({ correct }),
-      })
+      const data = await apiFetch<unknown>(
+        `/api/cards/${String(cardId)}/review`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ correct }),
+        },
+      )
       return reviewResultSchema.parse(data)
     },
   })
