@@ -26,7 +26,7 @@ function AccountPage() {
 
   const activeIndex =
     profiles?.findIndex((p) => p.id === activeProfile?.id) ?? -1
-  const color = profileColor(activeIndex < 0 ? 0 : activeIndex)
+  const color = profileColor(activeIndex)
 
   const handleLogout = async () => {
     await logout.mutateAsync()

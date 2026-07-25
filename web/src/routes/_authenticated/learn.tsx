@@ -39,7 +39,7 @@ function LearnPage() {
   }
 
   const activeIndex = profiles.findIndex((p) => p.id === activeProfile?.id)
-  const color = profileColor(activeIndex < 0 ? 0 : activeIndex)
+  const color = profileColor(activeIndex)
 
   // undefined while the list loads, so the "à jour" hero never flashes before
   // the real count lands (the query always refetches on entry).

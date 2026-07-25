@@ -4,5 +4,7 @@
 const AVATAR_COLORS = ['#FFD86A', '#FF8FB1', '#4FC1F0', '#7AD9C8', '#C5A8FF']
 
 export function profileColor(index: number): string {
-  return AVATAR_COLORS[index % AVATAR_COLORS.length]
+  // Clamp so a "not found" index (findIndex returns -1) falls back to the first
+  // colour rather than reading AVATAR_COLORS[-1]; callers pass a raw index.
+  return AVATAR_COLORS[Math.max(0, index) % AVATAR_COLORS.length]
 }
