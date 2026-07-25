@@ -18,6 +18,7 @@ import { Route as AuthenticatedWhoRouteImport } from './routes/_authenticated/wh
 import { Route as AuthenticatedTrainRouteImport } from './routes/_authenticated/train'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedLearnRouteImport } from './routes/_authenticated/learn'
+import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedCreateIndexRouteImport } from './routes/_authenticated/create/index'
 import { Route as AuthenticatedProfilesNewRouteImport } from './routes/_authenticated/profiles/new'
 import { Route as AuthenticatedCreateReviewRouteImport } from './routes/_authenticated/create/review'
@@ -66,6 +67,11 @@ const AuthenticatedLearnRoute = AuthenticatedLearnRouteImport.update({
   path: '/learn',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCreateIndexRoute =
   AuthenticatedCreateIndexRouteImport.update({
     id: '/create/',
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/welcome': typeof WelcomeRoute
+  '/account': typeof AuthenticatedAccountRoute
   '/learn': typeof AuthenticatedLearnRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/train': typeof AuthenticatedTrainRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/welcome': typeof WelcomeRoute
+  '/account': typeof AuthenticatedAccountRoute
   '/learn': typeof AuthenticatedLearnRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/train': typeof AuthenticatedTrainRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/welcome': typeof WelcomeRoute
+  '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/learn': typeof AuthenticatedLearnRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/train': typeof AuthenticatedTrainRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/welcome'
+    | '/account'
     | '/learn'
     | '/onboarding'
     | '/train'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/welcome'
+    | '/account'
     | '/learn'
     | '/onboarding'
     | '/train'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/welcome'
+    | '/_authenticated/account'
     | '/_authenticated/learn'
     | '/_authenticated/onboarding'
     | '/_authenticated/train'
@@ -242,6 +254,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLearnRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/account': {
+      id: '/_authenticated/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AuthenticatedAccountRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/create/': {
       id: '/_authenticated/create/'
       path: '/create'
@@ -267,6 +286,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedLearnRoute: typeof AuthenticatedLearnRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedTrainRoute: typeof AuthenticatedTrainRoute
@@ -277,6 +297,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedLearnRoute: AuthenticatedLearnRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedTrainRoute: AuthenticatedTrainRoute,

@@ -1,41 +1,15 @@
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 
-import { Pip } from '@/components/pip'
+import { PipAvatar } from '@/components/pip-avatar'
 import { Sparkle } from '@/components/sparkle'
 import { useActiveProfileId } from '@/lib/active-profile-context'
+import { profileColor } from '@/lib/profile-color'
 import { useProfiles } from '@/lib/profiles'
 
 export const Route = createFileRoute('/_authenticated/who')({
   component: WhoPage,
 })
-
-// Presentation-only: profiles carry no stored colour yet, so each Pip is
-// tinted by list position. Stable while the list is (ordered by created_at,
-// no deletion yet) — revisit when profiles can be removed or reordered.
-const AVATAR_COLORS = ['#FFD86A', '#FF8FB1', '#4FC1F0', '#7AD9C8', '#C5A8FF']
-
-function PipAvatar({
-  color,
-  size = 84,
-}: {
-  readonly color: string
-  readonly size?: number
-}) {
-  return (
-    <div
-      className="flex shrink-0 items-center justify-center overflow-hidden rounded-full"
-      style={{
-        width: size,
-        height: size,
-        background: 'var(--background)',
-        boxShadow: `0 0 0 4px white, 0 0 0 6px ${color}`,
-      }}
-    >
-      <Pip size={size * 1.05} mood="happy" color={color} />
-    </div>
-  )
-}
 
 function WhoPage() {
   const { data: profiles } = useProfiles()
@@ -105,7 +79,7 @@ function WhoPage() {
                   onClick={() => pick(p.id)}
                   className="flex cursor-pointer flex-col items-center gap-2"
                 >
-                  <PipAvatar color={AVATAR_COLORS[i % AVATAR_COLORS.length]} />
+                  <PipAvatar color={profileColor(i)} />
                   <span className="font-heading text-sm font-semibold">
                     {p.name ?? 'Sans nom'}
                   </span>

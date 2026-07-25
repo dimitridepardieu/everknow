@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Check } from 'lucide-react'
 
-import { Pip } from '@/components/pip'
+import { PipAvatar } from '@/components/pip-avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,28 +18,6 @@ export const Route = createFileRoute('/_authenticated/profiles/new')({
 // A child profile has no stored colour yet; the preview shows Pip in a warm
 // default so the screen feels alive while the parent types.
 const PREVIEW_COLOR = '#FFD86A'
-
-function PipAvatar({
-  color,
-  size = 104,
-}: {
-  readonly color: string
-  readonly size?: number
-}) {
-  return (
-    <div
-      className="flex shrink-0 items-center justify-center overflow-hidden rounded-full"
-      style={{
-        width: size,
-        height: size,
-        background: 'var(--background)',
-        boxShadow: `0 0 0 4px white, 0 0 0 6px ${color}`,
-      }}
-    >
-      <Pip size={size * 1.05} mood="happy" color={color} />
-    </div>
-  )
-}
 
 const inputClass =
   'border-border focus-visible:border-primary text-ink placeholder:text-ink-muted h-auto rounded-2xl border-2 bg-white py-3.5 text-lg font-semibold shadow-[0_4px_0_#1b1b3a14] transition-shadow focus-visible:shadow-[0_4px_0_var(--primary-dark)] focus-visible:ring-0'
@@ -90,7 +68,7 @@ function NewProfilePage() {
       </div>
 
       <div className="mt-4 mb-7 flex flex-col items-center">
-        <PipAvatar color={PREVIEW_COLOR} />
+        <PipAvatar color={PREVIEW_COLOR} size={104} />
         <p className="font-heading text-ink mt-2 text-[17px] font-semibold">
           {trimmedName || 'Prénom'}
         </p>

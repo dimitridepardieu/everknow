@@ -1,11 +1,16 @@
-import { Navigate, createFileRoute, useNavigate } from '@tanstack/react-router'
+import {
+  Link,
+  Navigate,
+  createFileRoute,
+  useNavigate,
+} from '@tanstack/react-router'
 
-import { Sparkle } from '@/components/sparkle'
+import { Pip } from '@/components/pip'
+import { PipAvatar } from '@/components/pip-avatar'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useActiveProfileId } from '@/lib/active-profile-context'
-import { useLogout, useMe } from '@/lib/auth'
+import { useMe } from '@/lib/auth'
 import { useDueCards } from '@/lib/cards'
+import { profileColor } from '@/lib/profile-color'
 import { useProfiles } from '@/lib/profiles'
 import { useActiveProfile } from '@/lib/use-active-profile'
 
@@ -16,11 +21,9 @@ export const Route = createFileRoute('/_authenticated/learn')({
 function LearnPage() {
   const { data: me } = useMe()
   const { data: profiles } = useProfiles()
-  const { setActiveProfileId } = useActiveProfileId()
   const { profile: activeProfile } = useActiveProfile()
   const { data: dueCards } = useDueCards(activeProfile?.id)
   const navigate = useNavigate()
-  const mutation = useLogout()
 
   // _authenticated guarantees me is non-null here (it redirects to /login
   // otherwise), but TS doesn't know that. Bail defensively rather than assert.
@@ -35,77 +38,87 @@ function LearnPage() {
     return <Navigate to={profiles.length === 0 ? '/profiles/new' : '/who'} />
   }
 
-  const handleLogout = async () => {
-    await mutation.mutateAsync()
-    // Drop the picked profile so the next account on this browser starts clean.
-    setActiveProfileId(null)
-    void navigate({ to: '/' })
-  }
+  const activeIndex = profiles.findIndex((p) => p.id === activeProfile?.id)
+  const color = profileColor(activeIndex)
+
+  // undefined while the list loads, so the "à jour" hero never flashes before
+  // the real count lands (the query always refetches on entry).
+  const dueCount = dueCards?.length
+  const hasDue = dueCount !== undefined && dueCount > 0
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 px-6 py-8">
-      <header className="flex items-center justify-between">
-        <p className="text-muted-foreground text-sm">{me.email}</p>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleLogout}
-          disabled={mutation.isPending}
-        >
-          Déconnexion
-        </Button>
+    <main className="flex min-h-dvh flex-col pb-9">
+      {/* Header hugs the viewport's left edge (px-6 pt-6, matching FlowHeader)
+          so "Salut, {name}" sits top-left on desktop instead of floating inside
+          the centered column below. */}
+      <header className="flex items-center gap-3.5 px-6 pt-6">
+        <Link to="/account" aria-label="Profil" className="cursor-pointer">
+          <PipAvatar color={color} size={40} />
+        </Link>
+        <p className="font-heading text-ink-soft text-sm font-semibold">
+          Salut, <span className="text-ink">{activeProfile?.name}</span>
+        </p>
       </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            Bonjour{activeProfile?.name ? ` ${activeProfile.name}` : ''} !
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          {dueCards && dueCards.length > 0 ? (
-            <>
-              <p className="text-muted-foreground text-sm">
-                {dueCards.length} carte{dueCards.length > 1 ? 's' : ''} à
-                réviser aujourd’hui.
-              </p>
-              <Button onClick={() => void navigate({ to: '/train' })}>
-                Réviser
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => void navigate({ to: '/create' })}
-              >
-                <Sparkle size={18} />
-                Créer des cartes
-              </Button>
-            </>
-          ) : (
-            <>
-              <p className="text-muted-foreground text-sm">
-                {dueCards
-                  ? 'Tout est à jour ! Colle une leçon et Pip la transforme en flashcards.'
-                  : 'Colle une leçon et Pip la transforme en flashcards.'}
-              </p>
-              <Button onClick={() => void navigate({ to: '/create' })}>
-                <Sparkle size={18} />
-                Créer des cartes
-              </Button>
-            </>
-          )}
-        </CardContent>
-      </Card>
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-6">
+        <div className="flex flex-1 flex-col items-center justify-center gap-[18px] text-center">
+          <Pip size={150} mood="happy" />
 
-      {me.role === 'family' && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="self-center"
-          onClick={() => void navigate({ to: '/who' })}
-        >
-          Changer de profil
-        </Button>
-      )}
+          {dueCount !== undefined &&
+            (hasDue ? (
+              <div>
+                <p className="font-heading text-ink-muted text-xs font-medium tracking-[2px] uppercase">
+                  À toi de jouer
+                </p>
+                <h1 className="font-heading mt-1 text-[36px] leading-[1.05] font-semibold">
+                  <span className="text-primary-dark">
+                    {dueCount} carte{dueCount > 1 ? 's' : ''}
+                  </span>
+                  <br />
+                  aujourd’hui
+                </h1>
+              </div>
+            ) : (
+              <div>
+                <p className="font-heading text-ink-muted text-xs font-medium tracking-[2px] uppercase">
+                  Tu as tout révisé
+                </p>
+                <h1 className="font-heading mt-1 text-[34px] leading-[1.15] font-semibold">
+                  Tout est calme.
+                  <br />
+                  <span className="text-success-dark">Respire.</span>
+                </h1>
+                <p className="text-ink-soft mx-auto mt-3 max-w-[280px] text-sm font-bold">
+                  Tes cartes reviendront au bon moment — parfois demain, parfois
+                  dans quelques jours. Le repos fait partie du jeu.
+                </p>
+              </div>
+            ))}
+        </div>
+
+        {dueCount !== undefined && (
+          <div className="flex flex-col gap-2.5">
+            {hasDue ? (
+              <>
+                <Button onClick={() => void navigate({ to: '/train' })}>
+                  Commencer
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => void navigate({ to: '/create' })}
+                >
+                  Créer des cartes
+                </Button>
+              </>
+            ) : (
+              <Button onClick={() => void navigate({ to: '/create' })}>
+                Créer des cartes
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
     </main>
   )
 }
