@@ -79,4 +79,4 @@ Only when no existing label captures the issue **and** the category will recur (
 gh label create "<name>" --description "<one-liner>"
 ```
 
-Convention: lowercase, kebab-case for multi-word (`prod-readiness`, not `ProdReadiness`).
+Convention: lowercase, spaces for multi-word (`prod readiness`, not `prod-readiness` or `ProdReadiness`) — matching GitHub's native labels (`good first issue`).
