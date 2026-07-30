@@ -79,9 +79,15 @@ const ORBIT_SPARKLES = [
   { left: '88%', top: '72%', size: 16, color: '#6B4EFF' },
 ] as const
 
-// Half a card, shadow included. The cards are absolutely positioned, so the
-// stage has to reserve room for how far they actually reach — a fixed padding
-// would silently let them spill over whatever sits above.
+// Half of a rendered card, shadow included, measured on the widest one
+// ("Histoire → Révolution"): min-w-[88px] stretched by its content, plus
+// px-2.5/py-2 and the inset border below.
+//
+// The cards are absolutely positioned, so the stage can't learn its own size
+// from them — it has to reserve their reach up front, or they spill over
+// whatever sits above (that is how they ended up drawn across the top bar).
+// Re-measure these two if a card's padding, type sizes, or longest answer
+// change: nothing fails loudly when they drift.
 const CARD_HALF_W = 58
 const CARD_HALF_H = 34
 
@@ -201,16 +207,14 @@ function LandingPage() {
             columns where that anchoring would leave a hole. */}
         <div className="mx-auto grid w-full max-w-5xl flex-1 grid-rows-[auto_1fr] items-stretch gap-6 md:flex-none md:grid-cols-2 md:grid-rows-none md:items-center md:gap-12">
           {/* Illustration first — it leads on mobile and sits left on desktop,
-              so the message lands after the eye has something to hold. Two
-              sizes (155 / 220); only the matching one renders, the other is
-              display:none so it never animates.
+              so the message lands after the eye has something to hold.
 
-              Both rings are deliberately tighter than the cards need: at 72°
-              apart neighbours only clear each other above ~190, so the cards
-              overlap slightly and tuck behind Pip (he holds z-[2]). That
-              overlap is the point — it reads as one dense cluster rather than
-              a wide, empty orbit. The upper bound is the viewport: a card
-              reaches ring/2 + 55px sideways, and past 225 that clips at 375px. */}
+              Two sizes, 155 below xl and 220 above. Both are mounted; only one
+              is shown, the other is display:none.
+
+              The ring has a ceiling: a card reaches ring/2 + CARD_HALF_W
+              sideways, so past ~225 it clips a 375px viewport. How far apart
+              the cards sit is set by the angles in ORBIT_CARDS, not here. */}
           <div className="flex items-center justify-center">
             <div className="xl:hidden">
               <OrbitHero size={155} pipSize={98} />
