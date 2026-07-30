@@ -3,7 +3,7 @@ import { type VariantProps, cva } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
 
-// Flashcard Academy "chunky 3D" button: Fredoka, uppercase, and a hard
+// Everknow "chunky 3D" button: Fredoka, uppercase, and a hard
 // offset shadow that compresses on press (translate-y + shrunk shadow), so
 // every default button feels tactile. The `link` variant opts out of the
 // chunky treatment. Shadow colors come from --primary-dark / --border so

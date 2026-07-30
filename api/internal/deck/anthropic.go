@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	"flashcardacademy/api/internal/card"
+	"everknow/api/internal/card"
 )
 
 const (

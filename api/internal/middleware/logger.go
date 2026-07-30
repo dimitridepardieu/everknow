@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"flashcardacademy/api/internal/user"
+	"everknow/api/internal/user"
 )
 
 // requestIDKey is a distinct unexported type to prevent collisions with

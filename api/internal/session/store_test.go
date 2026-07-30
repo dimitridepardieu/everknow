@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"flashcardacademy/api/internal/apitest"
-	"flashcardacademy/api/internal/session"
-	"flashcardacademy/api/internal/token"
+	"everknow/api/internal/apitest"
+	"everknow/api/internal/session"
+	"everknow/api/internal/token"
 )
 
 const (

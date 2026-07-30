@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"flashcardacademy/api/internal/middleware"
+	"everknow/api/internal/middleware"
 )
 
 // Logger wraps the ResponseWriter to record the status code. A wrapper that

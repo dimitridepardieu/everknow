@@ -1,4 +1,4 @@
-# Flashcard Academy
+# Everknow
 
 AI-powered flashcard app for parents to help their children learn
 autonomously.
@@ -20,8 +20,8 @@ binaries that crash the Linux container). See `CLAUDE.md`.
 
 ```bash
 # 1. Clone the repo
-git clone <repo-url> flashcardacademy
-cd flashcardacademy
+git clone <repo-url> everknow
+cd everknow
 
 # 2. Copy the environment template (edit docker/.env if you want custom values)
 cp docker/.env.example docker/.env
@@ -33,7 +33,7 @@ make up
 make trust-caddy-ca
 
 # 5. Open the app
-open https://flashcardacademy.localhost
+open https://everknow.localhost
 ```
 
 If you skip step 4, the app still works but Chrome/Safari will warn
@@ -72,7 +72,7 @@ Exit with `Ctrl-D` or `exit`.
 api/      Go backend (stdlib only)
 web/      React + Vite + TypeScript frontend (PWA mobile-first)
 docker/   Docker stack — per-service subdirs + compose files
-docs/     Project status, specs, setup guides
+docs/     ADRs and setup guides
 ```
 
 ## Troubleshooting

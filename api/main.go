@@ -15,16 +15,16 @@ import (
 	// Europe/Paris at startup (card.Schedule).
 	_ "time/tzdata"
 
-	"flashcardacademy/api/internal/auth"
-	"flashcardacademy/api/internal/card"
-	"flashcardacademy/api/internal/config"
-	"flashcardacademy/api/internal/db"
-	"flashcardacademy/api/internal/deck"
-	"flashcardacademy/api/internal/email"
-	"flashcardacademy/api/internal/profile"
-	"flashcardacademy/api/internal/server"
-	"flashcardacademy/api/internal/session"
-	"flashcardacademy/api/internal/user"
+	"everknow/api/internal/auth"
+	"everknow/api/internal/card"
+	"everknow/api/internal/config"
+	"everknow/api/internal/db"
+	"everknow/api/internal/deck"
+	"everknow/api/internal/email"
+	"everknow/api/internal/profile"
+	"everknow/api/internal/server"
+	"everknow/api/internal/session"
+	"everknow/api/internal/user"
 )
 
 func main() {

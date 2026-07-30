@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"flashcardacademy/api/internal/httpx"
-	"flashcardacademy/api/internal/user"
+	"everknow/api/internal/httpx"
+	"everknow/api/internal/user"
 )
 
 type Handlers struct {

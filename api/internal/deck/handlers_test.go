@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"flashcardacademy/api/internal/apitest"
-	"flashcardacademy/api/internal/card"
+	"everknow/api/internal/apitest"
+	"everknow/api/internal/card"
 )
 
 // sourceText is a synthetic passage comfortably over minSourceRunes; any

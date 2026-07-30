@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"flashcardacademy/api/internal/apitest"
+	"everknow/api/internal/apitest"
 )
 
 type profileJSON struct {

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"flashcardacademy/api/internal/card"
+	"everknow/api/internal/card"
 )
 
 type Store struct {

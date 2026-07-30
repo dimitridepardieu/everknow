@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"flashcardacademy/api/internal/apitest"
-	"flashcardacademy/api/internal/profile"
-	"flashcardacademy/api/internal/user"
+	"everknow/api/internal/apitest"
+	"everknow/api/internal/profile"
+	"everknow/api/internal/user"
 )
 
 // seedUser creates a user to own the profiles under test — profiles.user_id

@@ -10,15 +10,15 @@ import (
 	"net/http"
 	"time"
 
-	"flashcardacademy/api/internal/auth"
-	"flashcardacademy/api/internal/card"
-	"flashcardacademy/api/internal/config"
-	"flashcardacademy/api/internal/deck"
-	"flashcardacademy/api/internal/middleware"
-	"flashcardacademy/api/internal/profile"
-	"flashcardacademy/api/internal/ratelimit"
-	"flashcardacademy/api/internal/session"
-	"flashcardacademy/api/internal/user"
+	"everknow/api/internal/auth"
+	"everknow/api/internal/card"
+	"everknow/api/internal/config"
+	"everknow/api/internal/deck"
+	"everknow/api/internal/middleware"
+	"everknow/api/internal/profile"
+	"everknow/api/internal/ratelimit"
+	"everknow/api/internal/session"
+	"everknow/api/internal/user"
 )
 
 // Magic-link request limits. Defense against email-bombing a third party and

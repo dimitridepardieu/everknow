@@ -72,7 +72,7 @@ func Load() (*Config, error) {
 		DatabaseURL:     dbURL,
 		AppBaseURL:      appBaseURL,
 		EmailProvider:   provider,
-		EmailFrom:       envOr("EMAIL_FROM", "hello@flashcardacademy.io"),
+		EmailFrom:       envOr("EMAIL_FROM", "hello@everknow.app"),
 		ResendAPIKey:    os.Getenv("RESEND_API_KEY"),
 		AnthropicAPIKey: anthropicAPIKey,
 		SessionTTL:      time.Duration(sessionTTLHours) * time.Hour,

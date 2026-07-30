@@ -1,6 +1,6 @@
 ---
 name: create-issue
-description: Create a GitHub issue for Flashcard Academy with full triage applied at creation (label + milestone + Priority + Size). Use whenever the user asks to "create an issue", "open a ticket", "log a bug", "add to backlog", "track this", or describes a feature/bug they want captured — even without the word "issue". Always runs a duplicate check across open AND closed issues, reads the current milestones from GitHub rather than assuming them, then lands the new issue in the project Kanban with Status, Priority, and Size set. Do NOT use for: commenting on existing issues, editing labels of issues that already exist, or batch operations across multiple issues.
+description: Create a GitHub issue for Everknow with full triage applied at creation (label + milestone + Priority + Size). Use whenever the user asks to "create an issue", "open a ticket", "log a bug", "add to backlog", "track this", or describes a feature/bug they want captured — even without the word "issue". Always runs a duplicate check across open AND closed issues, reads the current milestones from GitHub rather than assuming them, then lands the new issue in the project Kanban with Status, Priority, and Size set. Do NOT use for: commenting on existing issues, editing labels of issues that already exist, or batch operations across multiple issues.
 ---
 
 # Create a triaged GitHub issue
@@ -10,7 +10,7 @@ Issues enter the Kanban with label, Priority, Size, **and milestone** set at cre
 ## 0. Read the milestones (never hardcode them)
 
 ```bash
-gh api repos/dimitridepardieu/flashcardacademy/milestones \
+gh api repos/dimitridepardieu/everknow/milestones \
   --jq '.[] | "\(.number) | \(.title) — \(.description)"'
 ```
 

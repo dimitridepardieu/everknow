@@ -7,7 +7,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Flashcard Academy design tokens.
+ * Everknow design tokens.
  * Palette and type scale mirror the Claude Design prototype (Pip identity):
  * cream background, violet primary, mint/gold/pink/sky accents,
  * Fredoka for headings + Nunito for body. The "chunky 3D" button shadow
@@ -36,7 +36,7 @@
   --ring: #6b4eff;
   --radius: 1rem;
 
-  /* FA brand tokens beyond the shadcn semantic set */
+  /* Everknow brand tokens beyond the shadcn semantic set */
   --primary-dark: #4d33cc;
   --primary-soft: #efebff;
   --ink: #1b1b3a;
@@ -92,7 +92,7 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* FA accent tokens → bg-gold, text-success-dark, border-ink-soft, … */
+  /* Everknow accent tokens → bg-gold, text-success-dark, border-ink-soft, … */
   --color-primary-dark: var(--primary-dark);
   --color-primary-soft: var(--primary-soft);
   --color-ink: var(--ink);

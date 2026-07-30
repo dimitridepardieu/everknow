@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"flashcardacademy/api/internal/token"
+	"everknow/api/internal/token"
 )
 
 var ErrNotFound = errors.New("session not found")

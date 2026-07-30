@@ -13,13 +13,13 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"flashcardacademy/api/internal/config"
-	"flashcardacademy/api/internal/httpx"
-	"flashcardacademy/api/internal/profile"
-	"flashcardacademy/api/internal/ratelimit"
-	"flashcardacademy/api/internal/session"
-	"flashcardacademy/api/internal/token"
-	"flashcardacademy/api/internal/user"
+	"everknow/api/internal/config"
+	"everknow/api/internal/httpx"
+	"everknow/api/internal/profile"
+	"everknow/api/internal/ratelimit"
+	"everknow/api/internal/session"
+	"everknow/api/internal/token"
+	"everknow/api/internal/user"
 )
 
 type Handlers struct {

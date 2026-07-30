@@ -7,7 +7,7 @@ import (
 
 // CookieName is the session cookie's protocol-level name. Stable across
 // deploys: changing it silently logs out every active user.
-const CookieName = "fa_session"
+const CookieName = "everknow_session"
 
 type Session struct {
 	ID        int64

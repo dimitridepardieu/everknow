@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"flashcardacademy/api/internal/apitest"
-	"flashcardacademy/api/internal/user"
+	"everknow/api/internal/apitest"
+	"everknow/api/internal/user"
 )
 
 const testEmail = "alice@example.test"

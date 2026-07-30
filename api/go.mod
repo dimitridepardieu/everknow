@@ -1,4 +1,4 @@
-module flashcardacademy/api
+module everknow/api
 
 go 1.26.2
 
