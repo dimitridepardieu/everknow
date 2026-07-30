@@ -25,7 +25,7 @@ func TestMigrate_Idempotent(t *testing.T) {
 		t.Skip("TEST_DATABASE_URL not set")
 	}
 
-	throwawayDB := fmt.Sprintf("everknow_migrate_test_%d", time.Now().UnixNano())
+	throwawayDB := fmt.Sprintf("everknow_test_migrate_%d", time.Now().UnixNano())
 	throwawayURL := mustReplaceDB(t, testURL, throwawayDB)
 
 	createDB(t, testURL, throwawayDB)
