@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"flashcardacademy/api/internal/httpx"
+	"everknow/api/internal/httpx"
 )
 
 type decodeBody struct {

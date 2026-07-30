@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-// Pip — the Flashcard Academy mascot: a small, round, friendly creature
+// Pip — the Everknow mascot: a small, round, friendly creature
 // built from simple geometric shapes. Ported 1:1 from the Claude Design
 // prototype (mascot.jsx); the SVG paths are intentionally unchanged.
 

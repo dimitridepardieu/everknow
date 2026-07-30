@@ -1,4 +1,4 @@
-# Flashcard Academy
+# Everknow
 
 PWA mobile-first (parents + enfants) pour générer et réviser des flashcards par IA.
 Stack: Go (stdlib) + React/Vite/TS + Postgres, Docker pour tout, Caddy en TLS local.
@@ -37,7 +37,7 @@ Versions = source de vérité dans `docker/.env`. `make fmt` avant chaque commit
 
 ## Milestones
 - Le **milestone porte le *quoi*** (quel effort cette issue sert), la **Priority porte le *quand***. Toute issue ouverte en a un — sans milestone, elle est invisible des vues qui comptent.
-- **La définition fait foi dans la description GitHub du milestone**, pas ici : `gh api repos/dimitridepardieu/flashcardacademy/milestones --jq '.[] | "\(.title): \(.description)"'`. La liste évolue ; la dupliquer ici la ferait pourrir.
+- **La définition fait foi dans la description GitHub du milestone**, pas ici : `gh api repos/dimitridepardieu/everknow/milestones --jq '.[] | "\(.title): \(.description)"'`. La liste évolue ; la dupliquer ici la ferait pourrir.
 - Un milestone est un **objectif de sortie**, pas un tiroir. S'il faut forcer une issue dedans, c'est qu'il manque un milestone — en proposer un plutôt que gonfler un existant.
 - Chaque milestone a un **journal** : une issue unique, ouverte le temps du milestone, qui porte la chronologie des arbitrages. Elle se ferme avec lui.
 

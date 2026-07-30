@@ -187,7 +187,7 @@ function LandingNav() {
       <div className="flex items-center gap-2">
         <Pip size={28} mood="happy" />
         <span className="font-heading text-primary text-[17px] font-semibold md:text-[19px]">
-          Flashcard Academy
+          Everknow
         </span>
       </div>
     </nav>

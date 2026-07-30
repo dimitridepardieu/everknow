@@ -11,7 +11,7 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"flashcardacademy/api/internal/db"
+	"everknow/api/internal/db"
 )
 
 // TestMigrate_Idempotent covers the contract documented in db.Migrate:
@@ -25,7 +25,7 @@ func TestMigrate_Idempotent(t *testing.T) {
 		t.Skip("TEST_DATABASE_URL not set")
 	}
 
-	throwawayDB := fmt.Sprintf("fa_migrate_test_%d", time.Now().UnixNano())
+	throwawayDB := fmt.Sprintf("everknow_migrate_test_%d", time.Now().UnixNano())
 	throwawayURL := mustReplaceDB(t, testURL, throwawayDB)
 
 	createDB(t, testURL, throwawayDB)

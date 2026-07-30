@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"flashcardacademy/api/internal/httpx"
+	"everknow/api/internal/httpx"
 )
 
 func Recover(next http.Handler) http.Handler {

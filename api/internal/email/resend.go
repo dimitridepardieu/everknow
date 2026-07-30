@@ -31,7 +31,7 @@ func (s *ResendSender) SendMagicLink(ctx context.Context, to, link string) error
 	payload := map[string]any{
 		"from":    s.from,
 		"to":      []string{to},
-		"subject": "Ton lien de connexion à Flashcard Academy",
+		"subject": "Ton lien de connexion à Everknow",
 		"html":    magicLinkHTML(link),
 		"text":    magicLinkText(link),
 	}
@@ -68,13 +68,13 @@ func magicLinkHTML(link string) string {
 	// config change feeding any user-controlled value into the URL would
 	// otherwise let HTML or javascript: payloads slip into the email body.
 	safe := html.EscapeString(link)
-	return fmt.Sprintf(`<p>Clique sur le lien ci-dessous pour te connecter à Flashcard Academy :</p>
+	return fmt.Sprintf(`<p>Clique sur le lien ci-dessous pour te connecter à Everknow :</p>
 <p><a href="%s">Me connecter</a></p>
 <p>Ce lien expire dans 15 minutes. Si tu n'as pas fait cette demande, ignore cet email.</p>`, safe)
 }
 
 func magicLinkText(link string) string {
-	return fmt.Sprintf(`Connecte-toi à Flashcard Academy :
+	return fmt.Sprintf(`Connecte-toi à Everknow :
 
 %s
 

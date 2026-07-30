@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"flashcardacademy/api/internal/apitest"
-	"flashcardacademy/api/internal/card"
+	"everknow/api/internal/apitest"
+	"everknow/api/internal/card"
 )
 
 func createProfile(t *testing.T, env *apitest.Env, name string) int64 {

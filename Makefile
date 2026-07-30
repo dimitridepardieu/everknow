@@ -11,7 +11,7 @@ help:
 		FS = ":.*?## "; \
 		printf "\n"; \
 		printf "    \033[1;38;5;141m╔════════════════════════════╗\033[0m\n"; \
-		printf "    \033[1;38;5;141m║     FLASHCARD ACADEMY      ║\033[0m\n"; \
+		printf "    \033[1;38;5;141m║          EVERKNOW          ║\033[0m\n"; \
 		printf "    \033[1;38;5;141m╚════════════════════════════╝\033[0m\n"; \
 	} \
 	/^##@/ { \
@@ -153,17 +153,17 @@ db-fresh: ## ! Reset + auto-migrate + seed in one shot — DEV ONLY
 	@sleep 3
 	@$(MAKE) db-seed
 
-db-test-clean: ## ! Drop all flashcardacademy_test* DBs (per-binary isolation) — DEV ONLY
+db-test-clean: ## ! Drop all everknow_test* DBs (per-binary isolation) — DEV ONLY
 	@if [ "$(APP_ENV)" != "dev" ]; then \
 		echo "Refused: db-test-clean is dev-only (APP_ENV=$(APP_ENV))."; exit 1; \
 	fi
 	@if [ "$(CONFIRM)" != "yes" ]; then \
-		read -p "Drop all flashcardacademy_test* databases? Type 'yes' to confirm: " REPLY; \
+		read -p "Drop all everknow_test* databases? Type 'yes' to confirm: " REPLY; \
 		[ "$$REPLY" = "yes" ] || { echo "Aborted."; exit 1; }; \
 	fi
-	@dbs=$$($(COMPOSE) exec -T postgres psql -U $(POSTGRES_USER) -d postgres -tAc "SELECT datname FROM pg_database WHERE datname ~ '^flashcardacademy_test'"); \
+	@dbs=$$($(COMPOSE) exec -T postgres psql -U $(POSTGRES_USER) -d postgres -tAc "SELECT datname FROM pg_database WHERE datname ~ '^everknow_test'"); \
 	if [ -z "$$dbs" ]; then \
-		echo "No flashcardacademy_test* databases found."; \
+		echo "No everknow_test* databases found."; \
 	else \
 		for db in $$dbs; do \
 			$(COMPOSE) exec -T postgres dropdb -U $(POSTGRES_USER) --force --if-exists "$$db" && echo "Dropped $$db"; \

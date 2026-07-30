@@ -6,7 +6,7 @@ import { ActiveProfileContext } from './active-profile-context'
 // Which learner is currently training. Client-only and per-launch by design:
 // the "who is training?" screen re-picks each time a shared family phone is
 // opened, so this lives in localStorage, not on the session.
-const STORAGE_KEY = 'fa_active_profile_id'
+const STORAGE_KEY = 'everknow_active_profile_id'
 
 function readStored(): number | null {
   const raw = localStorage.getItem(STORAGE_KEY)

@@ -9,9 +9,9 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"flashcardacademy/api/internal/card"
-	"flashcardacademy/api/internal/httpx"
-	"flashcardacademy/api/internal/user"
+	"everknow/api/internal/card"
+	"everknow/api/internal/httpx"
+	"everknow/api/internal/user"
 )
 
 const (

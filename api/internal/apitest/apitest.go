@@ -31,19 +31,19 @@ import (
 	"testing"
 	"time"
 
-	"flashcardacademy/api/internal/auth"
-	"flashcardacademy/api/internal/card"
-	"flashcardacademy/api/internal/config"
-	"flashcardacademy/api/internal/db"
-	"flashcardacademy/api/internal/deck"
-	"flashcardacademy/api/internal/email"
-	"flashcardacademy/api/internal/profile"
-	"flashcardacademy/api/internal/server"
-	"flashcardacademy/api/internal/session"
-	"flashcardacademy/api/internal/user"
+	"everknow/api/internal/auth"
+	"everknow/api/internal/card"
+	"everknow/api/internal/config"
+	"everknow/api/internal/db"
+	"everknow/api/internal/deck"
+	"everknow/api/internal/email"
+	"everknow/api/internal/profile"
+	"everknow/api/internal/server"
+	"everknow/api/internal/session"
+	"everknow/api/internal/user"
 )
 
-const appBaseURL = "https://test.flashcardacademy.local"
+const appBaseURL = "https://test.everknow.local"
 
 // sharedDB is opened once per test binary so the CREATE DATABASE + migrate
 // dance doesn't replay on every test. Subsequent tests just TRUNCATE.

@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"flashcardacademy/api/internal/httpx"
-	"flashcardacademy/api/internal/user"
+	"everknow/api/internal/httpx"
+	"everknow/api/internal/user"
 )
 
 const ageMax = 150

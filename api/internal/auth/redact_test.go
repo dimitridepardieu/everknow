@@ -3,7 +3,7 @@ package auth
 import (
 	"testing"
 
-	"flashcardacademy/api/internal/config"
+	"everknow/api/internal/config"
 )
 
 // Internal test: redactEmail is unexported and the external handlers_test

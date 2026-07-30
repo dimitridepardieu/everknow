@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"flashcardacademy/api/internal/config"
+	"everknow/api/internal/config"
 )
 
 type Sender interface {

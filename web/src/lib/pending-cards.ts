@@ -7,7 +7,7 @@ import { generatedCardSchema } from './schemas'
 // change. sessionStorage, not localStorage: a review in progress should die
 // with the tab, not resurrect three weeks later. Read/written synchronously
 // like active-profile — no useEffect, the write is driven by the event.
-const STORAGE_KEY = 'fa_pending_cards'
+const STORAGE_KEY = 'everknow_pending_cards'
 
 export function writePendingCards(cards: readonly GeneratedCard[]): void {
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(cards))

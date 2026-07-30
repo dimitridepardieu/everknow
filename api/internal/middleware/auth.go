@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"net/http"
 
-	"flashcardacademy/api/internal/httpx"
-	"flashcardacademy/api/internal/session"
-	"flashcardacademy/api/internal/user"
+	"everknow/api/internal/httpx"
+	"everknow/api/internal/session"
+	"everknow/api/internal/user"
 )
 
 // Auth returns a middleware that loads the user owning the session cookie

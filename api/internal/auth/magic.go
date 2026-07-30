@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"flashcardacademy/api/internal/email"
-	"flashcardacademy/api/internal/token"
+	"everknow/api/internal/email"
+	"everknow/api/internal/token"
 )
 
 type MagicLinkSender struct {
