@@ -181,12 +181,31 @@ function OrbitHero({
   )
 }
 
+// The brand mark — two passes over the same card, overlapping; the dense zone
+// where they meet is the memory. Ported 1:1 from the Claude Design board
+// ("le recoupement"), padded viewBox included: the ink is only 78×54 inside the
+// 100 box, so the mark reads noticeably smaller than `size` says.
+function LogoMark({ size = 28 }: { readonly size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <circle cx="38" cy="50" r="27" opacity="0.65" />
+      <circle cx="62" cy="50" r="27" opacity="0.65" />
+    </svg>
+  )
+}
+
 function LandingNav() {
   return (
     <nav className="flex h-16 shrink-0 items-center justify-center px-5 md:justify-start md:px-10">
-      <div className="flex items-center gap-2">
-        <Pip size={28} mood="happy" />
-        <span className="font-heading text-primary text-[17px] font-semibold md:text-[19px]">
+      <div className="text-primary flex items-center gap-2.5">
+        <LogoMark size={56} />
+        <span className="font-heading text-[24px] font-semibold tracking-[-0.02em] md:text-[26px]">
           Everknow
         </span>
       </div>
