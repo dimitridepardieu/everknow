@@ -4,8 +4,8 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Camera, FileText, Link2, Type } from 'lucide-react'
 
 import { CreateGenerating } from '@/components/create-generating'
+import { Eve } from '@/components/eve'
 import { FlowHeader } from '@/components/flow-header'
-import { Pip } from '@/components/pip'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { useGenerateFlashcards } from '@/lib/cards'
@@ -109,14 +109,14 @@ function HubScreen({
       <FlowHeader variant="close" onActivate={onClose} />
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-5">
         <div className="mt-4 flex flex-col items-center gap-1.5 text-center">
-          <Pip size={96} mood="cheer" />
+          <Eve size={96} mood="soft.happy" />
           <h2 className="font-heading text-[26px] leading-tight font-semibold">
             D’où viennent
             <br />
             tes flashcards ?
           </h2>
           <p className="text-ink-soft text-sm font-bold">
-            Choisis une source, Pip s’occupe du reste ✨
+            Choisis une source, Eve s’occupe du reste ✨
           </p>
         </div>
 
@@ -227,7 +227,7 @@ function PasteScreen({
 
         {isError && (
           <p className="text-destructive mx-1 mt-3 text-xs font-bold">
-            Pip n’a pas pu créer les cartes. Réessaie.
+            Eve n’a pas pu créer les cartes. Réessaie.
           </p>
         )}
 

@@ -1,6 +1,6 @@
 import { Link, createFileRoute, redirect } from '@tanstack/react-router'
 
-import { Pip } from '@/components/pip'
+import { Eve } from '@/components/eve'
 import { Sparkle } from '@/components/sparkle'
 import { buttonVariants } from '@/components/ui/button'
 import { meQueryOptions } from '@/lib/auth'
@@ -22,7 +22,7 @@ export const Route = createFileRoute('/')({
 // The orbit's fixed palette (colour + its 3D-shadow dark). Decorative, not
 // theme tokens — a card keeps its subject's colour regardless of theme.
 //
-// Every card sits at the same distance from Pip — they ride the ring. Only the
+// Every card sits at the same distance from Eve — they ride the ring. Only the
 // angles are uneven, and they have to be: a card is 116px wide but 68px tall,
 // so two cards side by side need nearly twice the gap of two stacked ones. An
 // even 72° step spends the same arc on both and leaves the sideways pairs
@@ -93,10 +93,10 @@ const CARD_HALF_H = 34
 
 function OrbitHero({
   size = 260,
-  pipSize = 120,
+  eveSize = 120,
 }: {
   readonly size?: number
-  readonly pipSize?: number
+  readonly eveSize?: number
 }) {
   const reach = size / 2
 
@@ -137,7 +137,7 @@ function OrbitHero({
       ))}
 
       <div className="relative z-[2]">
-        <Pip size={pipSize} mood="cheer" />
+        <Eve size={eveSize} mood="soft.cheer" />
       </div>
 
       <div
@@ -182,20 +182,21 @@ function OrbitHero({
 }
 
 // The brand mark — two passes over the same card, overlapping; the dense zone
-// where they meet is the memory. Ported 1:1 from the Claude Design board
-// ("le recoupement"), padded viewBox included: the ink is only 78×54 inside the
-// 100 box, so the mark reads noticeably smaller than `size` says.
-function LogoMark({ size = 28 }: { readonly size?: number }) {
+// where they meet is what stays. Geometry from the Claude Design board ("le
+// recoupement"): two r=27 discs, centres 24 apart. The viewBox is cropped to
+// the ink rather than kept square, so `size` is the height actually rendered;
+// the mark is 1.44× as wide as it is tall.
+function LogoMark({ size = 30 }: { readonly size?: number }) {
   return (
     <svg
-      width={size}
+      width={(size * 78) / 54}
       height={size}
-      viewBox="0 0 100 100"
+      viewBox="0 0 78 54"
       fill="currentColor"
       aria-hidden="true"
     >
-      <circle cx="38" cy="50" r="27" opacity="0.65" />
-      <circle cx="62" cy="50" r="27" opacity="0.65" />
+      <circle cx="27" cy="27" r="27" opacity="0.65" />
+      <circle cx="51" cy="27" r="27" opacity="0.65" />
     </svg>
   )
 }
@@ -203,8 +204,8 @@ function LogoMark({ size = 28 }: { readonly size?: number }) {
 function LandingNav() {
   return (
     <nav className="flex h-16 shrink-0 items-center justify-center px-5 md:justify-start md:px-10">
-      <div className="text-primary flex items-center gap-2.5">
-        <LogoMark size={56} />
+      <div className="text-primary flex items-center gap-4">
+        <LogoMark size={30} />
         <span className="font-heading text-[24px] font-semibold tracking-[-0.02em] md:text-[26px]">
           Everknow
         </span>
@@ -236,10 +237,10 @@ function LandingPage() {
               the cards sit is set by the angles in ORBIT_CARDS, not here. */}
           <div className="flex items-center justify-center">
             <div className="xl:hidden">
-              <OrbitHero size={155} pipSize={98} />
+              <OrbitHero size={155} eveSize={98} />
             </div>
             <div className="hidden xl:block">
-              <OrbitHero size={220} pipSize={175} />
+              <OrbitHero size={220} eveSize={175} />
             </div>
           </div>
 

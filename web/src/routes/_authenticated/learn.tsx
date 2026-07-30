@@ -5,8 +5,8 @@ import {
   useNavigate,
 } from '@tanstack/react-router'
 
-import { Pip } from '@/components/pip'
-import { PipAvatar } from '@/components/pip-avatar'
+import { Eve } from '@/components/eve'
+import { EveAvatar } from '@/components/eve-avatar'
 import { Button } from '@/components/ui/button'
 import { useMe } from '@/lib/auth'
 import { useDueCards } from '@/lib/cards'
@@ -46,6 +46,12 @@ function LearnPage() {
   const dueCount = dueCards?.length
   const hasDue = dueCount !== undefined && dueCount > 0
 
+  // Her mood is the screen's answer, not decoration: rest when nothing is due,
+  // and a neutral presence while the count loads — otherwise she falls asleep
+  // and wakes up a moment later.
+  const mood =
+    dueCount === undefined ? 'soft.idle' : hasDue ? 'soft.happy' : 'soft.sleep'
+
   return (
     <main className="flex min-h-dvh flex-col pb-9">
       {/* Header hugs the viewport's left edge (px-6 pt-6, matching FlowHeader)
@@ -53,7 +59,7 @@ function LearnPage() {
           the centered column below. */}
       <header className="flex items-center gap-3.5 px-6 pt-6">
         <Link to="/account" aria-label="Profil" className="cursor-pointer">
-          <PipAvatar color={color} size={40} />
+          <EveAvatar color={color} size={40} />
         </Link>
         <p className="font-heading text-ink-soft text-sm font-semibold">
           Salut, <span className="text-ink">{activeProfile?.name}</span>
@@ -62,7 +68,7 @@ function LearnPage() {
 
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-6">
         <div className="flex flex-1 flex-col items-center justify-center gap-[18px] text-center">
-          <Pip size={150} mood="happy" />
+          <Eve size={150} mood={mood} />
 
           {dueCount !== undefined &&
             (hasDue ? (

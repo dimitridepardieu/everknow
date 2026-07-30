@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
 
-import { Pip } from '@/components/pip'
+import { Eve } from '@/components/eve'
 import { Sparkle } from '@/components/sparkle'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -53,7 +53,7 @@ export function AuthSent({ email, isSignup, onResend }: AuthSentProps) {
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-5 text-center">
-        <PipWithEnvelope />
+        <EveWithEnvelope />
 
         <div>
           <p className="font-heading text-ink-muted text-xs font-medium tracking-[1.5px] uppercase">
@@ -116,10 +116,10 @@ export function AuthSent({ email, isSignup, onResend }: AuthSentProps) {
   )
 }
 
-// Pip perched on a paper envelope with a gold stamp — the celebratory
+// Eve perched on a paper envelope with a gold stamp — the celebratory
 // "we sent it" illustration. Fixed at 180px; positions are pixel-tuned, so
 // inline styles (clip-path, gradients) are clearer here than utilities.
-function PipWithEnvelope() {
+function EveWithEnvelope() {
   return (
     <div className="relative" style={{ width: 180, height: 180 }}>
       {/* envelope */}
@@ -155,9 +155,9 @@ function PipWithEnvelope() {
         <Sparkle size={18} className="text-white" />
       </div>
 
-      {/* Pip on top */}
+      {/* Eve on top */}
       <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-        <Pip size={108} mood="cheer" />
+        <Eve size={108} mood="soft.cheer" />
       </div>
 
       {/* floating sparkles */}

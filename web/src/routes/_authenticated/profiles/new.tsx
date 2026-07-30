@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Check } from 'lucide-react'
 
-import { PipAvatar } from '@/components/pip-avatar'
+import { EveAvatar } from '@/components/eve-avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,7 +15,7 @@ export const Route = createFileRoute('/_authenticated/profiles/new')({
   component: NewProfilePage,
 })
 
-// A child profile has no stored colour yet; the preview shows Pip in a warm
+// A child profile has no stored colour yet; the preview shows Eve in a warm
 // default so the screen feels alive while the parent types.
 const PREVIEW_COLOR = '#FFD86A'
 
@@ -68,7 +68,7 @@ function NewProfilePage() {
       </div>
 
       <div className="mt-4 mb-7 flex flex-col items-center">
-        <PipAvatar color={PREVIEW_COLOR} size={104} />
+        <EveAvatar color={PREVIEW_COLOR} size={104} />
         <p className="font-heading text-ink mt-2 text-[17px] font-semibold">
           {trimmedName || 'Prénom'}
         </p>

@@ -8,7 +8,7 @@
 
 /*
  * Everknow design tokens.
- * Palette and type scale mirror the Claude Design prototype (Pip identity):
+ * Palette and type scale mirror the Claude Design prototype (Eve identity):
  * cream background, violet primary, mint/gold/pink/sky accents,
  * Fredoka for headings + Nunito for body. The "chunky 3D" button shadow
  * relies on --primary-dark, so it lives at :root alongside the semantic set.

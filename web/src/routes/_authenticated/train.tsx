@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Navigate, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowDown, ArrowRight, ArrowUp, Check, X } from 'lucide-react'
 
-import { Pip } from '@/components/pip'
+import { Eve } from '@/components/eve'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { useDueCards, useReviewCard } from '@/lib/cards'
@@ -185,10 +185,16 @@ function Session({ cards }: { readonly cards: readonly DueCard[] }) {
             </div>
           </div>
 
-          {/* Pip appears only once the child has judged themselves — not
-              during the question, so nothing distracts from recalling. His
-              mood carries the moment. */}
-          {graded && <Pip size={84} mood={verdict.correct ? 'cheer' : 'sad'} />}
+          {/* Eve appears only once the child has judged themselves — not
+              during the question, so nothing distracts from recalling. Her
+              mood carries the moment, and a miss gets encouragement: a sad
+              mascot in front of a child's mistake is a reproach in disguise. */}
+          {graded && (
+            <Eve
+              size={84}
+              mood={verdict.correct ? 'soft.cheer' : 'soft.encourage'}
+            />
+          )}
         </div>
 
         {review.isError && (
@@ -352,7 +358,7 @@ function DoneScreen({
       }}
     >
       <div className="flex flex-1 flex-col items-center justify-center gap-5 text-center">
-        <Pip size={140} mood="cheer" />
+        <Eve size={140} mood="soft.celebrate" />
         <div>
           <p className="font-heading text-xs font-medium tracking-[2px] text-white/80 uppercase">
             Entraînement terminé

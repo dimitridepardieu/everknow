@@ -3,8 +3,8 @@ import { useState } from 'react'
 import { Navigate, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Check, X } from 'lucide-react'
 
+import { Eve } from '@/components/eve'
 import { FlowHeader } from '@/components/flow-header'
-import { Pip } from '@/components/pip'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useSaveDeck } from '@/lib/decks'
@@ -56,15 +56,15 @@ function ReviewPage() {
     )
   }
 
-  // ─── Intro: Pip's done, N cards ready ─────────────────────
+  // ─── Intro: Eve's done, N cards ready ─────────────────────
   if (phase === 'intro') {
     return (
       <Screen header={<FlowHeader variant="close" onActivate={abort} />}>
         <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-          <Pip size={130} mood="cheer" />
+          <Eve size={130} mood="soft.cheer" />
           <div>
             <p className="font-heading text-ink-muted text-xs font-semibold tracking-[1.5px] uppercase">
-              Pip a terminé !
+              Eve a terminé !
             </p>
             <h1 className="font-heading mt-1 text-[30px] leading-tight font-semibold">
               <span className="text-primary">
@@ -98,12 +98,12 @@ function ReviewPage() {
       return (
         <Screen header={<FlowHeader variant="close" onActivate={abort} />}>
           <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-            <Pip size={120} mood="sad" />
+            <Eve size={120} mood="soft.oops" />
             <h1 className="font-heading text-2xl leading-tight font-semibold">
               Aucune carte gardée
             </h1>
             <p className="text-ink-soft text-sm font-bold">
-              Repars d’un texte et Pip t’en refait de nouvelles.
+              Repars d’un texte et Eve t’en refait de nouvelles.
             </p>
           </div>
           <Button
@@ -123,7 +123,7 @@ function ReviewPage() {
         }
       >
         <div className="mt-4 flex flex-col items-center gap-1.5 text-center">
-          <Pip size={80} mood="happy" />
+          <Eve size={80} mood="soft.happy" />
           <p className="font-heading text-ink text-[26px] leading-tight font-semibold">
             {keptCount} carte{keptCount > 1 ? 's' : ''} prête
             {keptCount > 1 ? 's' : ''} à être rangée{keptCount > 1 ? 's' : ''}
@@ -282,7 +282,7 @@ function SavedScreen({
       }}
     >
       <div className="flex flex-1 flex-col items-center justify-center gap-5 text-center">
-        <Pip size={140} mood="cheer" />
+        <Eve size={140} mood="soft.celebrate" />
         <div>
           <p className="font-heading text-xs font-medium tracking-[2px] text-white/80 uppercase">
             Trop bien
