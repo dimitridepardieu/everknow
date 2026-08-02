@@ -19,11 +19,9 @@ export const Route = createFileRoute('/')({
 })
 
 // Eve asleep in a bubble of night, the Milky Way behind her — ported from the
-// Claude Design board ("Hero nuit · 3 · La voie lactée").
-// The night art is drawn in a fixed 540×430 box and scaled as a whole, so the
-// coordinates below are the Claude Design board's own pixels, untouched
-// ("Hero nuit · 3 · La voie lactée"). The box itself lives in landing.css,
-// which owns the scales.
+// Claude Design board ("Hero nuit · 3 · La voie lactée"). The art is drawn in a
+// fixed 540×430 box and scaled as a whole, so the coordinates below are the
+// board's own pixels, untouched. The box and the scales live in landing.css.
 
 // Three values and no blue: a blue night reads as a sticker sky. The stars
 // take the mascot's pale violet rather than white.
@@ -174,32 +172,31 @@ function LandingPage() {
       <LandingNav />
 
       <section className="flex flex-1 flex-col px-5 pt-12 pb-10 lg:justify-center lg:px-10 lg:pt-2 lg:pb-14">
-        {/* The page has one breakpoint, lg, and every `lg:` below flips at it —
-            including the illustration's own scale, which lives in landing.css.
-            Two states, no tablet in between: a middle layout is a third design
-            to keep working, and this page has too few elements to earn one.
+        {/* The layout has one breakpoint, lg, and every `lg:` below flips at it.
+            The illustration has one of its own at md, in landing.css, because it
+            reaches full size before there is room for two columns. No tablet
+            layout in between: a middle design is a third one to keep working,
+            and this page has too few elements to earn it.
 
-            Mobile stacks into two rows and fills the remaining height so the
-            CTAs can sit at the bottom edge; desktop drops back to two centred
-            columns where that anchoring would leave a hole.
+            Mobile is a flex column, desktop a 5:6 grid — the words carry the
+            promise and the buttons, so they get the wider track. The three
+            pieces are siblings rather than an illustration plus a text column,
+            because on a phone the buttons have to leave the pair: they stay on
+            the bottom edge, within thumb reach, while the illustration and the
+            promise centre in what is left. `lg:contents` dissolves the mobile
+            wrapper so all three land in the grid, placed by hand. */}
+        <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col lg:grid lg:flex-none lg:grid-cols-[5fr_6fr] lg:grid-rows-[auto_auto] lg:items-center lg:gap-x-12">
+          <div className="flex flex-1 flex-col items-center justify-center gap-10 lg:contents">
+            {/* Illustration first — it leads on mobile and sits left on desktop,
+                so the message lands after the eye has something to hold. One
+                instance at both states: the stage scales itself in
+                landing.css, and mounting a second copy would run the
+                animations twice. */}
+            <div className="flex items-center justify-center lg:row-span-2">
+              <NightHero />
+            </div>
 
-            The columns are 5:6, not equal: the words carry the promise and the
-            buttons, so they get the wider track. The illustration fits in the
-            narrower one because its box is cropped to what it actually paints
-            — see landing.css. */}
-        <div className="mx-auto grid w-full max-w-5xl flex-1 grid-rows-[auto_1fr] items-stretch gap-6 lg:flex-none lg:grid-cols-[5fr_6fr] lg:grid-rows-none lg:items-center lg:gap-12">
-          {/* Illustration first — it leads on mobile and sits left on desktop,
-              so the message lands after the eye has something to hold. One
-              instance at both states: the stage scales itself in landing.css,
-              and mounting a second copy would run the animations twice. */}
-          <div className="flex items-center justify-center">
-            <NightHero />
-          </div>
-
-          {/* Text column — centred at every width, mirroring the illustration
-              across the grid instead of pulling the eye to one side. */}
-          <div className="flex flex-col items-center text-center">
-            <h1 className="font-heading text-ink max-w-[460px] text-[36px] leading-[1.2] font-semibold text-balance">
+            <h1 className="font-heading text-ink max-w-[460px] text-center text-[36px] leading-[1.2] font-semibold text-balance lg:col-start-2 lg:justify-self-center">
               La méthode rapide, fun et efficace pour{' '}
               <span className="text-primary relative whitespace-nowrap">
                 mémoriser
@@ -220,27 +217,24 @@ function LandingPage() {
               </span>{' '}
               tes cours&nbsp;!
             </h1>
+          </div>
 
-            <div className="mt-auto flex w-full max-w-[300px] flex-col gap-3.5 pt-8 lg:mt-12 lg:pt-0">
-              <Link
-                to="/register"
-                className={cn(
-                  buttonVariants(),
-                  'w-full shadow-[0_5px_0_var(--primary-dark)] active:shadow-[0_2px_0_var(--primary-dark)]',
-                )}
-              >
-                C’est parti !
-              </Link>
-              <Link
-                to="/login"
-                className={cn(
-                  buttonVariants({ variant: 'secondary' }),
-                  'w-full',
-                )}
-              >
-                J’ai déjà un compte
-              </Link>
-            </div>
+          <div className="mx-auto mt-8 flex w-full max-w-[300px] flex-col gap-3.5 lg:col-start-2 lg:mt-12 lg:justify-self-center">
+            <Link
+              to="/register"
+              className={cn(
+                buttonVariants(),
+                'w-full shadow-[0_5px_0_var(--primary-dark)] active:shadow-[0_2px_0_var(--primary-dark)]',
+              )}
+            >
+              C’est parti !
+            </Link>
+            <Link
+              to="/login"
+              className={cn(buttonVariants({ variant: 'secondary' }), 'w-full')}
+            >
+              J’ai déjà un compte
+            </Link>
           </div>
         </div>
       </section>
