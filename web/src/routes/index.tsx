@@ -197,9 +197,9 @@ function LandingPage() {
             </div>
 
             <h1 className="font-heading text-ink max-w-[460px] text-center text-[36px] leading-[1.2] font-semibold text-balance lg:col-start-2 lg:justify-self-center">
-              La méthode rapide, fun et efficace pour{' '}
+              La méthode calme et efficace pour retenir un cours{' '}
               <span className="text-primary relative whitespace-nowrap">
-                mémoriser
+                longtemps
                 <svg
                   viewBox="0 0 200 12"
                   preserveAspectRatio="none"
@@ -214,8 +214,8 @@ function LandingPage() {
                     strokeLinecap="round"
                   />
                 </svg>
-              </span>{' '}
-              tes cours&nbsp;!
+              </span>
+              &nbsp;!
             </h1>
           </div>
 
