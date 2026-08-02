@@ -145,12 +145,20 @@ function LogoMark({ size = 30 }: { readonly size?: number }) {
 
 function LandingNav() {
   return (
-    <nav className="flex h-16 shrink-0 items-center justify-center px-5 md:justify-start md:px-10">
-      <div className="text-primary flex items-center gap-4">
-        <LogoMark size={30} />
-        <span className="font-heading text-[24px] font-semibold tracking-[-0.02em] md:text-[26px]">
-          Everknow
-        </span>
+    // The bar spans the viewport but its contents sit in the same max-w-5xl
+    // column as the hero below, so the logo lines up with the illustration
+    // instead of hugging the window edge on a wide screen.
+    <nav className="h-16 shrink-0 px-5 md:px-10">
+      <div className="mx-auto flex h-full max-w-5xl items-center justify-center md:justify-start">
+        <Link
+          to="/"
+          className="text-primary flex cursor-pointer items-center gap-4"
+        >
+          <LogoMark size={30} />
+          <span className="font-heading text-[24px] font-semibold tracking-[-0.02em] md:text-[26px]">
+            Everknow
+          </span>
+        </Link>
       </div>
     </nav>
   )
