@@ -1,33 +1,49 @@
 /* Landing hero — Eve asleep in a bubble of night, the Milky Way behind her.
    Ported from the Claude Design board ("Hero nuit · 3 · La voie lactée").
 
-   Everything is drawn in a fixed 540×430 stage and the stage is scaled, so the
-   art keeps the board's proportions at every width instead of reflowing. The
-   two scales below are the only responsive decision in the illustration.
+   Everything is drawn in the board's own 540×430 stage and the stage is scaled,
+   so the art keeps its proportions at every width instead of reflowing. The
+   layout has one breakpoint (`lg:` in index.tsx); the illustration has one of
+   its own, at 48rem, because it reaches full size well before there is room for
+   two columns.
+
+   The box the page sees is cropped to the bubble (420×356 at 60,34), because
+   the board's artboard carried 60px of empty margin on each side. Reserving it
+   would make the illustration claim 102px of nothing in the grid. Everything
+   painted — bubble, stars, Eve — is inside those bounds; check that again if a
+   prop or a larger Eve is ever added.
 
    The motion is deliberately near-static: an earlier hero rotated a ring of
    cards and read as distracting. Only the bubble breathes (18s) and the stars
    twinkle — Eve herself does not move, so the eye has something fixed to land
    on. */
 
+/* Two sizes. The phone value is a judgement, not a fit: 0.75 is the widest that
+   clears a 360px handset once the hero's px-5 is off, and the illustration sits
+   well below it so the headline and the two CTAs keep the fold. 0.85 is full
+   size and fits everywhere it applies — 357px inside a 728px screen at 48rem,
+   and inside the 444px grid track once the layout splits. */
 .nb-stage {
-  --nb-k: 0.5;
+  --nb-k: 0.6;
   position: relative;
-  width: calc(540px * var(--nb-k));
-  height: calc(430px * var(--nb-k));
+  width: calc(420px * var(--nb-k));
+  height: calc(356px * var(--nb-k));
 }
-@media (min-width: 80rem) {
+@media (min-width: 48rem) {
   .nb-stage {
     --nb-k: 0.85;
   }
 }
+/* Shifts the stage so the bubble's top-left lands on the box's, then scales
+   about that corner. Order matters: the translate applies first, in stage
+   units, so it must stay to the right of the scale. */
 .nb-scaled {
   position: absolute;
   top: 0;
   left: 0;
   width: 540px;
   height: 430px;
-  transform: scale(var(--nb-k));
+  transform: scale(var(--nb-k)) translate(-60px, -34px);
   transform-origin: top left;
 }
 /* Holds the star field in stage coordinates while its parent clips it. */

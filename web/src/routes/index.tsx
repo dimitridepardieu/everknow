@@ -18,10 +18,12 @@ export const Route = createFileRoute('/')({
   component: LandingPage,
 })
 
+// Eve asleep in a bubble of night, the Milky Way behind her — ported from the
+// Claude Design board ("Hero nuit · 3 · La voie lactée").
 // The night art is drawn in a fixed 540×430 box and scaled as a whole, so the
 // coordinates below are the Claude Design board's own pixels, untouched
 // ("Hero nuit · 3 · La voie lactée"). The box itself lives in landing.css,
-// which owns the two scales.
+// which owns the scales.
 
 // Three values and no blue: a blue night reads as a sticker sky. The stars
 // take the mascot's pale violet rather than white.
@@ -148,14 +150,14 @@ function LandingNav() {
     // The bar spans the viewport but its contents sit in the same max-w-5xl
     // column as the hero below, so the logo lines up with the illustration
     // instead of hugging the window edge on a wide screen.
-    <nav className="h-16 shrink-0 px-5 md:px-10">
-      <div className="mx-auto flex h-full max-w-5xl items-center justify-center md:justify-start">
+    <nav className="h-16 shrink-0 px-5 lg:px-10">
+      <div className="mx-auto flex h-full max-w-5xl items-center justify-center lg:justify-start">
         <Link
           to="/"
           className="text-primary flex cursor-pointer items-center gap-4"
         >
           <LogoMark size={30} />
-          <span className="font-heading text-[24px] font-semibold tracking-[-0.02em] md:text-[26px]">
+          <span className="font-heading text-[24px] font-semibold tracking-[-0.02em] lg:text-[26px]">
             Everknow
           </span>
         </Link>
@@ -171,14 +173,24 @@ function LandingPage() {
     <main className="bg-background flex min-h-dvh flex-col">
       <LandingNav />
 
-      <section className="flex flex-1 flex-col px-5 pt-12 pb-10 md:justify-center md:px-10 md:pt-2 md:pb-14">
-        {/* Mobile stacks into two rows and fills the remaining height so the
+      <section className="flex flex-1 flex-col px-5 pt-12 pb-10 lg:justify-center lg:px-10 lg:pt-2 lg:pb-14">
+        {/* The page has one breakpoint, lg, and every `lg:` below flips at it —
+            including the illustration's own scale, which lives in landing.css.
+            Two states, no tablet in between: a middle layout is a third design
+            to keep working, and this page has too few elements to earn one.
+
+            Mobile stacks into two rows and fills the remaining height so the
             CTAs can sit at the bottom edge; desktop drops back to two centred
-            columns where that anchoring would leave a hole. */}
-        <div className="mx-auto grid w-full max-w-5xl flex-1 grid-rows-[auto_1fr] items-stretch gap-6 md:flex-none md:grid-cols-2 md:grid-rows-none md:items-center md:gap-12">
+            columns where that anchoring would leave a hole.
+
+            The columns are 5:6, not equal: the words carry the promise and the
+            buttons, so they get the wider track. The illustration fits in the
+            narrower one because its box is cropped to what it actually paints
+            — see landing.css. */}
+        <div className="mx-auto grid w-full max-w-5xl flex-1 grid-rows-[auto_1fr] items-stretch gap-6 lg:flex-none lg:grid-cols-[5fr_6fr] lg:grid-rows-none lg:items-center lg:gap-12">
           {/* Illustration first — it leads on mobile and sits left on desktop,
               so the message lands after the eye has something to hold. One
-              instance at both widths: the stage scales itself in landing.css,
+              instance at both states: the stage scales itself in landing.css,
               and mounting a second copy would run the animations twice. */}
           <div className="flex items-center justify-center">
             <NightHero />
@@ -209,7 +221,7 @@ function LandingPage() {
               tes cours&nbsp;!
             </h1>
 
-            <div className="mt-auto flex w-full max-w-[300px] flex-col gap-3.5 pt-8 md:mt-12 md:pt-0">
+            <div className="mt-auto flex w-full max-w-[300px] flex-col gap-3.5 pt-8 lg:mt-12 lg:pt-0">
               <Link
                 to="/register"
                 className={cn(
