@@ -32,6 +32,7 @@ const SOFT_GROUPS = [
       'soft.celebrate',
       'soft.wow',
       'soft.sleep',
+      'soft.peaceful',
     ],
   },
   {

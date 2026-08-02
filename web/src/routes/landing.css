@@ -1,41 +1,75 @@
-/* Landing hero — flashcards arranged in a ring around Eve. Static by design:
-   an earlier version rotated the ring, which read as too distracting. The
-   transforms below only place the cards; nothing animates. */
+/* Landing hero — Eve asleep in a bubble of night, the Milky Way behind her.
+   Ported from the Claude Design board ("Hero nuit · 3 · La voie lactée").
 
-.lp-orbit-stage {
+   Everything is drawn in a fixed 540×430 stage and the stage is scaled, so the
+   art keeps the board's proportions at every width instead of reflowing. The
+   two scales below are the only responsive decision in the illustration.
+
+   The motion is deliberately near-static: an earlier hero rotated a ring of
+   cards and read as distracting. Only the bubble breathes (18s) and the stars
+   twinkle — Eve herself does not move, so the eye has something fixed to land
+   on. */
+
+.nb-stage {
+  --nb-k: 0.5;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: calc(540px * var(--nb-k));
+  height: calc(430px * var(--nb-k));
 }
-.lp-orbit-glow {
+@media (min-width: 80rem) {
+  .nb-stage {
+    --nb-k: 0.85;
+  }
+}
+.nb-scaled {
   position: absolute;
-  border-radius: 50%;
-  opacity: 0.3;
-  background: radial-gradient(
-    circle,
-    color-mix(in oklab, var(--primary), transparent 78%) 0%,
-    transparent 70%
-  );
+  top: 0;
+  left: 0;
+  width: 540px;
+  height: 430px;
+  transform: scale(var(--nb-k));
+  transform-origin: top left;
 }
-.lp-orbit-ring {
+/* Holds the star field in stage coordinates while its parent clips it. */
+.nb-field {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: var(--ring-size);
-  height: var(--ring-size);
-  margin-top: calc(var(--ring-size) / -2);
-  margin-left: calc(var(--ring-size) / -2);
+  width: 540px;
+  height: 430px;
 }
-.lp-orbit-card {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(var(--ang, 0deg))
-    translateX(calc(var(--ring-size) / 2));
-  transform-origin: 0 0;
+
+@keyframes nb-morph {
+  0%,
+  100% {
+    border-radius: 58% 42% 46% 54% / 50% 54% 46% 50%;
+  }
+  50% {
+    border-radius: 46% 54% 56% 44% / 56% 44% 56% 44%;
+  }
 }
-/* Counter-rotate the body so each card sits upright at its ring position. */
-.lp-orbit-card-body {
-  transform: rotate(calc(var(--ang, 0deg) * -1));
+@keyframes nb-twinkle {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* The bubble's resting silhouette also lives here: nb-morph animates between
+   two border-radius values, so the element must start on the first one. */
+.nb-blob {
+  border-radius: 58% 42% 46% 54% / 50% 54% 46% 50%;
+  animation: nb-morph 18s ease-in-out infinite;
+}
+.nb-star {
+  opacity: 0.8;
+  animation: nb-twinkle 4.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nb-blob,
+  .nb-star {
+    animation: none;
+  }
 }

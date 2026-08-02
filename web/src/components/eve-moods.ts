@@ -231,6 +231,13 @@ export const MOODS = {
     props: ['zzz'],
     use: 'Rien à réviser',
   },
+  // soft.sleep without the z's. The z's say "nothing to do here"; on a night
+  // scene they are furniture, and they only read on a light background.
+  'soft.peaceful': {
+    eyes: 'sleep',
+    mouth: 'small',
+    use: 'Sommeil paisible · illustration, fond sombre',
+  },
   'soft.happy': { eyes: 'happy', mouth: 'grin', use: 'Accueil, tout va bien' },
   'soft.wink': {
     eyes: 'winkClosed',

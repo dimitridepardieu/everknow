@@ -1,7 +1,6 @@
 import { Link, createFileRoute, redirect } from '@tanstack/react-router'
 
 import { Eve } from '@/components/eve'
-import { Sparkle } from '@/components/sparkle'
 import { buttonVariants } from '@/components/ui/button'
 import { meQueryOptions } from '@/lib/auth'
 import { cn } from '@/lib/utils'
@@ -19,163 +18,106 @@ export const Route = createFileRoute('/')({
   component: LandingPage,
 })
 
-// The orbit's fixed palette (colour + its 3D-shadow dark). Decorative, not
-// theme tokens — a card keeps its subject's colour regardless of theme.
-//
-// Every card sits at the same distance from Eve — they ride the ring. Only the
-// angles are uneven, and they have to be: a card is 116px wide but 68px tall,
-// so two cards side by side need nearly twice the gap of two stacked ones. An
-// even 72° step spends the same arc on both and leaves the sideways pairs
-// cramped. The steps below widen where cards meet flank to flank (Maths→
-// Anglais, Histoire→Sciences) and tighten where one sits above the other
-// (Anglais→Histoire, on the left).
-const ORBIT_CARDS = [
-  {
-    ang: 0,
-    color: '#6B4EFF',
-    dark: '#4D33CC',
-    cat: 'Géo',
-    q: 'Capitale ?',
-    a: 'Rome',
-  },
-  {
-    ang: 80,
-    color: '#FFC93C',
-    dark: '#D9A41A',
-    cat: 'Maths',
-    q: '8 × 7 ?',
-    a: '56',
-  },
-  {
-    ang: 155,
-    color: '#2EC4B6',
-    dark: '#1E9085',
-    cat: 'Anglais',
-    q: 'Cat ?',
-    a: 'Chat',
-  },
-  {
-    ang: 205,
-    color: '#F0564B',
-    dark: '#CC3D33',
-    cat: 'Histoire',
-    q: '1789 ?',
-    a: 'Révolution',
-  },
-  {
-    ang: 290,
-    color: '#4FC1F0',
-    dark: '#2A9DC9',
-    cat: 'Sciences',
-    q: 'H₂O ?',
-    a: 'Eau',
-  },
-] as const
+// The night art is drawn in a fixed 540×430 box and scaled as a whole, so the
+// coordinates below are the Claude Design board's own pixels, untouched
+// ("Hero nuit · 3 · La voie lactée"). The box itself lives in landing.css,
+// which owns the two scales.
 
-const ORBIT_SPARKLES = [
-  { left: '12%', top: '14%', size: 18, color: '#FFC93C' },
-  { left: '85%', top: '20%', size: 14, color: '#FF8FB1' },
-  { left: '8%', top: '78%', size: 12, color: '#2EC4B6' },
-  { left: '88%', top: '72%', size: 16, color: '#6B4EFF' },
-] as const
+// Three values and no blue: a blue night reads as a sticker sky. The stars
+// take the mascot's pale violet rather than white.
+const NIGHT_BUBBLE = '#241A5E'
+const NIGHT_WAY = '#3A25A8'
+const NIGHT_STAR = '#EFEBFF'
 
-// Half of a rendered card, shadow included, measured on the widest one
-// ("Histoire → Révolution"): min-w-[88px] stretched by its content, plus
-// px-2.5/py-2 and the inset border below.
-//
-// The cards are absolutely positioned, so the stage can't learn its own size
-// from them — it has to reserve their reach up front, or they spill over
-// whatever sits above (that is how they ended up drawn across the top bar).
-// Re-measure these two if a card's padding, type sizes, or longest answer
-// change: nothing fails loudly when they drift.
-const CARD_HALF_W = 58
-const CARD_HALF_H = 34
+// A soft shape, never a circle and never a rounded rectangle. The star layer
+// reuses these bounds so the field is clipped to the same silhouette, and
+// .nb-blob morphs both in step.
+const BUBBLE = { left: 60, top: 34, width: 420, height: 356 }
 
-function OrbitHero({
-  size = 260,
-  eveSize = 120,
-}: {
-  readonly size?: number
-  readonly eveSize?: number
-}) {
-  const reach = size / 2
+// Seeded, so the sky is one fixed drawing rather than a new one on every
+// render. Returns [x, y, radius, twinkle delay] in stage pixels.
+function starField(
+  count: number,
+  seed: number,
+  [x, y, w, h]: readonly [number, number, number, number],
+) {
+  const out: [number, number, number, number][] = []
+  let s = seed * 9301
+  const next = () => {
+    s = (s * 9301 + 49297) % 233280
+    return s / 233280
+  }
+  for (let i = 0; i < count; i++) {
+    const a = next()
+    const b = next()
+    out.push([
+      x + a * w,
+      y + b * h,
+      1.26 + ((i * 7) % 5) * 0.45,
+      (i % 9) * 0.55,
+    ])
+  }
+  return out
+}
 
+const STARS = starField(38, 11, [86, 74, 386, 290])
+
+function NightHero() {
   return (
-    <div
-      className="lp-orbit-stage"
-      style={{
-        width: 2 * (reach + CARD_HALF_W),
-        height: 2 * (reach + CARD_HALF_H),
-      }}
-    >
-      <div className="lp-orbit-glow" style={{ width: size, height: size }} />
-
-      <svg
-        width={size + 20}
-        height={size + 20}
-        className="absolute opacity-30"
-        aria-hidden="true"
-      >
-        <circle
-          cx={(size + 20) / 2}
-          cy={(size + 20) / 2}
-          r={size / 2}
-          fill="none"
-          stroke="var(--primary)"
-          strokeWidth="2"
-          strokeDasharray="3 8"
-        />
-      </svg>
-
-      {ORBIT_SPARKLES.map((s) => (
-        <Sparkle
-          key={`${s.left}-${s.top}`}
-          size={s.size}
-          className="absolute"
-          style={{ left: s.left, top: s.top, color: s.color }}
-        />
-      ))}
-
-      <div className="relative z-[2]">
-        <Eve size={eveSize} mood="soft.cheer" />
-      </div>
-
-      <div
-        className="lp-orbit-ring"
-        style={{ '--ring-size': `${size}px` } as React.CSSProperties}
-      >
-        {ORBIT_CARDS.map((c) => (
+    <div className="nb-stage">
+      <div className="nb-scaled">
+        {/* The bubble, with the Milky Way blurred across it on the diagonal.
+            The scarf is wider than the bubble and stops at its edge, which is
+            what makes it read as passing behind rather than sitting inside. */}
+        <div
+          className="nb-blob absolute overflow-hidden"
+          style={{ ...BUBBLE, background: NIGHT_BUBBLE, zIndex: 2 }}
+        >
           <div
-            key={c.cat}
-            className="lp-orbit-card"
-            style={{ '--ang': `${c.ang}deg` } as React.CSSProperties}
+            className="absolute"
+            style={{
+              left: -70,
+              top: 96,
+              width: 560,
+              height: 118,
+              background: `linear-gradient(90deg, transparent, ${NIGHT_WAY}, transparent)`,
+              transform: 'rotate(-19deg)',
+              filter: 'blur(14px)',
+              opacity: 0.9,
+            }}
+          />
+        </div>
+
+        {/* Stars are placed in stage coordinates but clipped to the bubble, so
+            the field is shifted back to the stage origin inside the clip. */}
+        <div
+          className="nb-blob absolute overflow-hidden"
+          style={{ ...BUBBLE, zIndex: 5 }}
+        >
+          <div
+            className="nb-field"
+            style={{ left: -BUBBLE.left, top: -BUBBLE.top }}
           >
-            <div className="lp-orbit-card-body">
-              <div
-                className="min-w-[88px] rounded-[14px] bg-white px-2.5 py-2"
+            {STARS.map(([x, y, r, delay]) => (
+              <span
+                key={`${x}-${y}`}
+                className="nb-star absolute rounded-full"
                 style={{
-                  boxShadow: `0 4px 0 ${c.dark}, 0 0 0 2.5px ${c.color} inset`,
+                  left: x,
+                  top: y,
+                  width: r * 2,
+                  height: r * 2,
+                  background: NIGHT_STAR,
+                  animationDelay: `${delay}s`,
                 }}
-              >
-                <p
-                  className="font-heading text-[9px] font-semibold tracking-[1px] uppercase"
-                  style={{ color: c.color }}
-                >
-                  {c.cat}
-                </p>
-                <p className="text-ink font-heading mt-px text-[13px] font-semibold whitespace-nowrap">
-                  {c.q}
-                </p>
-                <p
-                  className="mt-0.5 text-[11px] font-bold whitespace-nowrap"
-                  style={{ color: c.color }}
-                >
-                  → {c.a}
-                </p>
-              </div>
-            </div>
+              />
+            ))}
           </div>
-        ))}
+        </div>
+
+        <div className="absolute" style={{ left: 190, top: 154, zIndex: 7 }}>
+          <Eve size={204} mood="soft.peaceful" />
+        </div>
       </div>
     </div>
   )
@@ -227,21 +169,11 @@ function LandingPage() {
             columns where that anchoring would leave a hole. */}
         <div className="mx-auto grid w-full max-w-5xl flex-1 grid-rows-[auto_1fr] items-stretch gap-6 md:flex-none md:grid-cols-2 md:grid-rows-none md:items-center md:gap-12">
           {/* Illustration first — it leads on mobile and sits left on desktop,
-              so the message lands after the eye has something to hold.
-
-              Two sizes, 155 below xl and 220 above. Both are mounted; only one
-              is shown, the other is display:none.
-
-              The ring has a ceiling: a card reaches ring/2 + CARD_HALF_W
-              sideways, so past ~225 it clips a 375px viewport. How far apart
-              the cards sit is set by the angles in ORBIT_CARDS, not here. */}
+              so the message lands after the eye has something to hold. One
+              instance at both widths: the stage scales itself in landing.css,
+              and mounting a second copy would run the animations twice. */}
           <div className="flex items-center justify-center">
-            <div className="xl:hidden">
-              <OrbitHero size={155} eveSize={98} />
-            </div>
-            <div className="hidden xl:block">
-              <OrbitHero size={220} eveSize={175} />
-            </div>
+            <NightHero />
           </div>
 
           {/* Text column — centred at every width, mirroring the illustration
