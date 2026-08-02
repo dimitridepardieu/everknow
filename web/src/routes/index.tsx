@@ -171,7 +171,7 @@ function LandingPage() {
     <main className="bg-background flex min-h-dvh flex-col">
       <LandingNav />
 
-      <section className="flex flex-1 flex-col px-5 pt-12 pb-10 lg:justify-center lg:px-10 lg:pt-2 lg:pb-14">
+      <section className="flex flex-1 flex-col px-5 pt-12 pb-6 lg:justify-center lg:px-10 lg:pt-2 lg:pb-14">
         {/* The layout has one breakpoint, lg, and every `lg:` below flips at it.
             The illustration has one of its own at md, in landing.css, because it
             reaches full size before there is room for two columns. No tablet
@@ -219,19 +219,27 @@ function LandingPage() {
             </h1>
           </div>
 
-          <div className="mx-auto mt-8 flex w-full max-w-[300px] flex-col gap-3.5 lg:col-start-2 lg:mt-12 lg:justify-self-center">
+          <div className="mx-auto mt-8 flex w-full max-w-[340px] flex-col gap-3.5 lg:col-start-2 lg:mt-12 lg:justify-self-center">
+            {/* Smaller and more widely spaced than the button primitive, which
+                is tuned for buttons inside the app. These two are wider than
+                any of those, and set in caps: at full width the default size
+                reads shouty, and 0.3px of tracking is tight for caps. Height,
+                radius and colour stay standard. */}
             <Link
               to="/register"
               className={cn(
                 buttonVariants(),
-                'w-full shadow-[0_5px_0_var(--primary-dark)] active:shadow-[0_2px_0_var(--primary-dark)]',
+                'w-full text-sm tracking-[0.8px] shadow-[0_5px_0_var(--primary-dark)] active:shadow-[0_2px_0_var(--primary-dark)]',
               )}
             >
               C’est parti !
             </Link>
             <Link
               to="/login"
-              className={cn(buttonVariants({ variant: 'secondary' }), 'w-full')}
+              className={cn(
+                buttonVariants({ variant: 'secondary' }),
+                'w-full text-sm tracking-[0.8px]',
+              )}
             >
               J’ai déjà un compte
             </Link>
