@@ -38,6 +38,20 @@
 
   /* Everknow brand tokens beyond the shadcn semantic set */
   --primary-dark: #4d33cc;
+  /* The secondary button's raised edge, opaque on purpose: --border is
+     translucent, so the same value reads cool over the button's white face and
+     warm over the cream page, and the outline stopped matching the drop below
+     it. This is the warm one — a shadow takes the tint of what it falls on, and
+     a neutral grey is the only cold thing on a cream page. */
+  --secondary-dark: #e4ddd7;
+  /* The secondary button's hover face, halfway from its white to the page's
+     cream. Opaque for a reason: an opacity modifier does not tint the button,
+     it replaces its background with a translucent one and lets the page show
+     through, so a hover written with an opacity suffix composites over cream
+     rather than over white and lands on the page colour however small the
+     dose. (Do not write that suffix in a comment here — the star-slash closes
+     the comment and silently drops every declaration around it.) */
+  --secondary-hover: #fffbf5;
   --primary-soft: #efebff;
   --ink: #1b1b3a;
   --ink-soft: #5b5d7d;
@@ -94,6 +108,8 @@
 
   /* Everknow accent tokens → bg-gold, text-success-dark, border-ink-soft, … */
   --color-primary-dark: var(--primary-dark);
+  --color-secondary-dark: var(--secondary-dark);
+  --color-secondary-hover: var(--secondary-hover);
   --color-primary-soft: var(--primary-soft);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
@@ -155,6 +171,8 @@
   --ring: #8b73ff;
 
   --primary-dark: #5b41d6;
+  --secondary-dark: #302f45;
+  --secondary-hover: #1a1938;
   --primary-soft: #2a2a52;
   --ink: #fff7ec;
   --ink-soft: #c7cae0;
