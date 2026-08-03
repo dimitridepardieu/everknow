@@ -19,6 +19,11 @@ import {
 // twice — once masked to the lit half in ink, once masked to the shadow in a
 // pale tint — because ink on the shadow disappears. Hence the two <mask>
 // elements and the per-instance ids.
+//
+// She is aria-hidden everywhere. Every screen that shows her also states in
+// words what she is reacting to, and the profile avatars sit next to the name
+// they belong to — so announcing "Eve" only pads the label of whatever contains
+// her. Give her a name the day a screen leans on her alone to say something.
 
 const EVE = {
   base: '#6B4EFF',
@@ -168,8 +173,7 @@ export function Eve({
       viewBox="0 0 140 140"
       className={className}
       style={{ overflow: 'visible' }}
-      role="img"
-      aria-label="Eve"
+      aria-hidden="true"
     >
       <defs>
         <clipPath id={`c${uid}`}>
