@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { LogOut } from 'lucide-react'
 
+import { EveAvatar } from '@/components/eve-avatar'
 import { FlowHeader } from '@/components/flow-header'
-import { PipAvatar } from '@/components/pip-avatar'
 import { Button } from '@/components/ui/button'
 import { useActiveProfileId } from '@/lib/active-profile-context'
 import { useLogout, useMe } from '@/lib/auth'
@@ -45,7 +45,7 @@ function AccountPage() {
 
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-6">
         <div className="mt-6 flex flex-col items-center">
-          <PipAvatar color={color} size={104} />
+          <EveAvatar color={color} size={104} />
           {activeProfile?.name && (
             <p className="font-heading text-ink mt-3 text-xl font-semibold">
               {activeProfile.name}

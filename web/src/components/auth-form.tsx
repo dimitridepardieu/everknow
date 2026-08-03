@@ -4,7 +4,7 @@ import { ArrowLeft, Check, Link2 } from 'lucide-react'
 
 import { AuthLinkExpired } from '@/components/auth-link-expired'
 import { AuthSent } from '@/components/auth-sent'
-import { Pip } from '@/components/pip'
+import { Eve } from '@/components/eve'
 import { Sparkle } from '@/components/sparkle'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -77,7 +77,7 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
 
       <div className="flex flex-1 flex-col pt-2">
         <div className="mb-2 flex justify-center">
-          <Pip size={96} mood={isSignup ? 'cheer' : 'happy'} />
+          <Eve size={96} mood={isSignup ? 'soft.hello' : 'soft.happy'} />
         </div>
         <div className="mb-6 text-center">
           <h1 className="font-heading text-[28px] leading-tight font-semibold">

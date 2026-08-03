@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { RefreshCw, X } from 'lucide-react'
 
-import { Pip } from '@/components/pip'
+import { Eve } from '@/components/eve'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -36,7 +36,7 @@ export function AuthLinkExpired({ mode }: AuthLinkExpiredProps) {
             <div className="border-destructive/50 absolute top-1/2 right-0 left-0 border-t-2 border-dashed" />
           </div>
           <div className="absolute -top-[30px] -right-4">
-            <Pip size={90} mood="sad" />
+            <Eve size={90} mood="soft.concerned" />
           </div>
         </div>
 

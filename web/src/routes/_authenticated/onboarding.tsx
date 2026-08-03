@@ -1,7 +1,7 @@
 import { Navigate, createFileRoute } from '@tanstack/react-router'
 import { ArrowRight } from 'lucide-react'
 
-import { Pip } from '@/components/pip'
+import { Eve } from '@/components/eve'
 import { Button } from '@/components/ui/button'
 import { useMe, useUpdateRole } from '@/lib/auth'
 import type { Role } from '@/lib/schemas'
@@ -22,7 +22,7 @@ const ROLES: ReadonlyArray<{
     emoji: '👧',
     gradient: 'linear-gradient(135deg, #FFC93C 0%, #FF8FB1 100%)',
     title: 'Je suis un élève',
-    description: 'Je veux apprendre avec Pip et mes flashcards',
+    description: 'Je veux apprendre avec Eve et mes flashcards',
   },
   {
     role: 'family',
@@ -46,12 +46,12 @@ function OnboardingPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-5 py-9">
       <div className="mb-6 flex flex-col items-center text-center">
-        <Pip size={110} mood="cheer" />
+        <Eve size={110} mood="soft.hello" />
         <p className="font-heading text-success-dark mt-2 text-xs font-semibold tracking-[1.5px] uppercase">
           ✓ Compte créé
         </p>
         <h1 className="font-heading mt-1 text-[26px] leading-tight font-semibold">
-          Tu es qui pour Pip ?
+          Tu es qui pour Eve ?
         </h1>
         <p className="text-ink-soft mt-2 text-sm font-bold">
           On adapte ton expérience à ton rôle.

@@ -1,7 +1,7 @@
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 
-import { PipAvatar } from '@/components/pip-avatar'
+import { EveAvatar } from '@/components/eve-avatar'
 import { Sparkle } from '@/components/sparkle'
 import { useActiveProfileId } from '@/lib/active-profile-context'
 import { profileColor } from '@/lib/profile-color'
@@ -79,7 +79,7 @@ function WhoPage() {
                   onClick={() => pick(p.id)}
                   className="flex cursor-pointer flex-col items-center gap-2"
                 >
-                  <PipAvatar color={profileColor(i)} />
+                  <EveAvatar color={profileColor(i)} />
                   <span className="font-heading text-sm font-semibold">
                     {p.name ?? 'Sans nom'}
                   </span>

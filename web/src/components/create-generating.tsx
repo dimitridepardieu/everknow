@@ -1,9 +1,9 @@
-import { Pip } from '@/components/pip'
+import { Eve } from '@/components/eve'
 import { Sparkle } from '@/components/sparkle'
 
 // The waiting screen while the AI generates. One blocking call, so there is
 // no real progress to show — the design's four checklist steps would tick on
-// a timer and lie. Pip thinks, the halo breathes, and that's honest (#38).
+// a timer and lie. Eve thinks, the halo breathes, and that's honest (#38).
 const SPARKLES = [
   { size: 18, className: 'top-[15%] left-[12%]' },
   { size: 14, className: 'top-[24%] right-[16%]' },
@@ -33,7 +33,7 @@ export function CreateGenerating() {
       <div className="relative mb-6">
         <div className="absolute -inset-4 animate-pulse rounded-full bg-white/15" />
         <div className="relative">
-          <Pip size={150} mood="think" />
+          <Eve size={150} mood="soft.think" />
         </div>
       </div>
 
@@ -41,7 +41,7 @@ export function CreateGenerating() {
         Génération en cours
       </p>
       <h1 className="font-heading mt-1.5 text-[32px] leading-tight font-semibold">
-        Pip réfléchit…
+        Eve réfléchit…
       </h1>
       <p className="mt-2 max-w-xs text-sm leading-relaxed font-bold text-white/75">
         Je lis ton texte et je fabrique tes flashcards 🪄
