@@ -229,7 +229,7 @@ function LandingPage() {
               to="/register"
               className={cn(
                 buttonVariants(),
-                'w-full text-sm tracking-[0.8px] shadow-[0_5px_0_var(--primary-dark)] active:shadow-[0_2px_0_var(--primary-dark)]',
+                'w-full text-sm tracking-[0.8px]',
               )}
             >
               C’est parti !

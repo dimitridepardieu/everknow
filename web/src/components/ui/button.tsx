@@ -3,11 +3,22 @@ import { type VariantProps, cva } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
 
-// Everknow "chunky 3D" button: Fredoka, uppercase, and a hard
-// offset shadow that compresses on press (translate-y + shrunk shadow), so
-// every default button feels tactile. The `link` variant opts out of the
-// chunky treatment. Shadow colors come from --primary-dark / --secondary-dark
-// so they track the theme (and dark mode) automatically.
+// Everknow "chunky 3D" button: Fredoka, uppercase, and a hard offset shadow, so
+// every default button feels tactile. The `link` variant opts out of the chunky
+// treatment. Shadow colors come from --primary-dark / --secondary-dark so they
+// track the theme (and dark mode) automatically.
+//
+// Pressing flattens the button onto the page: the drop goes to nothing and the
+// button travels by exactly the relief it had, so its bottom edge never moves.
+// That is why the travel is not the same everywhere — a coloured button's whole
+// 5px is shadow, while `secondary` keeps a permanent 2px border and only has
+// 3px to give. Change one of the two numbers in a variant and the other has to
+// follow, or the button jumps under the finger.
+//
+// The press is deliberately not transitioned. box-shadow was never in the
+// transition, so animating the transform alone made the button slide down while
+// its shadow had already gone — a press that lagged the finger. A real key
+// travels instantly; both halves now do.
 //
 // The transparent 1px border is there to reserve the focus ring's space, so
 // focusing a button never shifts the layout. The background deliberately paints
@@ -15,12 +26,12 @@ import { cn } from '@/lib/utils'
 // the page show through as a pale hairline between the face and its shadow,
 // which broke the button into two pieces on a coloured surface.
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent font-heading text-sm font-semibold tracking-[0.3px] whitespace-nowrap uppercase transition-transform outline-none select-none cursor-pointer focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-[3px] disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent font-heading text-sm font-semibold tracking-[0.3px] whitespace-nowrap uppercase outline-none select-none cursor-pointer focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-[3px] disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
   {
     variants: {
       variant: {
         default:
-          'bg-primary text-primary-foreground shadow-[0_5px_0_var(--primary-dark)] hover:bg-primary/95 active:shadow-[0_2px_0_var(--primary-dark)]',
+          'bg-primary text-primary-foreground shadow-[0_5px_0_var(--primary-dark)] hover:bg-primary/95 active:shadow-none active:not-aria-[haspopup]:translate-y-[5px]',
         // Outline and drop take the same colour, so the button reads as one
         // raised slab rather than a face with a ring around it. It has to be a
         // real border and not an inset shadow: an inset sits inside the edge,
@@ -28,9 +39,8 @@ const buttonVariants = cva(
         //
         // 3px of drop, not 5: this is the only variant with a visible border,
         // and at the bottom the border and the drop are the same colour, so
-        // they read as one band. 2 + 3 matches the 5px the others show. Pressed
-        // it drops the shadow entirely, because the 2px border alone is the
-        // depth the others are left with.
+        // they read as one band. 2 + 3 matches the 5px the others show, and it
+        // travels 3 rather than 5 because the border is not compressible.
         //
         // Hover is an opaque colour, never a bg-*/nn. The modifier replaces
         // bg-card rather than tinting it, so the page shows through the button
@@ -42,9 +52,9 @@ const buttonVariants = cva(
         ghost:
           'hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50',
         destructive:
-          'bg-destructive text-white shadow-[0_5px_0_var(--destructive-dark)] hover:bg-destructive/95 active:shadow-[0_2px_0_var(--destructive-dark)]',
+          'bg-destructive text-white shadow-[0_5px_0_var(--destructive-dark)] hover:bg-destructive/95 active:shadow-none active:not-aria-[haspopup]:translate-y-[5px]',
         success:
-          'bg-success text-white shadow-[0_5px_0_var(--success-dark)] hover:bg-success/95 active:shadow-[0_2px_0_var(--success-dark)]',
+          'bg-success text-white shadow-[0_5px_0_var(--success-dark)] hover:bg-success/95 active:shadow-none active:not-aria-[haspopup]:translate-y-[5px]',
         link: 'font-sans tracking-normal normal-case text-primary underline-offset-4 hover:underline active:translate-y-0',
       },
       // No size carries its own radius any more: they all fall through to the
