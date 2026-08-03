@@ -4,35 +4,22 @@ import { type VariantProps, cva } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 // Everknow "chunky 3D" button: Fredoka, uppercase, and a hard offset shadow, so
-// every default button feels tactile. The `link` variant opts out of the chunky
-// treatment. Shadow colors come from --primary-dark / --secondary-dark so they
-// track the theme (and dark mode) automatically.
+// every default button feels tactile. The `link` variant opts out of it.
 //
-// Pressing flattens the button onto the page: the drop goes to nothing and the
-// button travels by exactly the relief it had, so its bottom edge never moves.
-// That is why the travel is not the same everywhere — a coloured button's whole
-// 5px is shadow, while `secondary` keeps a permanent 2px border and only has
-// 3px to give. Change one of the two numbers in a variant and the other has to
-// follow, or the button jumps under the finger.
+// Three couplings the code cannot state on its own:
 //
-// The press is deliberately not transitioned. box-shadow was never in the
-// transition, so animating the transform alone made the button slide down while
-// its shadow had already gone — a press that lagged the finger. A real key
-// travels instantly; both halves now do.
-//
-// The focus ring is two layers, and it has to be. A single violet ring is
-// invisible on the violet button — measured at 1.00:1, the colour against
-// itself — which is what the old focus-visible:border-ring did. The white
-// offset separates the ring from the button (5.05:1 on violet), the violet ring
-// separates it from the page (4.75:1 on cream), so the indicator clears 3:1 on
-// every surface a button sits on. It is opaque for the same reason: the ring it
-// replaced was violet at 50%, which measured 2.09:1 against the page.
-//
-// The transparent 1px border reserves the space aria-invalid's border takes, so
-// an invalid button never shifts the layout. The background deliberately paints
-// under it (border-box, the default): clipping to the padding box instead let
-// the page show through as a pale hairline between the face and its shadow,
-// which broke the button into two pieces on a coloured surface.
+// - A variant's press travel must equal its resting relief, or the bottom edge
+//   moves and the button jumps under the finger. Coloured variants are 5px of
+//   shadow and travel 5; `secondary` is a 2px border plus 3px of shadow and
+//   travels 3, because a border does not compress. Change one number and the
+//   other has to follow.
+// - The focus ring needs both its layers. A ring in one colour is invisible on
+//   a button of that colour — 1.00:1 — so the white offset carries it over the
+//   button (5.05:1) and the ring carries it over the page (4.75:1).
+// - The transparent 1px border is not decoration: it reserves the space
+//   aria-invalid's border takes, so an invalid button does not shift the
+//   layout. The background must keep painting under it (border-box), or the
+//   page shows through as a hairline splitting the face from its shadow.
 const buttonVariants = cva(
   "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent font-heading text-sm font-semibold tracking-[0.3px] whitespace-nowrap uppercase outline-none select-none cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-white active:not-aria-[haspopup]:translate-y-[3px] disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
   {
