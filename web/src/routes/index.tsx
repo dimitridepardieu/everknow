@@ -98,9 +98,13 @@ function NightHero() {
             className="nb-field"
             style={{ left: -BUBBLE.left, top: -BUBBLE.top }}
           >
-            {STARS.map(([x, y, r, delay]) => (
+            {/* Keyed by index on purpose: STARS is built once at module load
+                and never reordered or filtered, so the index is stable — where
+                a key made of the coordinates collides the day two stars land on
+                the same point. */}
+            {STARS.map(([x, y, r, delay], i) => (
               <span
-                key={`${x}-${y}`}
+                key={i}
                 className="nb-star absolute rounded-full"
                 style={{
                   left: x,
