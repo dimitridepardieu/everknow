@@ -190,7 +190,23 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+  }
+  /*
+   * Every focusable element gets a real focus indicator by default, so a new
+   * component is accessible without anyone remembering to make it so. This used
+   * to set outline-color only, which left the ring itself to the browser and
+   * tinted it violet at 50% — 2.09:1 against the page, under the 3:1 the rules
+   * ask of a focus indicator.
+   *
+   * An outline rather than a ring: it does not compete with the box-shadow the
+   * 3D buttons use, it follows border-radius, and an overflow-hidden parent
+   * cannot clip it. Buttons opt out with outline-none and draw their own
+   * two-layer ring, because a violet outline on a violet button is invisible.
+   */
+  *:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
   }
   body {
     @apply bg-background text-foreground;

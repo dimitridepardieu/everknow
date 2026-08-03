@@ -20,13 +20,21 @@ import { cn } from '@/lib/utils'
 // its shadow had already gone — a press that lagged the finger. A real key
 // travels instantly; both halves now do.
 //
-// The transparent 1px border is there to reserve the focus ring's space, so
-// focusing a button never shifts the layout. The background deliberately paints
+// The focus ring is two layers, and it has to be. A single violet ring is
+// invisible on the violet button — measured at 1.00:1, the colour against
+// itself — which is what the old focus-visible:border-ring did. The white
+// offset separates the ring from the button (5.05:1 on violet), the violet ring
+// separates it from the page (4.75:1 on cream), so the indicator clears 3:1 on
+// every surface a button sits on. It is opaque for the same reason: the ring it
+// replaced was violet at 50%, which measured 2.09:1 against the page.
+//
+// The transparent 1px border reserves the space aria-invalid's border takes, so
+// an invalid button never shifts the layout. The background deliberately paints
 // under it (border-box, the default): clipping to the padding box instead let
 // the page show through as a pale hairline between the face and its shadow,
 // which broke the button into two pieces on a coloured surface.
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent font-heading text-sm font-semibold tracking-[0.3px] whitespace-nowrap uppercase outline-none select-none cursor-pointer focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-[3px] disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent font-heading text-sm font-semibold tracking-[0.3px] whitespace-nowrap uppercase outline-none select-none cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-white active:not-aria-[haspopup]:translate-y-[3px] disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
   {
     variants: {
       variant: {

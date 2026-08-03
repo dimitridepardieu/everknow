@@ -150,9 +150,12 @@ function LandingNav() {
     // instead of hugging the window edge on a wide screen.
     <nav className="h-16 shrink-0 px-5 lg:px-10">
       <div className="mx-auto flex h-full max-w-5xl items-center justify-center lg:justify-start">
+        {/* rounded-lg is invisible at rest — the link has no fill and no
+            border. It is there for the focus outline, which traces the
+            element's own radius, so this gives it the buttons' 16px corner. */}
         <Link
           to="/"
-          className="text-primary flex cursor-pointer items-center gap-4"
+          className="text-primary flex cursor-pointer items-center gap-4 rounded-lg"
         >
           <LogoMark size={30} />
           <span className="font-heading text-[24px] font-semibold tracking-[-0.02em] lg:text-[26px]">
