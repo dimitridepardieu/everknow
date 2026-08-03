@@ -200,7 +200,7 @@ function LandingPage() {
             </div>
 
             <h1 className="font-heading text-ink max-w-[460px] text-center text-[36px] leading-[1.2] font-semibold text-balance lg:col-start-2 lg:justify-self-center">
-              La méthode calme et efficace pour retenir un cours{' '}
+              La méthode calme et efficace pour mémoriser un cours{' '}
               <span className="text-primary relative whitespace-nowrap">
                 longtemps
                 <svg
