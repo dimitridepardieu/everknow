@@ -57,7 +57,7 @@ Versions = source de vérité dans `docker/.env`. `make fmt` avant chaque commit
 - Chaque package possède ses propres `ErrNotFound` (`auth.ErrNotFound` ≠ `user.ErrNotFound`).
 
 ## Frontend — TanStack Router + React
-- **Pathless layouts (`_xxx.tsx`)** = layout fonctionnel : auth guard, state persistant entre navigations, données préchargées partagées. **Pas pour la déduplication visuelle.** Tailwind utility classes dupliquées sont OK ; extraire un composant React uniquement si Rule of 2-then-3 est dépassée.
+- **Pathless layouts (`_xxx.tsx`)** = layout fonctionnel : auth guard, state persistant entre navigations, données préchargées partagées. **Pas pour la déduplication visuelle.** Tailwind utility classes dupliquées sont OK ; extraire un composant React selon la règle de duplication ci-dessous (anti-overengineering).
 - **Auth boundary** : `_authenticated/route.tsx` (convention documentée par TanStack).
 - **Fichiers de routes** : un groupe (layout + ses enfants, ou route + ses sous-routes) vit dans un **directory** avec `route.tsx` comme layout — ex: `_authenticated/route.tsx`, `_authenticated/learn.tsx`, `_authenticated/decks/$deckId.tsx`. **Pas** la notation pointée (`_authenticated.learn.tsx`) : ne pas mélanger les deux styles dans un même sous-arbre. Routes racine isolées (`login.tsx`, `index.tsx`) = fichiers plats.
 - **URLs = REST** : une ressource et son formulaire de création suivent `/<ressource>` + `/<ressource>/new` (ex: `profiles/new.tsx` → `/profiles/new`), **jamais** un plat `/<ressource>-new`. Un directory **sans layout partagé n'a pas besoin de `route.tsx`** (`profiles/new.tsx` suffit) — n'en ajoute pas un vide juste pour la forme. Exception : un écran qui n'est pas une vue de collection mais un **portail fonctionnel** (choix d'identité au lancement, etc.) porte un nom d'intention, pas de ressource (`/who`, pas `/profiles`).
@@ -79,7 +79,7 @@ PII = email, nom, téléphone, IP, user agent, géoloc, données enfant, texte l
 - Défaut : **don't log it, don't return it**.
 
 ## Anti-overengineering
-- **Rule of 2-then-3** : 1ère fois → inline. 2ème fois → copier-coller. 3ème fois → extraire. Pas avant.
+- **Duplication — le critère est l'axe de variation, pas le compte.** 1ère fois → inline, jamais d'extraction. 2ème fois → extraire **si ce qui varie est déjà identifié** (chrome partagé entre écrans d'un même flow, composant identique à une ou deux props près) ; sinon copier et attendre. 3ème fois → extraire, sans discussion. Extraire trop tôt produit un composant à props booléennes qui grossit à chaque appelant, et une mauvaise abstraction coûte plus cher que la duplication.
 - **Filtrer le feedback des agents AVANT de me le présenter.** Pour chaque finding : (1) proportionné MVP scale ? (2) idiomatique dans CE codebase ? (3) introduit une abstraction non déjà justifiée ? Ne relayer que ceux qui passent. Le filtre est ton job, pas le mien.
 - **Commentaires inline = uniquement quand le code ment.** Gotcha wire/protocole, dépendance non-évidente que le lecteur ne peut pas reconstituer en grep'ant. **Jamais** pour paraphraser le code, ni pour défendre une décision de design face à un reviewer hypothétique — ça vit dans le PR body / commit message, pas dans le source. Test : « si je supprime ce commentaire, qu'est-ce que le lecteur perd vraiment ? »
 - **Trois buckets pour toute valeur littérale** :
