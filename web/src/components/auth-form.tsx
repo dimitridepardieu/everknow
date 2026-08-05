@@ -2,8 +2,8 @@ import { revalidateLogic, useForm } from '@tanstack/react-form'
 import { Link } from '@tanstack/react-router'
 import { X } from 'lucide-react'
 
-import { AuthLinkExpired } from '@/components/auth-link-expired'
 import { AuthSent } from '@/components/auth-sent'
+import { Eve } from '@/components/eve'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,8 +11,8 @@ import { useRequestMagicLink } from '@/lib/auth'
 import { emailSchema } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 
-// invalid_or_expired_token has its own screen; these rarer codes surface as
-// an inline notice on the email form so they never fail silently.
+// invalid_or_expired_token rewrites the whole screen; these rarer codes
+// surface as an inline notice so they never fail silently.
 const ERROR_MESSAGES: Record<string, string> = {
   missing_token: 'Le lien est incomplet. Demande un nouveau lien.',
   internal: 'Une erreur est survenue. Réessaie dans un instant.',
@@ -37,15 +37,21 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
     },
   })
 
-  // An expired or already-used magic link redirects here — give it the
-  // dedicated screen instead of a terse inline alert.
-  if (errorCode === 'invalid_or_expired_token') {
-    return <AuthLinkExpired mode={mode} />
-  }
+  // An expired or already-used magic link redirects here. Same form, same
+  // field: asking for another link is exactly asking for a first one, so the
+  // screen only changes what it says.
+  const isExpired = errorCode === 'invalid_or_expired_token'
 
-  const noticeMessage = errorCode
-    ? (ERROR_MESSAGES[errorCode] ?? ERROR_MESSAGES.internal)
-    : null
+  const noticeMessage =
+    errorCode && !isExpired
+      ? (ERROR_MESSAGES[errorCode] ?? ERROR_MESSAGES.internal)
+      : null
+
+  const hint = isExpired
+    ? `Nous t’enverrons un nouveau lien pour ${isSignup ? 'activer ton compte' : 'te connecter'}.`
+    : isSignup
+      ? 'Nous t’enverrons un lien d’activation pour créer ton compte.'
+      : null
 
   // Once the link is on its way, the same screen becomes "check your mail".
   if (mutation.isSuccess) {
@@ -95,9 +101,29 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
           }}
           className="flex w-full max-w-[380px] flex-col gap-[22px]"
         >
-          <h1 className="font-heading text-center text-[32px] leading-[1.1] font-semibold">
-            {isSignup ? <>Bienvenue&nbsp;!</> : 'Connexion'}
-          </h1>
+          {isExpired && (
+            <div className="flex justify-center">
+              <Eve size={92} mood="soft.concerned" />
+            </div>
+          )}
+
+          <div>
+            <h1 className="font-heading text-center text-[32px] leading-[1.1] font-semibold">
+              {isExpired ? (
+                'Ce lien a expiré'
+              ) : isSignup ? (
+                <>Bienvenue&nbsp;!</>
+              ) : (
+                'Connexion'
+              )}
+            </h1>
+            {isExpired && (
+              <p className="text-ink-soft mt-2.5 text-center text-sm leading-[1.45] font-bold text-balance">
+                Les liens {isSignup ? 'd’activation' : 'de connexion'} expirent
+                au bout de 15 minutes, pour protéger ton compte.
+              </p>
+            )}
+          </div>
 
           {noticeMessage && (
             <p className="bg-destructive/10 text-destructive rounded-xl px-4 py-3 text-sm font-bold">
@@ -148,10 +174,9 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
                       {field.state.meta.errors[0]}
                     </p>
                   ) : (
-                    isSignup && (
+                    hint && (
                       <p className="text-ink-soft text-[12.5px] font-bold">
-                        Nous t’enverrons un lien d’activation pour créer ton
-                        compte.
+                        {hint}
                       </p>
                     )
                   )}
@@ -168,9 +193,11 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
           >
             {mutation.isPending
               ? 'Envoi…'
-              : isSignup
-                ? 'Créer mon compte'
-                : 'Se connecter'}
+              : isExpired
+                ? 'Renvoyer un lien'
+                : isSignup
+                  ? 'Créer mon compte'
+                  : 'Se connecter'}
           </Button>
 
           {mutation.isError && (
