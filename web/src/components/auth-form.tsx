@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 
 import { AuthSent } from '@/components/auth-sent'
 import { AuthShell } from '@/components/auth-shell'
-import { Eve } from '@/components/eve'
+import { EveEnvelope } from '@/components/eve-envelope'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -67,15 +67,17 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
   return (
     <AuthShell
       action={
-        <Link
-          to={isSignup ? '/login' : '/register'}
-          className={cn(
-            buttonVariants({ variant: 'secondary', size: 'sm' }),
-            'text-primary px-5',
-          )}
-        >
-          {isSignup ? 'Se connecter' : 'S’inscrire'}
-        </Link>
+        isExpired ? undefined : (
+          <Link
+            to={isSignup ? '/login' : '/register'}
+            className={cn(
+              buttonVariants({ variant: 'secondary', size: 'sm' }),
+              'text-primary px-5',
+            )}
+          >
+            {isSignup ? 'Se connecter' : 'S’inscrire'}
+          </Link>
+        )
       }
       onSubmit={(e) => {
         e.preventDefault()
@@ -83,11 +85,7 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
         void form.handleSubmit()
       }}
     >
-      {isExpired && (
-        <div className="flex justify-center">
-          <Eve size={92} mood="soft.concerned" />
-        </div>
-      )}
+      {isExpired && <EveEnvelope cold />}
 
       <div>
         <h1 className="font-heading text-center text-[32px] leading-[1.1] font-semibold">
