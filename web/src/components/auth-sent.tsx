@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react'
 
-import { Link } from '@tanstack/react-router'
-import { X } from 'lucide-react'
-
+import { AuthShell } from '@/components/auth-shell'
 import { Eve } from '@/components/eve'
 import { Sparkle } from '@/components/sparkle'
-import { Button, buttonVariants } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 // Backend rate-limits to 3 requests/hour per email; a short cooldown keeps
 // users from hammering "resend" and burning that budget by accident.
@@ -33,68 +30,52 @@ export function AuthSent({ email, isSignup, onResend }: AuthSentProps) {
   const canResend = secondsLeft <= 0
 
   return (
-    <main className="flex min-h-dvh flex-col">
-      <header className="flex shrink-0 items-center px-4 py-4 sm:px-7 sm:py-5">
-        <Link
-          to="/"
-          aria-label="Fermer"
-          className={cn(
-            buttonVariants({ variant: 'ghost', size: 'icon-sm' }),
-            'text-ink-muted',
-          )}
-        >
-          <X className="size-[22px]" strokeWidth={3} />
-        </Link>
-      </header>
-
-      <div className="flex flex-1 items-center justify-center px-5 sm:px-6">
-        <div className="flex w-full max-w-[380px] flex-col gap-[22px]">
-          <EveWithEnvelope />
-
-          <div>
-            <p className="font-heading text-ink-soft text-center text-[13px] font-semibold tracking-[2.4px] uppercase">
-              Lien envoyé&nbsp;!
-            </p>
-            <h1 className="font-heading mt-1 text-center text-[32px] leading-[1.1] font-semibold">
-              Vérifie ta boîte mail
-            </h1>
-            <p className="text-ink-soft mt-2.5 text-center text-sm leading-[1.45] font-bold text-balance">
-              On a envoyé un lien à
-            </p>
-            <p className="bg-primary-soft text-primary font-heading mt-2.5 mb-3 rounded-xl px-4 py-[11px] text-center text-[17px] font-semibold break-all">
-              {email}
-            </p>
-            <p className="text-ink-soft text-center text-sm leading-[1.45] font-bold">
-              Clique dessus pour{' '}
-              {isSignup ? 'activer ton compte' : 'te connecter'}.
-              <br />
-              Le lien est valable 15 minutes.
-            </p>
-          </div>
+    <AuthShell
+      bottom={
+        <div className="flex shrink-0 flex-col items-center gap-0.5 px-6 pt-6 pb-[34px]">
+          <strong className="text-ink text-sm font-extrabold">
+            Tu n’as rien reçu&nbsp;?
+          </strong>
+          <Button
+            type="button"
+            variant="link"
+            size="sm"
+            disabled={!canResend}
+            onClick={() => {
+              onResend()
+              setSecondsLeft(RESEND_COOLDOWN_SECONDS)
+            }}
+            className="text-ink-soft hover:text-primary disabled:text-ink-soft text-[13.5px] font-extrabold underline decoration-2 underline-offset-[3px] disabled:no-underline disabled:opacity-100"
+          >
+            {canResend
+              ? 'Renvoyer le lien'
+              : `Renvoyer le lien (dans ${secondsLeft} s)`}
+          </Button>
         </div>
-      </div>
+      }
+    >
+      <EveWithEnvelope />
 
-      <div className="flex shrink-0 flex-col items-center gap-0.5 px-6 pt-6 pb-[34px]">
-        <strong className="text-ink text-sm font-extrabold">
-          Tu n’as rien reçu&nbsp;?
-        </strong>
-        <Button
-          type="button"
-          variant="link"
-          size="sm"
-          disabled={!canResend}
-          onClick={() => {
-            onResend()
-            setSecondsLeft(RESEND_COOLDOWN_SECONDS)
-          }}
-          className="text-ink-soft hover:text-primary disabled:text-ink-soft text-[13.5px] font-extrabold underline decoration-2 underline-offset-[3px] disabled:no-underline disabled:opacity-100"
-        >
-          {canResend
-            ? 'Renvoyer le lien'
-            : `Renvoyer le lien (dans ${secondsLeft} s)`}
-        </Button>
+      <div>
+        <p className="font-heading text-ink-soft text-center text-[13px] font-semibold tracking-[2.4px] uppercase">
+          Lien envoyé&nbsp;!
+        </p>
+        <h1 className="font-heading mt-1 text-center text-[32px] leading-[1.1] font-semibold">
+          Vérifie ta boîte mail
+        </h1>
+        <p className="text-ink-soft mt-2.5 text-center text-sm leading-[1.45] font-bold text-balance">
+          On a envoyé un lien à
+        </p>
+        <p className="bg-primary-soft text-primary font-heading mt-2.5 mb-3 rounded-xl px-4 py-[11px] text-center text-[17px] font-semibold break-all">
+          {email}
+        </p>
+        <p className="text-ink-soft text-center text-sm leading-[1.45] font-bold">
+          Clique dessus pour {isSignup ? 'activer ton compte' : 'te connecter'}.
+          <br />
+          Le lien est valable 15 minutes.
+        </p>
       </div>
-    </main>
+    </AuthShell>
   )
 }
 
