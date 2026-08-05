@@ -1,23 +1,15 @@
-import { useForm } from '@tanstack/react-form'
+import { revalidateLogic, useForm } from '@tanstack/react-form'
 import { Link } from '@tanstack/react-router'
-import { ArrowLeft, Check, Link2 } from 'lucide-react'
+import { X } from 'lucide-react'
 
 import { AuthLinkExpired } from '@/components/auth-link-expired'
 import { AuthSent } from '@/components/auth-sent'
-import { Eve } from '@/components/eve'
-import { Sparkle } from '@/components/sparkle'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useRequestMagicLink } from '@/lib/auth'
 import { emailSchema } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
-
-const TRUST_SIGNALS = [
-  'Pas de mot de passe à retenir',
-  'Pas de carte bancaire pour commencer',
-  'Conforme RGPD, données protégées',
-]
 
 // invalid_or_expired_token has its own screen; these rarer codes surface as
 // an inline notice on the email form so they never fail silently.
@@ -37,6 +29,9 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
 
   const form = useForm({
     defaultValues: { email: '' },
+    // Nothing is flagged until the first submit, then the error corrects
+    // itself as the address is fixed. Typing "s" must not be an error yet.
+    validationLogic: revalidateLogic(),
     onSubmit: async ({ value }) => {
       await mutation.mutateAsync(value.email.trim().toLowerCase())
     },
@@ -64,50 +59,56 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col px-5 pt-[50px] pb-9">
-      <div>
+    <main className="flex min-h-dvh flex-col">
+      <header className="flex shrink-0 items-center justify-between px-4 py-4 sm:px-7 sm:py-5">
         <Link
           to="/"
-          aria-label="Retour"
-          className="text-ink-muted hover:bg-foreground/5 flex size-9 items-center justify-center rounded-xl"
+          aria-label="Fermer"
+          className={cn(
+            buttonVariants({ variant: 'ghost', size: 'icon-sm' }),
+            'text-ink-muted',
+          )}
         >
-          <ArrowLeft className="size-[22px]" strokeWidth={3} />
+          <X className="size-[22px]" strokeWidth={3} />
         </Link>
-      </div>
+        <Link
+          to={isSignup ? '/login' : '/register'}
+          className={cn(
+            buttonVariants({ variant: 'secondary', size: 'sm' }),
+            'text-primary px-5',
+          )}
+        >
+          {isSignup ? 'Se connecter' : 'S’inscrire'}
+        </Link>
+      </header>
 
-      <div className="flex flex-1 flex-col pt-2">
-        <div className="mb-2 flex justify-center">
-          <Eve size={96} mood={isSignup ? 'soft.hello' : 'soft.happy'} />
-        </div>
-        <div className="mb-6 text-center">
-          <h1 className="font-heading text-[28px] leading-tight font-semibold">
-            {isSignup ? 'Bienvenue !' : 'Heureux de te revoir !'}
-          </h1>
-          <p className="text-ink-soft mt-2 text-sm font-bold">
-            {isSignup
-              ? 'On t’envoie un lien magique. Pas de mot de passe à retenir.'
-              : 'On t’envoie un lien magique par email.'}
-          </p>
-        </div>
-
-        {noticeMessage && (
-          <p className="bg-destructive/10 text-destructive mb-4 rounded-xl px-4 py-3 text-sm font-bold">
-            {noticeMessage}
-          </p>
-        )}
-
+      <div className="flex flex-1 items-center justify-center px-5 pb-8 sm:px-6 sm:pb-10">
         <form
-          id="auth-form"
+          // type="email" is kept for the mobile keyboard and autocomplete, but
+          // its native check would intercept the submit with a browser bubble
+          // for some addresses and let others (d@d) through to Zod.
+          noValidate
           onSubmit={(e) => {
             e.preventDefault()
             e.stopPropagation()
             void form.handleSubmit()
           }}
+          className="flex w-full max-w-[380px] flex-col gap-[22px]"
         >
+          <h1 className="font-heading text-center text-[32px] leading-[1.1] font-semibold">
+            {isSignup ? <>Bienvenue&nbsp;!</> : 'Connexion'}
+          </h1>
+
+          {noticeMessage && (
+            <p className="bg-destructive/10 text-destructive rounded-xl px-4 py-3 text-sm font-bold">
+              {noticeMessage}
+            </p>
+          )}
+
           <form.Field
             name="email"
             validators={{
-              onChange: ({ value }) => {
+              onDynamic: ({ value }) => {
                 const result = emailSchema.safeParse(value)
                 return result.success
                   ? undefined
@@ -116,110 +117,75 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
             }}
           >
             {(field) => {
-              const valid = emailSchema.safeParse(field.state.value).success
-              const showError =
-                field.state.meta.isTouched && field.state.meta.errors.length > 0
+              const showError = field.state.meta.errors.length > 0
               return (
-                <>
-                  <Label
-                    htmlFor={field.name}
-                    className="font-heading text-ink-muted mb-2 block text-xs font-semibold tracking-[1.5px] uppercase"
-                  >
+                <div className="flex flex-col gap-2.5">
+                  <Label htmlFor={field.name} className="sr-only">
                     Ton email
                   </Label>
-                  <div className="relative">
-                    <Link2
-                      className={cn(
-                        'pointer-events-none absolute top-1/2 left-4 size-[18px] -translate-y-1/2',
-                        valid ? 'text-primary' : 'text-ink-muted',
-                      )}
-                    />
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type="email"
-                      inputMode="email"
-                      autoComplete="email"
-                      autoFocus
-                      placeholder="prenom@email.com"
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                      className="text-ink placeholder:text-ink-muted border-border focus-visible:border-primary h-auto rounded-2xl border-2 bg-white py-3.5 pr-4 pl-12 text-[18px] font-semibold shadow-[0_4px_0_#1b1b3a14] transition-shadow focus-visible:shadow-[0_4px_0_var(--primary-dark)] focus-visible:ring-0 md:text-[18px]"
-                    />
-                  </div>
-                  <p className="text-ink-muted mx-1 mt-2.5 text-xs font-bold">
-                    🪄 On t’enverra un lien à cliquer pour{' '}
-                    {isSignup ? 'créer ton compte' : 'te connecter'}.
-                  </p>
-                  {showError && (
-                    <p className="text-destructive mx-1 mt-2 text-xs font-bold">
+                  <Input
+                    id={field.name}
+                    name={field.name}
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    autoFocus
+                    placeholder="E-mail"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                    aria-invalid={showError}
+                    className="text-ink placeholder:text-ink-muted border-input focus-visible:border-primary aria-invalid:border-destructive-dark h-[58px] rounded-lg border-2 bg-white px-4 text-[17px] font-bold focus-visible:ring-0 aria-invalid:ring-0 md:text-[17px]"
+                  />
+                  {showError ? (
+                    <p className="text-destructive-dark flex items-start gap-[7px] text-[13px] leading-[1.4] font-extrabold">
+                      <span
+                        aria-hidden
+                        className="bg-destructive-dark mt-px flex size-4 shrink-0 items-center justify-center rounded-full text-[11px] leading-none font-black text-white"
+                      >
+                        !
+                      </span>
                       {field.state.meta.errors[0]}
                     </p>
+                  ) : (
+                    isSignup && (
+                      <p className="text-ink-soft text-[12.5px] font-bold">
+                        Nous t’enverrons un lien d’activation pour créer ton
+                        compte.
+                      </p>
+                    )
                   )}
-                </>
+                </div>
               )
             }}
           </form.Field>
-        </form>
 
-        {isSignup && (
-          <div className="bg-success-soft mt-[18px] flex flex-col gap-1.5 rounded-2xl px-3.5 py-3">
-            {TRUST_SIGNALS.map((signal) => (
-              <div
-                key={signal}
-                className="text-success-dark flex items-center gap-2 text-xs font-bold"
-              >
-                <span className="bg-success flex size-[18px] shrink-0 items-center justify-center rounded-full text-white">
-                  <Check className="size-3" strokeWidth={4} />
-                </span>
-                {signal}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {mutation.isError && (
-          <p className="text-destructive mx-1 mt-4 text-xs font-bold">
-            Impossible d’envoyer le lien. Réessaie.
-          </p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-3.5">
-        <form.Subscribe selector={(s) => s.values.email}>
-          {(email) => (
-            <Button
-              type="submit"
-              form="auth-form"
-              disabled={
-                mutation.isPending ||
-                !emailSchema.safeParse(email.trim()).success
-              }
-              className="w-full"
-            >
-              <Sparkle size={18} />
-              {mutation.isPending ? 'Envoi…' : 'Recevoir mon lien magique'}
-            </Button>
-          )}
-        </form.Subscribe>
-
-        <p className="text-ink-soft font-heading text-center text-[13px] font-medium">
-          {isSignup ? 'Tu as déjà un compte ?' : 'Pas encore de compte ?'}{' '}
-          <Link
-            to={isSignup ? '/login' : '/register'}
-            className="text-primary font-semibold underline underline-offset-4"
+          <Button
+            type="submit"
+            size="lg"
+            disabled={mutation.isPending}
+            className="w-full"
           >
-            {isSignup ? 'Se connecter' : 'Créer un compte'}
-          </Link>
-        </p>
+            {mutation.isPending
+              ? 'Envoi…'
+              : isSignup
+                ? 'Créer mon compte'
+                : 'Se connecter'}
+          </Button>
 
-        {isSignup && (
-          <p className="text-ink-muted font-heading text-center text-[10px] leading-relaxed font-medium">
-            En continuant, tu acceptes nos <u>CGU</u> et notre{' '}
-            <u>Politique de confidentialité</u>.
+          {mutation.isError && (
+            <p className="text-destructive mx-1 text-xs font-bold">
+              Impossible d’envoyer le lien. Réessaie.
+            </p>
+          )}
+
+          <p className="text-ink-soft text-center text-xs leading-[1.6] font-bold">
+            En continuant, tu acceptes nos{' '}
+            <u className="underline-offset-2">Conditions d’utilisation</u> et
+            notre{' '}
+            <u className="underline-offset-2">Politique de confidentialité</u>.
           </p>
-        )}
+        </form>
       </div>
     </main>
   )
