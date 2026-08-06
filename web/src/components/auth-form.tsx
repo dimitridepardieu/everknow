@@ -4,9 +4,12 @@ import { Link } from '@tanstack/react-router'
 import { AuthSent } from '@/components/auth-sent'
 import { AuthShell } from '@/components/auth-shell'
 import { EveEnvelope } from '@/components/eve-envelope'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { toast } from '@/components/ui/toast'
+import { ApiError } from '@/lib/api'
 import { useRequestMagicLink } from '@/lib/auth'
 import { emailSchema } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
@@ -16,6 +19,35 @@ import { cn } from '@/lib/utils'
 const ERROR_MESSAGES: Record<string, string> = {
   missing_token: 'Le lien est incomplet. Demande un nouveau lien.',
   internal: 'Une erreur est survenue. Réessaie dans un instant.',
+}
+
+// The limiter counts by IP and by address, and the 429 deliberately hides
+// which one tripped so addresses cannot be enumerated — this message has to
+// stay just as silent about it. Telling the wait is safe: it is already in
+// the Retry-After header, and "réessaie" alone would be a lie for an hour.
+function requestErrorToast(error: unknown): {
+  title: string
+  description: string
+} {
+  if (!(error instanceof ApiError) || error.code !== 'rate_limited') {
+    return {
+      title: 'Impossible d’envoyer le lien',
+      description: 'Réessaie dans quelques instants.',
+    }
+  }
+  return {
+    title: 'Trop de demandes',
+    description: `Réessaie ${retryDelay(error.retryAfter)}.`,
+  }
+}
+
+function retryDelay(seconds: number | undefined): string {
+  if (seconds === undefined) return 'plus tard'
+  if (seconds < 60) {
+    return `dans ${String(seconds)} seconde${seconds > 1 ? 's' : ''}`
+  }
+  const minutes = Math.ceil(seconds / 60)
+  return `dans ${String(minutes)} minute${minutes > 1 ? 's' : ''}`
 }
 
 interface AuthFormProps {
@@ -32,8 +64,12 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
     // Nothing is flagged until the first submit, then the error corrects
     // itself as the address is fixed. Typing "s" must not be an error yet.
     validationLogic: revalidateLogic(),
-    onSubmit: async ({ value }) => {
-      await mutation.mutateAsync(value.email.trim().toLowerCase())
+    onSubmit: ({ value }) => {
+      mutation.mutate(value.email.trim().toLowerCase(), {
+        onError: (error) => {
+          toast.add({ type: 'error', ...requestErrorToast(error) })
+        },
+      })
     },
   })
 
@@ -42,6 +78,8 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
   // screen only changes what it says.
   const isExpired = errorCode === 'invalid_or_expired_token'
 
+  // Failing to send raises a toast; this one is the state the page arrived
+  // in, so it stays on the page rather than fading out of it.
   const noticeMessage =
     errorCode && !isExpired
       ? (ERROR_MESSAGES[errorCode] ?? ERROR_MESSAGES.internal)
@@ -106,9 +144,9 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
       </div>
 
       {noticeMessage && (
-        <p className="bg-destructive/10 text-destructive rounded-xl px-4 py-3 text-sm font-bold">
-          {noticeMessage}
-        </p>
+        <Alert variant="destructive">
+          <AlertDescription>{noticeMessage}</AlertDescription>
+        </Alert>
       )}
 
       <form.Field
@@ -177,12 +215,6 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
               ? 'Créer mon compte'
               : 'Se connecter'}
       </Button>
-
-      {mutation.isError && (
-        <p className="text-destructive mx-1 text-xs font-bold">
-          Impossible d’envoyer le lien. Réessaie.
-        </p>
-      )}
 
       <p className="text-ink-soft text-center text-xs leading-[1.6] font-bold">
         En continuant, tu acceptes nos{' '}

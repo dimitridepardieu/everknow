@@ -3,6 +3,8 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { Outlet, createRootRouteWithContext } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 
+import { Toaster } from '@/components/ui/toast'
+
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
 }>()({
@@ -11,10 +13,10 @@ export const Route = createRootRouteWithContext<{
 
 function RootComponent() {
   return (
-    <>
+    <Toaster>
       <Outlet />
       <TanStackRouterDevtools />
       <ReactQueryDevtools initialIsOpen={false} />
-    </>
+    </Toaster>
   )
 }
