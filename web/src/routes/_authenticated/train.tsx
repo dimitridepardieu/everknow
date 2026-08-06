@@ -198,7 +198,7 @@ function Session({ cards }: { readonly cards: readonly DueCard[] }) {
         </div>
 
         {review.isError && (
-          <Alert variant="destructive" className="mt-4">
+          <Alert variant="error" className="mt-4">
             <AlertDescription>
               Impossible d’enregistrer. Réessaie dans un instant.
             </AlertDescription>

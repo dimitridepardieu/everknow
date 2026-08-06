@@ -145,7 +145,7 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
       </div>
 
       {noticeMessage && (
-        <Alert variant="destructive">
+        <Alert variant="error">
           <XIcon strokeWidth={3.2} />
           <AlertDescription>{noticeMessage}</AlertDescription>
         </Alert>
