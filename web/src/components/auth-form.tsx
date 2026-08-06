@@ -1,5 +1,6 @@
 import { revalidateLogic, useForm } from '@tanstack/react-form'
 import { Link } from '@tanstack/react-router'
+import { XIcon } from 'lucide-react'
 
 import { AuthSent } from '@/components/auth-sent'
 import { AuthShell } from '@/components/auth-shell'
@@ -145,6 +146,7 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
 
       {noticeMessage && (
         <Alert variant="destructive">
+          <XIcon strokeWidth={3.2} />
           <AlertDescription>{noticeMessage}</AlertDescription>
         </Alert>
       )}
