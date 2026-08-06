@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 
 import { AuthShell } from '@/components/auth-shell'
-import { EveEnvelope } from '@/components/eve-envelope'
 import { Button } from '@/components/ui/button'
 
 // Backend rate-limits to 3 requests/hour per email; a short cooldown keeps
@@ -53,17 +52,12 @@ export function AuthSent({ email, isSignup, onResend }: AuthSentProps) {
         </div>
       }
     >
-      <EveEnvelope />
-
       <div>
-        <p className="font-heading text-ink-soft text-center text-[13px] font-semibold tracking-[2.4px] uppercase">
-          Lien envoyé&nbsp;!
-        </p>
-        <h1 className="font-heading mt-1 text-center text-[32px] leading-[1.1] font-semibold">
+        <h1 className="font-heading text-center text-[32px] leading-[1.1] font-semibold">
           Vérifie ta boîte mail
         </h1>
         <p className="text-ink-soft mt-2.5 text-center text-sm leading-[1.45] font-bold text-balance">
-          On a envoyé un lien à
+          Nous t’avons envoyé un lien à
         </p>
         <p className="bg-primary-soft text-primary font-heading mt-2.5 mb-3 rounded-xl px-4 py-[11px] text-center text-[17px] font-semibold break-all">
           {email}
