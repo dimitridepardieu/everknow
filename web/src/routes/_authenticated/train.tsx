@@ -150,7 +150,7 @@ function Session({ cards }: { readonly cards: readonly DueCard[] }) {
                 onClick={() => {
                   grade(false)
                 }}
-                className="h-16 flex-1 rounded-[20px] px-2 text-sm"
+                className="h-16 flex-1 rounded-[20px] px-2"
               >
                 J’avais oublié
               </Button>
@@ -160,7 +160,7 @@ function Session({ cards }: { readonly cards: readonly DueCard[] }) {
                 onClick={() => {
                   grade(true)
                 }}
-                className="h-16 flex-1 rounded-[20px] px-2 text-sm"
+                className="h-16 flex-1 rounded-[20px] px-2"
               >
                 Je le savais
               </Button>
