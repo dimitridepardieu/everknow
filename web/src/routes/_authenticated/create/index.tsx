@@ -9,9 +9,11 @@ import { FlowHeader } from '@/components/flow-header'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toast'
+import { ApiError } from '@/lib/api'
 import { useGenerateFlashcards } from '@/lib/cards'
 import { writePendingCards } from '@/lib/pending-cards'
 import { sourceTextSchema } from '@/lib/schemas'
+import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_authenticated/create/')({
   component: CreatePage,
@@ -37,11 +39,19 @@ function CreatePage() {
             writePendingCards(data.cards)
             void navigate({ to: '/create/review' })
           },
-          onError: () => {
+          onError: (error) => {
+            // A 400 means the text itself yielded nothing — "réessaie" would
+            // send the same text back for the same answer. Anything else is a
+            // failure on our side, where trying again is the right advice.
+            const rejected = error instanceof ApiError && error.status === 400
             toast.add({
               type: 'error',
-              title: 'Eve n’a pas pu créer les cartes',
-              description: 'Réessaie dans quelques instants.',
+              title: rejected
+                ? 'Ce texte n’a pas donné de cartes'
+                : 'Eve n’a pas pu créer les cartes',
+              description: rejected
+                ? 'Essaie avec une leçon ou un résumé plus complet.'
+                : 'Réessaie dans quelques instants.',
             })
           },
         })
@@ -61,18 +71,28 @@ function PasteScreen({
   readonly onClose: () => void
   readonly onGenerate: () => void
 }) {
-  // Nothing is flagged until the first attempt, then the error corrects itself
-  // as the text grows. An empty box on arrival isn't a mistake, just the
-  // starting state — and a button that greys out never says why.
-  const [attempted, setAttempted] = useState(false)
+  // Three levels, in this order: nothing at all until a press is refused, then
+  // the outline and the message, then — as soon as the parent types, having
+  // understood — only the count in red. The loud part has done its job; what
+  // stays is a fact about the text, not a reprimand.
+  const [warning, setWarning] = useState<'none' | 'full' | 'count'>('none')
   const result = sourceTextSchema.safeParse(text)
-  const error =
-    attempted && !result.success ? result.error.issues[0]?.message : null
   const count = [...text.trim()].length
 
+  const blocked = warning === 'full' && !result.success
+  const countIsShort = warning !== 'none' && !result.success
+
   const submit = () => {
-    setAttempted(true)
-    if (result.success) onGenerate()
+    if (result.success) {
+      onGenerate()
+      return
+    }
+    setWarning('full')
+  }
+
+  const change = (value: string) => {
+    setWarning((w) => (w === 'full' ? 'count' : w))
+    onChange(value)
   }
 
   return (
@@ -96,18 +116,30 @@ function PasteScreen({
 
         <Textarea
           value={text}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => change(e.target.value)}
           autoFocus
           placeholder="Colle ici une leçon, un résumé, un cours…"
-          aria-invalid={error !== null}
-          className="text-ink placeholder:text-ink-muted focus-visible:border-primary min-h-52 flex-1 rounded-3xl border-2 border-transparent bg-white p-4 text-base font-semibold shadow-[0_4px_0_#1b1b3a14] transition-shadow focus-visible:shadow-[0_4px_0_var(--primary-dark)] focus-visible:ring-0"
+          aria-invalid={blocked}
+          className="text-ink placeholder:text-ink-muted focus-visible:border-primary aria-invalid:border-destructive min-h-52 flex-1 rounded-3xl border-2 border-transparent bg-white p-4 text-base font-semibold shadow-[0_4px_0_#1b1b3a14] transition-shadow focus-visible:shadow-[0_4px_0_var(--primary-dark)] focus-visible:ring-0 aria-invalid:ring-0"
         />
 
-        <p className="text-ink-muted mt-2 px-1 text-xs font-bold">
-          {count} / 5000
-        </p>
-
-        {error && <FieldError className="mt-2 px-1">{error}</FieldError>}
+        {/* One slot under the box, holding one thing at a time: the message
+            takes the counter's place while the press is being refused, and
+            hands it back — in red — as soon as the parent starts typing. */}
+        <div className="mt-2 px-1">
+          {blocked ? (
+            <FieldError>{result.error.issues[0]?.message}</FieldError>
+          ) : (
+            <span
+              className={cn(
+                'text-xs font-bold',
+                countIsShort ? 'text-destructive-dark' : 'text-ink-muted',
+              )}
+            >
+              {count} / 5000
+            </span>
+          )}
+        </div>
 
         <Button type="button" onClick={submit} className="mt-4 w-full">
           Générer les cartes
