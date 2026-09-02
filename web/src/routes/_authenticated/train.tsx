@@ -3,7 +3,9 @@ import { useState } from 'react'
 import { Navigate, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowDown, ArrowRight, ArrowUp, Check, X } from 'lucide-react'
 
+import { CardSession } from '@/components/card-session'
 import { Eve } from '@/components/eve'
+import { Flashcard } from '@/components/flashcard'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { useDueCards, useReviewCard } from '@/lib/cards'
@@ -113,83 +115,14 @@ function Session({ cards }: { readonly cards: readonly DueCard[] }) {
   const answered = index + (graded ? 1 : 0)
 
   return (
-    // Three fixed rows: top bar, scene, bottom bar. The card is centred in the
-    // scene, and the scene keeps its height across every phase — so the card a
-    // child is reading never moves under them when the answer lands.
-    <main className="grid min-h-dvh grid-rows-[auto_1fr_auto]">
-      {/* Close and the progress bar share the top row, like the design. The
-          close keeps its original muted style and viewport-left position. */}
-      <div className="flex items-center gap-3 px-6 pt-6">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={leave}
-          aria-label="Fermer"
-          className="text-ink-muted shrink-0"
-        >
-          <X className="size-[22px]" strokeWidth={3} />
-        </Button>
-        {/* Thicker bar with a glossy highlight (the design's ::after strip).
-            Green as it fills, flashing red only on the step just forgotten.
-            Centred and capped (max-w-4xl) so it stops short of the edges on
-            desktop, Duolingo-style, rather than stretching the full width. */}
-        <div className="flex-1">
-          <div className="mx-auto h-3.5 max-w-4xl overflow-hidden rounded-full bg-[#e6e2d6] shadow-[inset_0_2px_0_rgba(0,0,0,0.05)]">
-            <div
-              className={`relative h-full rounded-full transition-[width,background-color] duration-300 ${
-                graded && !verdict.correct ? 'bg-destructive' : 'bg-success'
-              }`}
-              style={{ width: `${String((answered / deck.length) * 100)}%` }}
-            >
-              <div className="absolute inset-x-1.5 top-0.5 h-1 rounded-full bg-white/50" />
-            </div>
-          </div>
-        </div>
-        {/* The count on the right — real info instead of a blank, and it
-            balances the close button on the left (Duolingo puts hearts here). */}
-        <p className="font-heading text-ink-muted shrink-0 pl-2 text-sm font-semibold tabular-nums">
-          {index + 1}/{deck.length}
-        </p>
-      </div>
-      <div className="mx-auto flex w-full max-w-md items-center justify-center px-5 py-4">
-        <div className="relative w-full">
-          {/* stacked cards behind, for depth (decorative). inset-0 makes
-                them match the card's own height, so the rotation is what
-                peeks out — a fixed height would hide them under it. */}
-          <div className="absolute inset-0 rotate-[-2.5deg] rounded-3xl bg-white opacity-55 shadow-[0_3px_0_var(--border)]" />
-          <div className="absolute inset-0 rotate-[1.8deg] rounded-3xl bg-white opacity-80 shadow-[0_3px_0_var(--border)]" />
-
-          <div
-            className={`relative rounded-3xl p-6 transition-colors ${
-              graded && verdict.correct
-                ? 'bg-success-soft shadow-[0_4px_0_var(--border),inset_0_0_0_3px_var(--success)]'
-                : 'bg-white shadow-[0_4px_0_var(--border),inset_0_0_0_2px_var(--primary-soft)]'
-            }`}
-          >
-            <p className="font-heading text-ink text-[24px] leading-snug font-semibold">
-              {card.question}
-            </p>
-
-            {phase !== 'question' && (
-              <>
-                <div className="my-5 border-t-2 border-dashed border-[var(--border)]" />
-                <p className="text-ink text-[19px] leading-relaxed font-bold">
-                  {card.answer}
-                </p>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* The bottom row holds whatever the phase asks for, and reserves the
-          height of its tallest state (the verdict) so the scene above never
-          resizes. 184px = pt-6 + the 60px verdict row + pt-4 + a 48px button +
-          pb-9; change any of those and this has to follow. Content is pinned
-          to the bottom, so the main action sits under the same thumb whether
-          it says Réponse, Je le savais or Continuer. */}
-      <div className={graded ? verdictTone(verdict) : undefined}>
-        <div className="mx-auto flex min-h-[184px] w-full max-w-md flex-col justify-end px-5 pt-6 pb-9">
+    <CardSession
+      onClose={leave}
+      progress={answered / deck.length}
+      progressTone={graded && !verdict.correct ? 'destructive' : 'success'}
+      status={`${String(index + 1)}/${String(deck.length)}`}
+      bottomTone={graded ? verdictTone(verdict) : undefined}
+      bottom={
+        <>
           {review.isError && (
             <Alert variant="error" className="mb-4">
               <AlertDescription>
@@ -235,9 +168,15 @@ function Session({ cards }: { readonly cards: readonly DueCard[] }) {
           )}
 
           {graded && <ResultBanner verdict={verdict} onNext={next} />}
-        </div>
-      </div>
-    </main>
+        </>
+      }
+    >
+      <Flashcard
+        question={card.question}
+        answer={phase === 'question' ? undefined : card.answer}
+        tone={graded && verdict.correct ? 'success' : 'neutral'}
+      />
+    </CardSession>
   )
 }
 
