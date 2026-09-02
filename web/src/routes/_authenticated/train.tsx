@@ -113,7 +113,10 @@ function Session({ cards }: { readonly cards: readonly DueCard[] }) {
   const answered = index + (graded ? 1 : 0)
 
   return (
-    <main className="flex min-h-dvh flex-col">
+    // Three fixed rows: top bar, scene, bottom bar. The card is centred in the
+    // scene, and the scene keeps its height across every phase — so the card a
+    // child is reading never moves under them when the answer lands.
+    <main className="grid min-h-dvh grid-rows-[auto_1fr_auto]">
       {/* Close and the progress bar share the top row, like the design. The
           close keeps its original muted style and viewport-left position. */}
       <div className="flex items-center gap-3 px-6 pt-6">
@@ -148,101 +151,92 @@ function Session({ cards }: { readonly cards: readonly DueCard[] }) {
           {index + 1}/{deck.length}
         </p>
       </div>
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-5 pt-2 pb-9">
-        <div className="flex flex-1 flex-col items-center justify-center gap-5">
-          <div className="relative w-full">
-            {/* stacked cards behind, for depth (decorative). inset-0 makes
+      <div className="mx-auto flex w-full max-w-md items-center justify-center px-5 py-4">
+        <div className="relative w-full">
+          {/* stacked cards behind, for depth (decorative). inset-0 makes
                 them match the card's own height, so the rotation is what
                 peeks out — a fixed height would hide them under it. */}
-            <div className="absolute inset-0 rotate-[-2.5deg] rounded-3xl bg-white opacity-55 shadow-[0_3px_0_var(--border)]" />
-            <div className="absolute inset-0 rotate-[1.8deg] rounded-3xl bg-white opacity-80 shadow-[0_3px_0_var(--border)]" />
+          <div className="absolute inset-0 rotate-[-2.5deg] rounded-3xl bg-white opacity-55 shadow-[0_3px_0_var(--border)]" />
+          <div className="absolute inset-0 rotate-[1.8deg] rounded-3xl bg-white opacity-80 shadow-[0_3px_0_var(--border)]" />
 
-            <div
-              className={`relative rounded-3xl p-6 transition-colors ${
-                graded && verdict.correct
-                  ? 'bg-success-soft shadow-[0_4px_0_var(--border),inset_0_0_0_3px_var(--success)]'
-                  : 'bg-white shadow-[0_4px_0_var(--border),inset_0_0_0_2px_var(--primary-soft)]'
-              }`}
-            >
-              <p className="font-heading text-ink-muted mb-2 text-xs font-semibold tracking-[1px] uppercase">
-                Question
-              </p>
-              <p className="font-heading text-ink text-[24px] leading-snug font-semibold">
-                {card.question}
-              </p>
-
-              {phase !== 'question' && (
-                <>
-                  <div className="my-5 border-t-2 border-dashed border-[var(--border)]" />
-                  <p className="font-heading text-primary mb-2 text-xs font-semibold tracking-[1px] uppercase">
-                    Réponse
-                  </p>
-                  <p className="text-ink text-[19px] leading-relaxed font-bold">
-                    {card.answer}
-                  </p>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Eve appears only once the child has judged themselves — not
-              during the question, so nothing distracts from recalling. Her
-              mood carries the moment, and a miss gets encouragement: a sad
-              mascot in front of a child's mistake is a reproach in disguise. */}
-          {graded && (
-            <Eve
-              size={84}
-              mood={verdict.correct ? 'soft.cheer' : 'soft.encourage'}
-            />
-          )}
-        </div>
-
-        {review.isError && (
-          <Alert variant="error" className="mt-4">
-            <AlertDescription>
-              Impossible d’enregistrer. Réessaie dans un instant.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {phase === 'question' && (
-          <Button
-            onClick={() => {
-              setPhase('revealed')
-            }}
-            className="mt-5 w-full"
+          <div
+            className={`relative rounded-3xl p-6 transition-colors ${
+              graded && verdict.correct
+                ? 'bg-success-soft shadow-[0_4px_0_var(--border),inset_0_0_0_3px_var(--success)]'
+                : 'bg-white shadow-[0_4px_0_var(--border),inset_0_0_0_2px_var(--primary-soft)]'
+            }`}
           >
-            Réponse
-          </Button>
-        )}
+            <p className="font-heading text-ink text-[24px] leading-snug font-semibold">
+              {card.question}
+            </p>
 
-        {phase === 'revealed' && (
-          <div className="mt-5 flex gap-3">
-            <Button
-              variant="destructive"
-              disabled={review.isPending}
-              onClick={() => {
-                grade(false)
-              }}
-              className="h-16 flex-1 rounded-[20px] px-2 text-sm"
-            >
-              J’avais oublié
-            </Button>
-            <Button
-              variant="success"
-              disabled={review.isPending}
-              onClick={() => {
-                grade(true)
-              }}
-              className="h-16 flex-1 rounded-[20px] px-2 text-sm"
-            >
-              Je le savais
-            </Button>
+            {phase !== 'question' && (
+              <>
+                <div className="my-5 border-t-2 border-dashed border-[var(--border)]" />
+                <p className="text-ink text-[19px] leading-relaxed font-bold">
+                  {card.answer}
+                </p>
+              </>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
-      {graded && <ResultBanner verdict={verdict} onNext={next} />}
+      {/* The bottom row holds whatever the phase asks for, and reserves the
+          height of its tallest state (the verdict) so the scene above never
+          resizes. 184px = pt-6 + the 60px verdict row + pt-4 + a 48px button +
+          pb-9; change any of those and this has to follow. Content is pinned
+          to the bottom, so the main action sits under the same thumb whether
+          it says Réponse, Je le savais or Continuer. */}
+      <div className={graded ? verdictTone(verdict) : undefined}>
+        <div className="mx-auto flex min-h-[184px] w-full max-w-md flex-col justify-end px-5 pt-6 pb-9">
+          {review.isError && (
+            <Alert variant="error" className="mb-4">
+              <AlertDescription>
+                Impossible d’enregistrer. Réessaie dans un instant.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {phase === 'question' && (
+            <Button
+              onClick={() => {
+                setPhase('revealed')
+              }}
+              className="w-full"
+            >
+              Réponse
+            </Button>
+          )}
+
+          {phase === 'revealed' && (
+            <div className="flex gap-3">
+              <Button
+                variant="destructive"
+                disabled={review.isPending}
+                onClick={() => {
+                  grade(false)
+                }}
+                className="h-16 flex-1 rounded-[20px] px-2 text-sm"
+              >
+                J’avais oublié
+              </Button>
+              <Button
+                variant="success"
+                disabled={review.isPending}
+                onClick={() => {
+                  grade(true)
+                }}
+                className="h-16 flex-1 rounded-[20px] px-2 text-sm"
+              >
+                Je le savais
+              </Button>
+            </div>
+          )}
+
+          {graded && <ResultBanner verdict={verdict} onNext={next} />}
+        </div>
+      </div>
     </main>
   )
 }
@@ -257,6 +251,10 @@ function nextDueLabel(dueAt: string): string {
   return `On la revoit dans ${String(days)} jours`
 }
 
+function verdictTone(verdict: Verdict): string {
+  return verdict.correct ? 'bg-success-soft' : 'bg-destructive-soft'
+}
+
 function ResultBanner({
   verdict,
   onNext,
@@ -266,13 +264,12 @@ function ResultBanner({
 }) {
   const { dueAt, correct } = verdict
 
-  const tone = correct ? 'bg-success-soft' : 'bg-destructive-soft'
-
   return (
-    <div className={`sticky bottom-0 w-full ${tone}`}>
+    <>
       {/* The check or cross for an instant read; the rank badge and the next
-          due date stacked beside it — where the card landed is the point. */}
-      <div className="mx-auto flex w-full max-w-md items-center gap-3 px-5 pt-6">
+          due date stacked beside it — where the card landed is the point. The
+          row is a fixed 60px because the reserved height above counts on it. */}
+      <div className="flex h-[60px] items-center gap-3">
         <span
           className={`flex size-11 shrink-0 items-center justify-center rounded-full text-white ${
             correct ? 'bg-success' : 'bg-destructive'
@@ -293,16 +290,14 @@ function ResultBanner({
           </p>
         </div>
       </div>
-      <div className="mx-auto w-full max-w-md px-5 pt-4 pb-6">
-        <Button
-          variant={correct ? 'success' : 'destructive'}
-          onClick={onNext}
-          className="w-full"
-        >
-          Continuer
-        </Button>
-      </div>
-    </div>
+      <Button
+        variant={correct ? 'success' : 'destructive'}
+        onClick={onNext}
+        className="mt-4 w-full"
+      >
+        Continuer
+      </Button>
+    </>
   )
 }
 
