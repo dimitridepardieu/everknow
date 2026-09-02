@@ -5,6 +5,7 @@ import { XIcon } from 'lucide-react'
 import { AuthSent } from '@/components/auth-sent'
 import { AuthShell } from '@/components/auth-shell'
 import { EveEnvelope } from '@/components/eve-envelope'
+import { FieldError } from '@/components/field-error'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -182,15 +183,7 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
                 className="text-ink placeholder:text-ink-muted border-input focus-visible:border-primary aria-invalid:border-destructive-dark h-[58px] rounded-lg border-2 bg-white px-4 text-[17px] font-bold focus-visible:ring-0 aria-invalid:ring-0 md:text-[17px]"
               />
               {showError ? (
-                <p className="text-destructive-dark flex items-start gap-[7px] text-[13px] leading-[1.4] font-extrabold">
-                  <span
-                    aria-hidden
-                    className="bg-destructive-dark mt-px flex size-4 shrink-0 items-center justify-center rounded-full text-[11px] leading-none font-black text-white"
-                  >
-                    !
-                  </span>
-                  {field.state.meta.errors[0]}
-                </p>
+                <FieldError>{field.state.meta.errors[0]}</FieldError>
               ) : (
                 hint && (
                   <p className="text-ink-soft text-[12.5px] font-bold">
