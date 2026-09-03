@@ -168,7 +168,7 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
         name="email"
         validators={{
           onDynamic: ({ value }) => {
-            const result = emailSchema.safeParse(value)
+            const result = emailSchema.safeParse(value.trim())
             return result.success ? undefined : result.error.issues[0]?.message
           },
         }}
