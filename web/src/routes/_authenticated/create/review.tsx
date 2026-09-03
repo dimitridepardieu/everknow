@@ -195,7 +195,10 @@ function ReviewPage() {
   return (
     <CardSession
       onClose={abort}
-      progress={index / cards.length}
+      // Counts the card being decided as done, like training counts the one
+      // just answered — so the bar reaches the end rather than stopping short
+      // on the last card of the batch.
+      progress={(index + 1) / cards.length}
       status={`${String(index + 1)}/${String(cards.length)}`}
       bottom={
         <>
