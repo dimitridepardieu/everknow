@@ -120,6 +120,7 @@ function PasteScreen({
           autoFocus
           placeholder="Colle ici une leçon, un résumé, un cours…"
           aria-invalid={blocked}
+          aria-describedby={blocked ? 'source-text-error' : undefined}
           className="text-ink placeholder:text-ink-muted focus-visible:border-primary aria-invalid:border-destructive min-h-52 flex-1 rounded-3xl border-2 border-transparent bg-white p-4 text-base font-semibold shadow-[0_4px_0_#1b1b3a14] transition-shadow focus-visible:shadow-[0_4px_0_var(--primary-dark)] focus-visible:ring-0 aria-invalid:ring-0"
         />
 
@@ -128,7 +129,9 @@ function PasteScreen({
             hands it back — in red — as soon as the parent starts typing. */}
         <div className="mt-2 px-1">
           {blocked ? (
-            <FieldError>{result.error.issues[0]?.message}</FieldError>
+            <FieldError id="source-text-error">
+              {result.error.issues[0]?.message}
+            </FieldError>
           ) : (
             <span
               className={cn(

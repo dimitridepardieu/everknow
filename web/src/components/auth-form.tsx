@@ -192,10 +192,13 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
                 onChange={(e) => field.handleChange(e.target.value)}
                 onBlur={field.handleBlur}
                 aria-invalid={showError}
+                aria-describedby={showError ? `${field.name}-error` : undefined}
                 className="text-ink placeholder:text-ink-muted border-input focus-visible:border-primary aria-invalid:border-destructive-dark h-[58px] rounded-lg border-2 bg-white px-4 text-[17px] font-bold focus-visible:ring-0 aria-invalid:ring-0 md:text-[17px]"
               />
               {showError ? (
-                <FieldError>{field.state.meta.errors[0]}</FieldError>
+                <FieldError id={`${field.name}-error`}>
+                  {field.state.meta.errors[0]}
+                </FieldError>
               ) : (
                 hint && (
                   <p className="text-ink-soft text-[12.5px] font-bold">
