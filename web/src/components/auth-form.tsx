@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import { revalidateLogic, useForm } from '@tanstack/react-form'
 import { Link } from '@tanstack/react-router'
 import { XIcon } from 'lucide-react'
@@ -60,6 +62,10 @@ interface AuthFormProps {
 export function AuthForm({ mode, errorCode }: AuthFormProps) {
   const isSignup = mode === 'register'
   const mutation = useRequestMagicLink()
+  // The address a link actually went to. Its presence is what puts the screen
+  // on "check your mail", and its value is what that screen names — one state
+  // rather than a flag beside an address read back out of the field.
+  const [sentTo, setSentTo] = useState<string | null>(null)
 
   const form = useForm({
     defaultValues: { email: '' },
@@ -67,7 +73,11 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
     // itself as the address is fixed. Typing "s" must not be an error yet.
     validationLogic: revalidateLogic(),
     onSubmit: ({ value }) => {
-      mutation.mutate(value.email.trim().toLowerCase(), {
+      const email = value.email.trim().toLowerCase()
+      mutation.mutate(email, {
+        onSuccess: () => {
+          setSentTo(email)
+        },
         onError: (error) => {
           toast.add({ type: 'error', ...requestErrorToast(error) })
         },
@@ -93,11 +103,13 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
       ? 'Nous t’enverrons un lien d’activation pour créer ton compte.'
       : null
 
-  // Once the link is on its way, the same screen becomes "check your mail".
-  if (mutation.isSuccess) {
+  // Once a link has gone out, the screen stays on "check your mail" — not
+  // mutation.isSuccess, which drops back to false for the length of a resend
+  // and would flash the form back for a round trip.
+  if (sentTo !== null) {
     return (
       <AuthSent
-        email={form.state.values.email.trim().toLowerCase()}
+        email={sentTo}
         isSignup={isSignup}
         onResend={() => void form.handleSubmit()}
       />
