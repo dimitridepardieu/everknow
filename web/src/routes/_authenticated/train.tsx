@@ -6,8 +6,8 @@ import { ArrowDown, ArrowRight, ArrowUp, Check, X } from 'lucide-react'
 import { CardSession } from '@/components/card-session'
 import { Eve } from '@/components/eve'
 import { Flashcard } from '@/components/flashcard'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { toast } from '@/components/ui/toast'
 import { useDueCards, useReviewCard } from '@/lib/cards'
 import type { DueCard } from '@/lib/schemas'
 import { useActiveProfile } from '@/lib/use-active-profile'
@@ -83,6 +83,17 @@ function Session({ cards }: { readonly cards: readonly DueCard[] }) {
     review.mutate(
       { cardId: card.id, correct },
       {
+        // A failed save is a request that went wrong, so it is announced and
+        // leaves — an alert in the bottom row would push past the height the
+        // frame reserves and move the card, which is what that reserve exists
+        // to prevent.
+        onError: () => {
+          toast.add({
+            type: 'error',
+            title: 'Impossible d’enregistrer',
+            description: 'Réessaie dans un instant.',
+          })
+        },
         onSuccess: (result) => {
           setVerdicts((prev) => [
             ...prev,
@@ -123,14 +134,6 @@ function Session({ cards }: { readonly cards: readonly DueCard[] }) {
       bottomTone={graded ? verdictTone(verdict) : undefined}
       bottom={
         <>
-          {review.isError && (
-            <Alert variant="error" className="mb-4">
-              <AlertDescription>
-                Impossible d’enregistrer. Réessaie dans un instant.
-              </AlertDescription>
-            </Alert>
-          )}
-
           {phase === 'question' && (
             <Button
               onClick={() => {
