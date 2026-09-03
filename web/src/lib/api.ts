@@ -1,11 +1,19 @@
 export class ApiError extends Error {
   readonly status: number
   readonly code: string
+  // Seconds to wait, from the Retry-After header, when the server sent one.
+  readonly retryAfter?: number
 
-  constructor(status: number, code: string, message: string) {
+  constructor(
+    status: number,
+    code: string,
+    message: string,
+    retryAfter?: number,
+  ) {
     super(message)
     this.status = status
     this.code = code
+    this.retryAfter = retryAfter
     this.name = 'ApiError'
   }
 }
@@ -39,10 +47,14 @@ export async function apiFetch<T = unknown>(
 
   if (!res.ok) {
     const errBody = body as ApiErrorBody | null
+    // RFC 9110 also allows an HTTP-date here; the API only ever sends
+    // delay-seconds, so anything unparseable is dropped rather than guessed.
+    const retryAfter = Number(res.headers.get('Retry-After'))
     throw new ApiError(
       res.status,
       errBody?.code ?? 'unknown',
       errBody?.message ?? res.statusText,
+      Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined,
     )
   }
 

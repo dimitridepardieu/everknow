@@ -3,7 +3,9 @@ import { useState } from 'react'
 import { Navigate, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Check, X } from 'lucide-react'
 
+import { CardSession } from '@/components/card-session'
 import { Eve } from '@/components/eve'
+import { Flashcard } from '@/components/flashcard'
 import { FlowHeader } from '@/components/flow-header'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -191,57 +193,47 @@ function ReviewPage() {
   }
 
   return (
-    <Screen header={<FlowHeader variant="close" onActivate={abort} />}>
-      <div className="mt-2 flex items-center justify-between px-1">
-        <p className="font-heading text-ink-muted text-xs font-semibold tracking-[1px] uppercase">
-          Carte {index + 1} sur {cards.length}
-        </p>
-        <span className="font-heading text-success-dark text-xs font-semibold">
-          ✓ {keptCount} · ✕ {rejectedCount}
-        </span>
-      </div>
-
-      <div className="relative mt-4 flex-1">
-        {/* stacked cards behind, for depth (decorative) */}
-        <div className="absolute top-5 right-8 left-8 h-24 rotate-[-2.5deg] rounded-3xl bg-white opacity-55 shadow-[0_3px_0_var(--border)]" />
-        <div className="absolute top-3 right-6 left-6 h-24 rotate-[1.8deg] rounded-3xl bg-white opacity-80 shadow-[0_3px_0_var(--border)]" />
-
-        <div className="relative rounded-3xl bg-white p-5 shadow-[0_4px_0_var(--border),inset_0_0_0_2px_var(--primary-soft)]">
-          <p className="font-heading text-ink-muted mb-1.5 text-xs font-semibold tracking-[1px] uppercase">
-            Question
-          </p>
-          <p className="font-heading text-ink mb-3 text-[22px] leading-snug font-semibold">
-            {card.question}
-          </p>
-          <div className="my-3 border-t-2 border-dashed border-[var(--border)]" />
-          <p className="font-heading text-ink-muted mb-1.5 text-xs font-semibold tracking-[1px] uppercase">
-            Réponse
-          </p>
-          <p className="text-ink text-[17px] leading-relaxed font-bold">
-            {card.answer}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-4 flex gap-3">
-        <button
-          type="button"
-          onClick={() => decide(false)}
-          className="font-heading flex h-16 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-[20px] bg-[var(--destructive)] text-base font-semibold tracking-[0.3px] text-white uppercase shadow-[0_5px_0_#c9453f]"
-        >
-          <X className="size-6" strokeWidth={3.5} />
-          Supprimer
-        </button>
-        <button
-          type="button"
-          onClick={() => decide(true)}
-          className="font-heading flex h-16 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-[20px] bg-[var(--success)] text-base font-semibold tracking-[0.3px] text-white uppercase shadow-[0_5px_0_var(--success-dark)]"
-        >
-          <Check className="size-6" strokeWidth={4} />
-          Garder
-        </button>
-      </div>
-    </Screen>
+    <CardSession
+      onClose={abort}
+      // Counts the card being decided as done, like training counts the one
+      // just answered — so the bar reaches the end rather than stopping short
+      // on the last card of the batch.
+      progress={(index + 1) / cards.length}
+      status={`${String(index + 1)}/${String(cards.length)}`}
+      bottom={
+        <>
+          {/* The tally sits where training shows its verdict: next to the
+              buttons that move it, in the space the frame already reserves.
+              Hidden until the first decision — two zeroes say nothing. */}
+          {index > 0 && (
+            <p className="text-ink-muted mb-8 text-center text-[13px] font-bold">
+              {keptCount} gardée{keptCount > 1 ? 's' : ''} · {rejectedCount}{' '}
+              supprimée{rejectedCount > 1 ? 's' : ''}
+            </p>
+          )}
+          <div className="flex gap-3">
+            <Button
+              variant="destructive"
+              onClick={() => decide(false)}
+              className="h-16 flex-1 gap-1.5 rounded-[20px]"
+            >
+              <X className="size-6" strokeWidth={3.5} />
+              Supprimer
+            </Button>
+            <Button
+              variant="success"
+              onClick={() => decide(true)}
+              className="h-16 flex-1 gap-1.5 rounded-[20px]"
+            >
+              <Check className="size-6" strokeWidth={4} />
+              Garder
+            </Button>
+          </div>
+        </>
+      }
+    >
+      <Flashcard question={card.question} answer={card.answer} labelled />
+    </CardSession>
   )
 }
 

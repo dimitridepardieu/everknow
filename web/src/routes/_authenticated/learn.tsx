@@ -5,7 +5,6 @@ import {
   useNavigate,
 } from '@tanstack/react-router'
 
-import { Eve } from '@/components/eve'
 import { EveAvatar } from '@/components/eve-avatar'
 import { Button } from '@/components/ui/button'
 import { useMe } from '@/lib/auth'
@@ -46,12 +45,6 @@ function LearnPage() {
   const dueCount = dueCards?.length
   const hasDue = dueCount !== undefined && dueCount > 0
 
-  // Her mood is the screen's answer, not decoration: rest when nothing is due,
-  // and a neutral presence while the count loads — otherwise she falls asleep
-  // and wakes up a moment later.
-  const mood =
-    dueCount === undefined ? 'soft.idle' : hasDue ? 'soft.happy' : 'soft.sleep'
-
   return (
     <main className="flex min-h-dvh flex-col pb-9">
       {/* Header hugs the viewport's left edge (px-6 pt-6, matching FlowHeader)
@@ -67,16 +60,11 @@ function LearnPage() {
       </header>
 
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-6">
-        <div className="flex flex-1 flex-col items-center justify-center gap-[18px] text-center">
-          <Eve size={150} mood={mood} />
-
+        <div className="flex flex-1 flex-col items-center justify-center text-center">
           {dueCount !== undefined &&
             (hasDue ? (
               <div>
-                <p className="font-heading text-ink-muted text-xs font-medium tracking-[2px] uppercase">
-                  À toi de jouer
-                </p>
-                <h1 className="font-heading mt-1 text-[36px] leading-[1.05] font-semibold">
+                <h1 className="font-heading text-[36px] leading-[1.05] font-semibold">
                   <span className="text-primary-dark">
                     {dueCount} carte{dueCount > 1 ? 's' : ''}
                   </span>
@@ -86,17 +74,13 @@ function LearnPage() {
               </div>
             ) : (
               <div>
-                <p className="font-heading text-ink-muted text-xs font-medium tracking-[2px] uppercase">
-                  Tu as tout révisé
-                </p>
-                <h1 className="font-heading mt-1 text-[34px] leading-[1.15] font-semibold">
+                <h1 className="font-heading text-[34px] leading-[1.15] font-semibold">
                   Tout est calme.
-                  <br />
-                  <span className="text-success-dark">Respire.</span>
                 </h1>
                 <p className="text-ink-soft mx-auto mt-3 max-w-[280px] text-sm font-bold">
-                  Tes cartes reviendront au bon moment — parfois demain, parfois
-                  dans quelques jours. Le repos fait partie du jeu.
+                  Tes cartes reviendront au bon moment.
+                  <br />
+                  Le repos fait partie du jeu.
                 </p>
               </div>
             ))}

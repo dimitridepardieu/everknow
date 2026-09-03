@@ -227,26 +227,12 @@ function LandingPage() {
           </div>
 
           <div className="mx-auto mt-8 flex w-full max-w-[340px] flex-col gap-3.5 lg:col-start-2 lg:mt-12 lg:justify-self-center">
-            {/* Smaller and more widely spaced than the button primitive, which
-                is tuned for buttons inside the app. These two are wider than
-                any of those, and set in caps: at full width the default size
-                reads shouty, and 0.3px of tracking is tight for caps. Height,
-                radius and colour stay standard. */}
-            <Link
-              to="/register"
-              className={cn(
-                buttonVariants(),
-                'w-full text-sm tracking-[0.8px]',
-              )}
-            >
+            <Link to="/register" className={cn(buttonVariants(), 'w-full')}>
               C’est parti !
             </Link>
             <Link
               to="/login"
-              className={cn(
-                buttonVariants({ variant: 'secondary' }),
-                'w-full text-sm tracking-[0.8px]',
-              )}
+              className={cn(buttonVariants({ variant: 'secondary' }), 'w-full')}
             >
               J’ai déjà un compte
             </Link>

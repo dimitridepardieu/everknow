@@ -61,8 +61,11 @@
   --success-soft: #e1f7f4;
   --gold: #ffc93c;
   --gold-dark: #d9a41a;
+  --gold-soft: #fff3d4;
   --pink: #ff8fb1;
   --sky: #4fc1f0;
+  --sky-dark: #2a93be;
+  --sky-soft: #e3f5fd;
 
   /* Charts reuse the brand accents (handy for future stats screens) */
   --chart-1: #6b4eff;
@@ -119,8 +122,15 @@
   --color-success-soft: var(--success-soft);
   --color-gold: var(--gold);
   --color-gold-dark: var(--gold-dark);
+  --color-gold-soft: var(--gold-soft);
   --color-pink: var(--pink);
   --color-sky: var(--sky);
+  --color-sky-dark: var(--sky-dark);
+  --color-sky-soft: var(--sky-soft);
+
+  /* Matches the toast provider's 5s timeout: the bar empties as the toast
+     lives, and pauses with it when the stack is hovered. */
+  --animate-toast-timer: toast-timer 5s linear forwards;
 
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -186,6 +196,15 @@
   --sidebar-accent-foreground: #c9bdff;
   --sidebar-border: rgba(255, 247, 236, 0.12);
   --sidebar-ring: #8b73ff;
+}
+
+@keyframes toast-timer {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
 }
 
 @layer base {

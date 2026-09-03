@@ -1,29 +1,57 @@
-import { useForm } from '@tanstack/react-form'
-import { Link } from '@tanstack/react-router'
-import { ArrowLeft, Check, Link2 } from 'lucide-react'
+import { useState } from 'react'
 
-import { AuthLinkExpired } from '@/components/auth-link-expired'
+import { revalidateLogic, useForm } from '@tanstack/react-form'
+import { Link } from '@tanstack/react-router'
+import { XIcon } from 'lucide-react'
+
 import { AuthSent } from '@/components/auth-sent'
-import { Eve } from '@/components/eve'
-import { Sparkle } from '@/components/sparkle'
-import { Button } from '@/components/ui/button'
+import { AuthShell } from '@/components/auth-shell'
+import { EveEnvelope } from '@/components/eve-envelope'
+import { FieldError } from '@/components/field-error'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { toast } from '@/components/ui/toast'
+import { ApiError } from '@/lib/api'
 import { useRequestMagicLink } from '@/lib/auth'
 import { emailSchema } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 
-const TRUST_SIGNALS = [
-  'Pas de mot de passe à retenir',
-  'Pas de carte bancaire pour commencer',
-  'Conforme RGPD, données protégées',
-]
-
-// invalid_or_expired_token has its own screen; these rarer codes surface as
-// an inline notice on the email form so they never fail silently.
+// invalid_or_expired_token rewrites the whole screen; these rarer codes
+// surface as an inline notice so they never fail silently.
 const ERROR_MESSAGES: Record<string, string> = {
   missing_token: 'Le lien est incomplet. Demande un nouveau lien.',
   internal: 'Une erreur est survenue. Réessaie dans un instant.',
+}
+
+// The limiter counts by IP and by address, and the 429 deliberately hides
+// which one tripped so addresses cannot be enumerated — this message has to
+// stay just as silent about it. Telling the wait is safe: it is already in
+// the Retry-After header, and "réessaie" alone would be a lie for an hour.
+function requestErrorToast(error: unknown): {
+  title: string
+  description: string
+} {
+  if (!(error instanceof ApiError) || error.code !== 'rate_limited') {
+    return {
+      title: 'Impossible d’envoyer le lien',
+      description: 'Réessaie dans quelques instants.',
+    }
+  }
+  return {
+    title: 'Trop de demandes',
+    description: `Réessaie ${retryDelay(error.retryAfter)}.`,
+  }
+}
+
+function retryDelay(seconds: number | undefined): string {
+  if (seconds === undefined) return 'plus tard'
+  if (seconds < 60) {
+    return `dans ${String(seconds)} seconde${seconds > 1 ? 's' : ''}`
+  }
+  const minutes = Math.ceil(seconds / 60)
+  return `dans ${String(minutes)} minute${minutes > 1 ? 's' : ''}`
 }
 
 interface AuthFormProps {
@@ -34,29 +62,54 @@ interface AuthFormProps {
 export function AuthForm({ mode, errorCode }: AuthFormProps) {
   const isSignup = mode === 'register'
   const mutation = useRequestMagicLink()
+  // The address a link actually went to. Its presence is what puts the screen
+  // on "check your mail", and its value is what that screen names — one state
+  // rather than a flag beside an address read back out of the field.
+  const [sentTo, setSentTo] = useState<string | null>(null)
 
   const form = useForm({
     defaultValues: { email: '' },
-    onSubmit: async ({ value }) => {
-      await mutation.mutateAsync(value.email.trim().toLowerCase())
+    // Nothing is flagged until the first submit, then the error corrects
+    // itself as the address is fixed. Typing "s" must not be an error yet.
+    validationLogic: revalidateLogic(),
+    onSubmit: ({ value }) => {
+      const email = value.email.trim().toLowerCase()
+      mutation.mutate(email, {
+        onSuccess: () => {
+          setSentTo(email)
+        },
+        onError: (error) => {
+          toast.add({ type: 'error', ...requestErrorToast(error) })
+        },
+      })
     },
   })
 
-  // An expired or already-used magic link redirects here — give it the
-  // dedicated screen instead of a terse inline alert.
-  if (errorCode === 'invalid_or_expired_token') {
-    return <AuthLinkExpired mode={mode} />
-  }
+  // An expired or already-used magic link redirects here. Same form, same
+  // field: asking for another link is exactly asking for a first one, so the
+  // screen only changes what it says.
+  const isExpired = errorCode === 'invalid_or_expired_token'
 
-  const noticeMessage = errorCode
-    ? (ERROR_MESSAGES[errorCode] ?? ERROR_MESSAGES.internal)
-    : null
+  // Failing to send raises a toast; this one is the state the page arrived
+  // in, so it stays on the page rather than fading out of it.
+  const noticeMessage =
+    errorCode && !isExpired
+      ? (ERROR_MESSAGES[errorCode] ?? ERROR_MESSAGES.internal)
+      : null
 
-  // Once the link is on its way, the same screen becomes "check your mail".
-  if (mutation.isSuccess) {
+  const hint = isExpired
+    ? `Nous t’enverrons un nouveau lien pour ${isSignup ? 'activer ton compte' : 'te connecter'}.`
+    : isSignup
+      ? 'Nous t’enverrons un lien d’activation pour créer ton compte.'
+      : null
+
+  // Once a link has gone out, the screen stays on "check your mail" — not
+  // mutation.isSuccess, which drops back to false for the length of a resend
+  // and would flash the form back for a round trip.
+  if (sentTo !== null) {
     return (
       <AuthSent
-        email={form.state.values.email.trim().toLowerCase()}
+        email={sentTo}
         isSignup={isSignup}
         onResend={() => void form.handleSubmit()}
       />
@@ -64,163 +117,120 @@ export function AuthForm({ mode, errorCode }: AuthFormProps) {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col px-5 pt-[50px] pb-9">
-      <div>
-        <Link
-          to="/"
-          aria-label="Retour"
-          className="text-ink-muted hover:bg-foreground/5 flex size-9 items-center justify-center rounded-xl"
-        >
-          <ArrowLeft className="size-[22px]" strokeWidth={3} />
-        </Link>
-      </div>
-
-      <div className="flex flex-1 flex-col pt-2">
-        <div className="mb-2 flex justify-center">
-          <Eve size={96} mood={isSignup ? 'soft.hello' : 'soft.happy'} />
-        </div>
-        <div className="mb-6 text-center">
-          <h1 className="font-heading text-[28px] leading-tight font-semibold">
-            {isSignup ? 'Bienvenue !' : 'Heureux de te revoir !'}
-          </h1>
-          <p className="text-ink-soft mt-2 text-sm font-bold">
-            {isSignup
-              ? 'On t’envoie un lien magique. Pas de mot de passe à retenir.'
-              : 'On t’envoie un lien magique par email.'}
-          </p>
-        </div>
-
-        {noticeMessage && (
-          <p className="bg-destructive/10 text-destructive mb-4 rounded-xl px-4 py-3 text-sm font-bold">
-            {noticeMessage}
-          </p>
-        )}
-
-        <form
-          id="auth-form"
-          onSubmit={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            void form.handleSubmit()
-          }}
-        >
-          <form.Field
-            name="email"
-            validators={{
-              onChange: ({ value }) => {
-                const result = emailSchema.safeParse(value)
-                return result.success
-                  ? undefined
-                  : result.error.issues[0]?.message
-              },
-            }}
-          >
-            {(field) => {
-              const valid = emailSchema.safeParse(field.state.value).success
-              const showError =
-                field.state.meta.isTouched && field.state.meta.errors.length > 0
-              return (
-                <>
-                  <Label
-                    htmlFor={field.name}
-                    className="font-heading text-ink-muted mb-2 block text-xs font-semibold tracking-[1.5px] uppercase"
-                  >
-                    Ton email
-                  </Label>
-                  <div className="relative">
-                    <Link2
-                      className={cn(
-                        'pointer-events-none absolute top-1/2 left-4 size-[18px] -translate-y-1/2',
-                        valid ? 'text-primary' : 'text-ink-muted',
-                      )}
-                    />
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type="email"
-                      inputMode="email"
-                      autoComplete="email"
-                      autoFocus
-                      placeholder="prenom@email.com"
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                      className="text-ink placeholder:text-ink-muted border-border focus-visible:border-primary h-auto rounded-2xl border-2 bg-white py-3.5 pr-4 pl-12 text-[18px] font-semibold shadow-[0_4px_0_#1b1b3a14] transition-shadow focus-visible:shadow-[0_4px_0_var(--primary-dark)] focus-visible:ring-0 md:text-[18px]"
-                    />
-                  </div>
-                  <p className="text-ink-muted mx-1 mt-2.5 text-xs font-bold">
-                    🪄 On t’enverra un lien à cliquer pour{' '}
-                    {isSignup ? 'créer ton compte' : 'te connecter'}.
-                  </p>
-                  {showError && (
-                    <p className="text-destructive mx-1 mt-2 text-xs font-bold">
-                      {field.state.meta.errors[0]}
-                    </p>
-                  )}
-                </>
-              )
-            }}
-          </form.Field>
-        </form>
-
-        {isSignup && (
-          <div className="bg-success-soft mt-[18px] flex flex-col gap-1.5 rounded-2xl px-3.5 py-3">
-            {TRUST_SIGNALS.map((signal) => (
-              <div
-                key={signal}
-                className="text-success-dark flex items-center gap-2 text-xs font-bold"
-              >
-                <span className="bg-success flex size-[18px] shrink-0 items-center justify-center rounded-full text-white">
-                  <Check className="size-3" strokeWidth={4} />
-                </span>
-                {signal}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {mutation.isError && (
-          <p className="text-destructive mx-1 mt-4 text-xs font-bold">
-            Impossible d’envoyer le lien. Réessaie.
-          </p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-3.5">
-        <form.Subscribe selector={(s) => s.values.email}>
-          {(email) => (
-            <Button
-              type="submit"
-              form="auth-form"
-              disabled={
-                mutation.isPending ||
-                !emailSchema.safeParse(email.trim()).success
-              }
-              className="w-full"
-            >
-              <Sparkle size={18} />
-              {mutation.isPending ? 'Envoi…' : 'Recevoir mon lien magique'}
-            </Button>
-          )}
-        </form.Subscribe>
-
-        <p className="text-ink-soft font-heading text-center text-[13px] font-medium">
-          {isSignup ? 'Tu as déjà un compte ?' : 'Pas encore de compte ?'}{' '}
+    <AuthShell
+      action={
+        isExpired ? undefined : (
           <Link
             to={isSignup ? '/login' : '/register'}
-            className="text-primary font-semibold underline underline-offset-4"
+            className={cn(
+              buttonVariants({ variant: 'secondary', size: 'sm' }),
+              'text-primary px-5',
+            )}
           >
-            {isSignup ? 'Se connecter' : 'Créer un compte'}
+            {isSignup ? 'Se connecter' : 'S’inscrire'}
           </Link>
-        </p>
+        )
+      }
+      onSubmit={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        void form.handleSubmit()
+      }}
+    >
+      {isExpired && <EveEnvelope cold />}
 
-        {isSignup && (
-          <p className="text-ink-muted font-heading text-center text-[10px] leading-relaxed font-medium">
-            En continuant, tu acceptes nos <u>CGU</u> et notre{' '}
-            <u>Politique de confidentialité</u>.
+      <div>
+        <h1 className="font-heading text-center text-[32px] leading-[1.1] font-semibold">
+          {isExpired ? (
+            'Ce lien a expiré'
+          ) : isSignup ? (
+            <>Bienvenue&nbsp;!</>
+          ) : (
+            'Connexion'
+          )}
+        </h1>
+        {isExpired && (
+          <p className="text-ink-soft mt-2.5 text-center text-sm leading-[1.45] font-bold text-balance">
+            Les liens {isSignup ? 'd’activation' : 'de connexion'} expirent au
+            bout de 15 minutes, pour protéger ton compte.
           </p>
         )}
       </div>
-    </main>
+
+      {noticeMessage && (
+        <Alert variant="error">
+          <XIcon strokeWidth={3.2} />
+          <AlertDescription>{noticeMessage}</AlertDescription>
+        </Alert>
+      )}
+
+      <form.Field
+        name="email"
+        validators={{
+          onDynamic: ({ value }) => {
+            const result = emailSchema.safeParse(value.trim())
+            return result.success ? undefined : result.error.issues[0]?.message
+          },
+        }}
+      >
+        {(field) => {
+          const showError = field.state.meta.errors.length > 0
+          return (
+            <div className="flex flex-col gap-2.5">
+              <Label htmlFor={field.name} className="sr-only">
+                Ton email
+              </Label>
+              <Input
+                id={field.name}
+                name={field.name}
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                autoFocus
+                placeholder="E-mail"
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+                onBlur={field.handleBlur}
+                aria-invalid={showError}
+                aria-describedby={showError ? `${field.name}-error` : undefined}
+                className="text-ink placeholder:text-ink-muted border-input focus-visible:border-primary aria-invalid:border-destructive-dark h-[58px] rounded-lg border-2 bg-white px-4 text-[17px] font-bold focus-visible:ring-0 aria-invalid:ring-0 md:text-[17px]"
+              />
+              {showError ? (
+                <FieldError id={`${field.name}-error`}>
+                  {field.state.meta.errors[0]}
+                </FieldError>
+              ) : (
+                hint && (
+                  <p className="text-ink-soft text-[12.5px] font-bold">
+                    {hint}
+                  </p>
+                )
+              )}
+            </div>
+          )
+        }}
+      </form.Field>
+
+      <Button
+        type="submit"
+        size="lg"
+        disabled={mutation.isPending}
+        className="w-full"
+      >
+        {mutation.isPending
+          ? 'Envoi…'
+          : isExpired
+            ? 'Renvoyer un lien'
+            : isSignup
+              ? 'Créer mon compte'
+              : 'Se connecter'}
+      </Button>
+
+      <p className="text-ink-soft text-center text-xs leading-[1.6] font-bold">
+        En continuant, tu acceptes nos{' '}
+        <u className="underline-offset-2">Conditions d’utilisation</u> et notre{' '}
+        <u className="underline-offset-2">Politique de confidentialité</u>.
+      </p>
+    </AuthShell>
   )
 }

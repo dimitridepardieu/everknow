@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const emailSchema = z.email("Format d'email invalide")
+export const emailSchema = z.email("L'adresse e-mail est invalide")
 
 export const roleSchema = z.enum(['family', 'individual'])
 export type Role = z.infer<typeof roleSchema>

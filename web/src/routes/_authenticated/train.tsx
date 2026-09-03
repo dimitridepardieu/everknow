@@ -3,9 +3,11 @@ import { useState } from 'react'
 import { Navigate, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowDown, ArrowRight, ArrowUp, Check, X } from 'lucide-react'
 
+import { CardSession } from '@/components/card-session'
 import { Eve } from '@/components/eve'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Flashcard } from '@/components/flashcard'
 import { Button } from '@/components/ui/button'
+import { toast } from '@/components/ui/toast'
 import { useDueCards, useReviewCard } from '@/lib/cards'
 import type { DueCard } from '@/lib/schemas'
 import { useActiveProfile } from '@/lib/use-active-profile'
@@ -81,6 +83,17 @@ function Session({ cards }: { readonly cards: readonly DueCard[] }) {
     review.mutate(
       { cardId: card.id, correct },
       {
+        // A failed save is a request that went wrong, so it is announced and
+        // leaves — an alert in the bottom row would push past the height the
+        // frame reserves and move the card, which is what that reserve exists
+        // to prevent.
+        onError: () => {
+          toast.add({
+            type: 'error',
+            title: 'Impossible d’enregistrer',
+            description: 'Réessaie dans un instant.',
+          })
+        },
         onSuccess: (result) => {
           setVerdicts((prev) => [
             ...prev,
@@ -113,137 +126,60 @@ function Session({ cards }: { readonly cards: readonly DueCard[] }) {
   const answered = index + (graded ? 1 : 0)
 
   return (
-    <main className="flex min-h-dvh flex-col">
-      {/* Close and the progress bar share the top row, like the design. The
-          close keeps its original muted style and viewport-left position. */}
-      <div className="flex items-center gap-3 px-6 pt-6">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={leave}
-          aria-label="Fermer"
-          className="text-ink-muted shrink-0"
-        >
-          <X className="size-[22px]" strokeWidth={3} />
-        </Button>
-        {/* Thicker bar with a glossy highlight (the design's ::after strip).
-            Green as it fills, flashing red only on the step just forgotten.
-            Centred and capped (max-w-4xl) so it stops short of the edges on
-            desktop, Duolingo-style, rather than stretching the full width. */}
-        <div className="flex-1">
-          <div className="mx-auto h-3.5 max-w-4xl overflow-hidden rounded-full bg-[#e6e2d6] shadow-[inset_0_2px_0_rgba(0,0,0,0.05)]">
-            <div
-              className={`relative h-full rounded-full transition-[width,background-color] duration-300 ${
-                graded && !verdict.correct ? 'bg-destructive' : 'bg-success'
-              }`}
-              style={{ width: `${String((answered / deck.length) * 100)}%` }}
+    <CardSession
+      onClose={leave}
+      progress={answered / deck.length}
+      progressTone={graded && !verdict.correct ? 'destructive' : 'success'}
+      status={`${String(index + 1)}/${String(deck.length)}`}
+      bottomTone={graded ? verdictTone(verdict) : undefined}
+      bottom={
+        <>
+          {phase === 'question' && (
+            <Button
+              onClick={() => {
+                setPhase('revealed')
+              }}
+              className="w-full"
             >
-              <div className="absolute inset-x-1.5 top-0.5 h-1 rounded-full bg-white/50" />
-            </div>
-          </div>
-        </div>
-        {/* The count on the right — real info instead of a blank, and it
-            balances the close button on the left (Duolingo puts hearts here). */}
-        <p className="font-heading text-ink-muted shrink-0 pl-2 text-sm font-semibold tabular-nums">
-          {index + 1}/{deck.length}
-        </p>
-      </div>
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-5 pt-2 pb-9">
-        <div className="flex flex-1 flex-col items-center justify-center gap-5">
-          <div className="relative w-full">
-            {/* stacked cards behind, for depth (decorative). inset-0 makes
-                them match the card's own height, so the rotation is what
-                peeks out — a fixed height would hide them under it. */}
-            <div className="absolute inset-0 rotate-[-2.5deg] rounded-3xl bg-white opacity-55 shadow-[0_3px_0_var(--border)]" />
-            <div className="absolute inset-0 rotate-[1.8deg] rounded-3xl bg-white opacity-80 shadow-[0_3px_0_var(--border)]" />
-
-            <div
-              className={`relative rounded-3xl p-6 transition-colors ${
-                graded && verdict.correct
-                  ? 'bg-success-soft shadow-[0_4px_0_var(--border),inset_0_0_0_3px_var(--success)]'
-                  : 'bg-white shadow-[0_4px_0_var(--border),inset_0_0_0_2px_var(--primary-soft)]'
-              }`}
-            >
-              <p className="font-heading text-ink-muted mb-2 text-xs font-semibold tracking-[1px] uppercase">
-                Question
-              </p>
-              <p className="font-heading text-ink text-[24px] leading-snug font-semibold">
-                {card.question}
-              </p>
-
-              {phase !== 'question' && (
-                <>
-                  <div className="my-5 border-t-2 border-dashed border-[var(--border)]" />
-                  <p className="font-heading text-primary mb-2 text-xs font-semibold tracking-[1px] uppercase">
-                    Réponse
-                  </p>
-                  <p className="text-ink text-[19px] leading-relaxed font-bold">
-                    {card.answer}
-                  </p>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Eve appears only once the child has judged themselves — not
-              during the question, so nothing distracts from recalling. Her
-              mood carries the moment, and a miss gets encouragement: a sad
-              mascot in front of a child's mistake is a reproach in disguise. */}
-          {graded && (
-            <Eve
-              size={84}
-              mood={verdict.correct ? 'soft.cheer' : 'soft.encourage'}
-            />
+              Réponse
+            </Button>
           )}
-        </div>
 
-        {review.isError && (
-          <Alert variant="destructive" className="mt-4">
-            <AlertDescription>
-              Impossible d’enregistrer. Réessaie dans un instant.
-            </AlertDescription>
-          </Alert>
-        )}
+          {phase === 'revealed' && (
+            <div className="flex gap-3">
+              <Button
+                variant="destructive"
+                disabled={review.isPending}
+                onClick={() => {
+                  grade(false)
+                }}
+                className="h-16 flex-1 rounded-[20px] px-2"
+              >
+                J’avais oublié
+              </Button>
+              <Button
+                variant="success"
+                disabled={review.isPending}
+                onClick={() => {
+                  grade(true)
+                }}
+                className="h-16 flex-1 rounded-[20px] px-2"
+              >
+                Je le savais
+              </Button>
+            </div>
+          )}
 
-        {phase === 'question' && (
-          <Button
-            onClick={() => {
-              setPhase('revealed')
-            }}
-            className="mt-5 w-full"
-          >
-            Réponse
-          </Button>
-        )}
-
-        {phase === 'revealed' && (
-          <div className="mt-5 flex gap-3">
-            <Button
-              variant="destructive"
-              disabled={review.isPending}
-              onClick={() => {
-                grade(false)
-              }}
-              className="h-16 flex-1 rounded-[20px] px-2 text-sm"
-            >
-              J’avais oublié
-            </Button>
-            <Button
-              variant="success"
-              disabled={review.isPending}
-              onClick={() => {
-                grade(true)
-              }}
-              className="h-16 flex-1 rounded-[20px] px-2 text-sm"
-            >
-              Je le savais
-            </Button>
-          </div>
-        )}
-      </div>
-
-      {graded && <ResultBanner verdict={verdict} onNext={next} />}
-    </main>
+          {graded && <ResultBanner verdict={verdict} onNext={next} />}
+        </>
+      }
+    >
+      <Flashcard
+        question={card.question}
+        answer={phase === 'question' ? undefined : card.answer}
+        tone={graded && verdict.correct ? 'success' : 'neutral'}
+      />
+    </CardSession>
   )
 }
 
@@ -257,6 +193,10 @@ function nextDueLabel(dueAt: string): string {
   return `On la revoit dans ${String(days)} jours`
 }
 
+function verdictTone(verdict: Verdict): string {
+  return verdict.correct ? 'bg-success-soft' : 'bg-destructive-soft'
+}
+
 function ResultBanner({
   verdict,
   onNext,
@@ -266,13 +206,12 @@ function ResultBanner({
 }) {
   const { dueAt, correct } = verdict
 
-  const tone = correct ? 'bg-success-soft' : 'bg-destructive-soft'
-
   return (
-    <div className={`sticky bottom-0 w-full ${tone}`}>
+    <>
       {/* The check or cross for an instant read; the rank badge and the next
-          due date stacked beside it — where the card landed is the point. */}
-      <div className="mx-auto flex w-full max-w-md items-center gap-3 px-5 pt-6">
+          due date stacked beside it — where the card landed is the point. The
+          row is a fixed 60px because the reserved height above counts on it. */}
+      <div className="flex h-[60px] items-center gap-3">
         <span
           className={`flex size-11 shrink-0 items-center justify-center rounded-full text-white ${
             correct ? 'bg-success' : 'bg-destructive'
@@ -293,16 +232,14 @@ function ResultBanner({
           </p>
         </div>
       </div>
-      <div className="mx-auto w-full max-w-md px-5 pt-4 pb-6">
-        <Button
-          variant={correct ? 'success' : 'destructive'}
-          onClick={onNext}
-          className="w-full"
-        >
-          Continuer
-        </Button>
-      </div>
-    </div>
+      <Button
+        variant={correct ? 'success' : 'destructive'}
+        onClick={onNext}
+        className="mt-4 w-full"
+      >
+        Continuer
+      </Button>
+    </>
   )
 }
 
